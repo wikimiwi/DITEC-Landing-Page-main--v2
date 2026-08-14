@@ -1,0 +1,43 @@
+{
+  "name": "DITEC Assistência Técnica",
+  "short_name": "DITEC",
+  "description": "Conserto de eletrodomésticos rápido em São Paulo. Técnicos certificados e garantia de 90 dias.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0047AB",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "categories": ["business", "utilities"],
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%230047AB'/><text x='96' y='130' text-anchor='middle' font-family='sans-serif' font-weight='900' font-size='90' fill='white'>DT</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%230047AB'/><text x='256' y='345' text-anchor='middle' font-family='sans-serif' font-weight='900' font-size='240' fill='white'>DT</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Chamar no WhatsApp",
+      "url": "https://wa.me/5511999999999?text=Olá!%20Preciso%20de%20assistência%20técnica%20DITEC.",
+      "description": "Falar com a equipe DITEC"
+    },
+    {
+      "name": "Agendar Visita",
+      "url": "/#agendamento",
+      "description": "Agendar visita técnica"
+    },
+    {
+      "name": "Rastrear OS",
+      "url": "/#rastreamento",
+      "description": "Rastrear ordem de serviço"
+    }
+  ]
+}
