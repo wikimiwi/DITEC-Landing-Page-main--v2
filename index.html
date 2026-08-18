@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
@@ -40,7 +40,7 @@
   }
   </script>
   <!-- PWA Manifest -->
-  <link rel="manifest" href="manifest.json" />
+  <link rel="manifest" href="Manifest.JSON" />
   <meta name="theme-color" content="#0047AB" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -91,6 +91,10 @@
       <a href="#contato" class="nav__link">Contato</a>
     </nav>
     <div class="header__actions">
+      <button class="btn btn--outline btn--sm" id="authBtn" type="button" aria-haspopup="dialog" aria-controls="authModal">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span id="authBtnText">Entrar</span>
+      </button>
       <a href="tel:+5511999999999" class="btn btn--primary btn--sm" aria-label="Ligar para DITEC">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.67A2 2 0 012 .92h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 15.92v1z"/></svg>
         Ligar Agora
@@ -212,14 +216,14 @@
       <p class="section-subtitle">Trabalhamos com as principais marcas com peças originais e técnicos treinados.</p>
     </div>
     <div class="brands__grid" role="list">
-      <div class="brand-card" role="listitem" title="Brastemp" data-reveal data-delay="1"><svg viewBox="0 0 140 60" xmlns="http://www.w3.org/2000/svg" class="brand-svg" aria-label="Brastemp"><rect x="4" y="8" width="132" height="44" rx="6" fill="#e8f0fe" stroke="#c7d7fc" stroke-width="1"/><rect x="14" y="22" width="6" height="16" rx="3" fill="#0047AB"/><rect x="24" y="18" width="6" height="20" rx="3" fill="#0047AB" opacity="0.7"/><rect x="34" y="22" width="6" height="16" rx="3" fill="#0047AB" opacity="0.5"/><text x="82" y="36" text-anchor="middle" font-family="Poppins,sans-serif" font-weight="800" font-size="14" fill="#0047AB">Brastemp</text></svg></div>
-      <div class="brand-card" role="listitem" title="Electrolux" data-reveal data-delay="2"><svg viewBox="0 0 140 60" xmlns="http://www.w3.org/2000/svg" class="brand-svg" aria-label="Electrolux"><rect x="4" y="8" width="132" height="44" rx="6" fill="#e8f0fe" stroke="#c7d7fc" stroke-width="1"/><rect x="12" y="20" width="22" height="5" rx="2.5" fill="#005EB8"/><rect x="12" y="28" width="17" height="4" rx="2" fill="#005EB8"/><rect x="12" y="35" width="22" height="5" rx="2.5" fill="#005EB8"/><text x="92" y="36" text-anchor="middle" font-family="Poppins,sans-serif" font-weight="700" font-size="11" fill="#005EB8" letter-spacing="1">ELECTROLUX</text></svg></div>
-      <div class="brand-card" role="listitem" title="Consul" data-reveal data-delay="3"><svg viewBox="0 0 140 60" xmlns="http://www.w3.org/2000/svg" class="brand-svg" aria-label="Consul"><rect x="4" y="8" width="132" height="44" rx="6" fill="#e8f0fe" stroke="#c7d7fc" stroke-width="1"/><circle cx="32" cy="30" r="13" fill="#0047AB"/><path d="M26 30 a6 6 0 1 1 6 6" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/><text x="90" y="36" text-anchor="middle" font-family="Poppins,sans-serif" font-weight="800" font-size="16" fill="#0047AB">CONSUL</text></svg></div>
-      <div class="brand-card" role="listitem" title="Samsung" data-reveal data-delay="4"><svg viewBox="0 0 140 60" xmlns="http://www.w3.org/2000/svg" class="brand-svg" aria-label="Samsung"><rect x="4" y="8" width="132" height="44" rx="6" fill="#e8f0fe" stroke="#c7d7fc" stroke-width="1"/><ellipse cx="70" cy="30" rx="55" ry="16" fill="none" stroke="#1428A0" stroke-width="1.5" opacity="0.3"/><text x="70" y="36" text-anchor="middle" font-family="Poppins,sans-serif" font-weight="800" font-size="14" fill="#1428A0" letter-spacing="2">SAMSUNG</text></svg></div>
-      <div class="brand-card" role="listitem" title="LG" data-reveal data-delay="5"><svg viewBox="0 0 140 60" xmlns="http://www.w3.org/2000/svg" class="brand-svg" aria-label="LG"><rect x="4" y="8" width="132" height="44" rx="6" fill="#e8f0fe" stroke="#c7d7fc" stroke-width="1"/><circle cx="38" cy="30" r="16" fill="none" stroke="#003087" stroke-width="3"/><text x="36" y="35" text-anchor="middle" font-family="Poppins,sans-serif" font-weight="800" font-size="14" fill="#003087">LG</text><path d="M46 26 Q55 30 46 34" stroke="#003087" stroke-width="2.5" fill="none" stroke-linecap="round"/><text x="95" y="34" text-anchor="middle" font-family="Poppins,sans-serif" font-weight="600" font-size="10" fill="#003087">Life's Good</text></svg></div>
-      <div class="brand-card" role="listitem" title="Whirlpool" data-reveal data-delay="6"><svg viewBox="0 0 140 60" xmlns="http://www.w3.org/2000/svg" class="brand-svg" aria-label="Whirlpool"><rect x="4" y="8" width="132" height="44" rx="6" fill="#e8f0fe" stroke="#c7d7fc" stroke-width="1"/><path d="M20 30 Q27 18 34 30 Q41 42 48 30" stroke="#003087" stroke-width="2.5" fill="none" stroke-linecap="round"/><text x="92" y="36" text-anchor="middle" font-family="Poppins,sans-serif" font-weight="800" font-size="12" fill="#003087">WHIRLPOOL</text></svg></div>
-      <div class="brand-card" role="listitem" title="Panasonic" data-reveal data-delay="6"><svg viewBox="0 0 140 60" xmlns="http://www.w3.org/2000/svg" class="brand-svg" aria-label="Panasonic"><rect x="4" y="8" width="132" height="44" rx="6" fill="#e8f0fe" stroke="#c7d7fc" stroke-width="1"/><rect x="12" y="22" width="5" height="16" rx="2.5" fill="#003087"/><rect x="20" y="18" width="5" height="20" rx="2.5" fill="#003087"/><rect x="28" y="22" width="5" height="16" rx="2.5" fill="#003087"/><text x="88" y="36" text-anchor="middle" font-family="Poppins,sans-serif" font-weight="700" font-size="12" fill="#003087">Panasonic</text></svg></div>
-      <div class="brand-card" role="listitem" title="Philips" data-reveal data-delay="6"><svg viewBox="0 0 140 60" xmlns="http://www.w3.org/2000/svg" class="brand-svg" aria-label="Philips"><rect x="4" y="8" width="132" height="44" rx="6" fill="#e8f4ff" stroke="#bcd9f5" stroke-width="1"/><circle cx="20" cy="24" r="5" fill="#0066CC"/><circle cx="33" cy="24" r="5" fill="#0066CC"/><circle cx="46" cy="24" r="5" fill="#0066CC"/><line x1="12" y1="34" x2="54" y2="34" stroke="#0066CC" stroke-width="1.5" opacity="0.4"/><text x="95" y="38" text-anchor="middle" font-family="Poppins,sans-serif" font-weight="700" font-size="15" fill="#0066CC">Philips</text></svg></div>
+      <div class="brand-card" role="listitem" title="Brastemp" data-reveal data-delay="1"><img src="assetslogos/brastemp.png" alt="Brastemp" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
+      <div class="brand-card" role="listitem" title="Electrolux" data-reveal data-delay="2"><img src="assetslogos/electrolux.png" alt="Electrolux" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
+      <div class="brand-card" role="listitem" title="Consul" data-reveal data-delay="3"><img src="assetslogos/consul.png" alt="Consul" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
+      <div class="brand-card" role="listitem" title="Samsung" data-reveal data-delay="4"><img src="assetslogos/samsung.png" alt="Samsung" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
+      <div class="brand-card" role="listitem" title="LG" data-reveal data-delay="5"><img src="assetslogos/lg.png" alt="LG" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
+      <div class="brand-card" role="listitem" title="Whirlpool" data-reveal data-delay="6"><img src="assetslogos/whirlpool.png" alt="Whirlpool" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
+      <div class="brand-card" role="listitem" title="Panasonic" data-reveal data-delay="6"><img src="assetslogos/panasonic.png" alt="Panasonic" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
+      <div class="brand-card" role="listitem" title="Philips" data-reveal data-delay="6"><img src="assetslogos/philips.png" alt="Philips" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
     </div>
   </div>
 </section>
@@ -590,6 +594,8 @@
       <div class="footer__legal-links">
         <a href="#privacidade">Política de Privacidade</a>
         <a href="#termos">Termos de Uso</a>
+        <a href="conta.html">Área do Cliente</a>
+        <a href="admin.html">Acesso administrativo</a>
       </div>
     </div>
   </div>
@@ -626,6 +632,60 @@
     <svg class="chatbot__trigger-icon chatbot__trigger-icon--close" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     <span class="chatbot__trigger-badge" id="chatbotBadge" aria-label="1 nova mensagem">1</span>
   </button>
+</div>
+
+<!-- ===== MODAL: LOGIN / CADASTRO ===== -->
+<div class="modal-overlay" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle" hidden>
+  <div class="modal-box">
+    <button class="modal-close" id="authModalClose" aria-label="Fechar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <h3 class="modal-title" id="authModalTitle">Acesse sua conta</h3>
+    <p class="modal-subtitle">Acompanhe seus agendamentos e suas Ordens de Serviço.</p>
+
+    <div class="modal-tabs" role="tablist">
+      <button class="modal-tab active" id="tabLoginBtn" type="button" role="tab" aria-selected="true" aria-controls="loginForm">Entrar</button>
+      <button class="modal-tab" id="tabCadastroBtn" type="button" role="tab" aria-selected="false" aria-controls="cadastroForm">Criar Conta</button>
+    </div>
+
+    <form id="loginForm" class="modal-form" novalidate>
+      <div class="form-group"><label class="form-label" for="loginEmail">E-mail</label><input type="email" id="loginEmail" class="input" placeholder="voce@email.com" required autocomplete="username" /></div>
+      <div class="form-group"><label class="form-label" for="loginSenha">Senha</label><input type="password" id="loginSenha" class="input" placeholder="••••••••" required autocomplete="current-password" /></div>
+      <button type="submit" class="btn btn--primary btn--full">Entrar</button>
+      <p class="modal-switch">Ainda não tem conta? <button type="button" class="modal-link" id="goToCadastro">Cadastre-se</button></p>
+    </form>
+
+    <form id="cadastroForm" class="modal-form" novalidate hidden>
+      <div class="form-group"><label class="form-label" for="cadNome">Nome completo</label><input type="text" id="cadNome" class="input" placeholder="João Silva" required autocomplete="name" /></div>
+      <div class="form-group"><label class="form-label" for="cadEmail">E-mail</label><input type="email" id="cadEmail" class="input" placeholder="voce@email.com" required autocomplete="username" /></div>
+      <div class="form-group"><label class="form-label" for="cadTel">Telefone / WhatsApp</label><input type="tel" id="cadTel" class="input" placeholder="(11) 99999-9999" required autocomplete="tel" /></div>
+      <div class="form-group"><label class="form-label" for="cadSenha">Senha</label><input type="password" id="cadSenha" class="input" placeholder="Mínimo 6 caracteres" required autocomplete="new-password" /></div>
+      <div class="form-group"><label class="form-label" for="cadSenha2">Confirmar senha</label><input type="password" id="cadSenha2" class="input" placeholder="Repita a senha" required autocomplete="new-password" /></div>
+      <button type="submit" class="btn btn--primary btn--full">Criar Conta</button>
+      <p class="modal-switch">Já tem conta? <button type="button" class="modal-link" id="goToLogin">Entrar</button></p>
+    </form>
+  </div>
+</div>
+
+<!-- ===== MODAL: COMPLETAR CADASTRO (pós-agendamento) ===== -->
+<div class="modal-overlay" id="completeProfileModal" role="dialog" aria-modal="true" aria-labelledby="completeProfileTitle" hidden>
+  <div class="modal-box">
+    <button class="modal-close" id="completeProfileClose" aria-label="Fechar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="modal-icon">🎉</div>
+    <h3 class="modal-title" id="completeProfileTitle">Agendamento confirmado!</h3>
+    <p class="modal-subtitle">Complete seu cadastro para acompanhar sua Ordem de Serviço e agilizar os próximos atendimentos.</p>
+
+    <form id="completeProfileForm" class="modal-form" novalidate>
+      <div class="form-group"><label class="form-label" for="cpNome">Nome completo</label><input type="text" id="cpNome" class="input" required autocomplete="name" /></div>
+      <div class="form-group"><label class="form-label" for="cpEmail">E-mail</label><input type="email" id="cpEmail" class="input" placeholder="voce@email.com" required autocomplete="username" /></div>
+      <div class="form-group"><label class="form-label" for="cpTel">Telefone / WhatsApp</label><input type="tel" id="cpTel" class="input" required autocomplete="tel" /></div>
+      <div class="form-group"><label class="form-label" for="cpSenha">Crie uma senha</label><input type="password" id="cpSenha" class="input" placeholder="Mínimo 6 caracteres" required autocomplete="new-password" /></div>
+      <button type="submit" class="btn btn--primary btn--full">Completar Cadastro</button>
+      <button type="button" class="modal-skip" id="completeProfileSkip">Agora não, obrigado</button>
+    </form>
+  </div>
 </div>
 
 <script src="script.js"></script>

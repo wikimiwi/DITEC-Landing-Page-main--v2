@@ -153,6 +153,66 @@
        window.scrollTo({ top: el.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
      }
    }
+
+   /* ─────────────────────────────────────────────────────────────
+      PERSISTÊNCIA LOCAL (mock — sem backend/BD integrado ainda)
+      As mesmas chaves são usadas em conta.html e admin.html.
+      TODO (próxima etapa): substituir por chamadas ao backend
+      Spring Boot + banco de dados real.
+      ───────────────────────────────────────────────────────────── */
+   const DB_KEYS = { USERS: 'ditec_users', SESSION: 'ditec_session', AGENDAMENTOS: 'ditec_agendamentos' };
+
+   function dbGet(key, fallback) {
+     try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+     catch { return fallback; }
+   }
+   function dbSet(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+
+   function getUsers() { return dbGet(DB_KEYS.USERS, []); }
+   function saveUsers(users) { dbSet(DB_KEYS.USERS, users); }
+   function findUserByEmail(email) {
+     return getUsers().find(u => u.email.toLowerCase() === String(email || '').toLowerCase());
+   }
+   function getSession() { return dbGet(DB_KEYS.SESSION, null); }
+   function setSession(email) { dbSet(DB_KEYS.SESSION, { email, since: Date.now() }); }
+   function clearSession() { localStorage.removeItem(DB_KEYS.SESSION); }
+   function getCurrentUser() {
+     const s = getSession();
+     return s ? findUserByEmail(s.email) : null;
+   }
+   function getAgendamentos() { return dbGet(DB_KEYS.AGENDAMENTOS, []); }
+   function saveAgendamentos(list) { dbSet(DB_KEYS.AGENDAMENTOS, list); }
+   function registrarAgendamento({ nome, telefone, aparelho, endereco, dataStr, hora }) {
+     const list = getAgendamentos();
+     const user = getCurrentUser();
+     list.push({
+       id: 'ag' + Date.now(),
+       nome, telefone, aparelho, endereco, dataStr, hora,
+       status: 'pendente',
+       userEmail: user ? user.email : null,
+       criadoEm: new Date().toISOString(),
+     });
+     saveAgendamentos(list);
+   }
+
+   function showToast(msg, type) {
+     const el = document.createElement('div');
+     el.className = 'ditec-toast' + (type === 'error' ? ' ditec-toast--error' : ' ditec-toast--success');
+     el.textContent = msg;
+     document.body.appendChild(el);
+     requestAnimationFrame(() => el.classList.add('show'));
+     setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 300); }, 3400);
+   }
+
+   function maskTelefoneInput(input) {
+     if (!input) return;
+     input.addEventListener('input', () => {
+       let v = onlyDigits(input.value).slice(0, 11);
+       if (v.length > 6) v = `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
+       else if (v.length > 2) v = `(${v.slice(0,2)}) ${v.slice(2)}`;
+       input.value = v;
+     });
+   }
    
    /* ─────────────────────────────────────────────────────────────
       INTEGRAÇÃO COM BACKEND JAVA (Proxy Hugging Face)
@@ -319,6 +379,171 @@
      }
    })();
    
+   (function initAuth() {
+     const authBtn = $('#authBtn'), authBtnText = $('#authBtnText');
+     const modal = $('#authModal'), closeBtn = $('#authModalClose');
+     const tabLogin = $('#tabLoginBtn'), tabCadastro = $('#tabCadastroBtn');
+     const loginForm = $('#loginForm'), cadastroForm = $('#cadastroForm');
+     const goCad = $('#goToCadastro'), goLogin = $('#goToLogin');
+     if (!authBtn || !modal) return;
+
+     maskTelefoneInput($('#cadTel'));
+
+     function refreshAuthBtn() {
+       const user = getCurrentUser();
+       if (user) {
+         authBtnText.textContent = user.nome.split(' ')[0];
+         authBtn.onclick = () => { window.location.href = 'conta.html'; };
+       } else {
+         authBtnText.textContent = 'Entrar';
+         authBtn.onclick = openModal;
+       }
+     }
+
+     function openModal() {
+       modal.hidden = false;
+       requestAnimationFrame(() => modal.classList.add('active'));
+       document.body.classList.add('modal-open');
+     }
+     function closeModal() {
+       modal.classList.remove('active');
+       document.body.classList.remove('modal-open');
+       setTimeout(() => { modal.hidden = true; }, 250);
+     }
+     closeBtn.addEventListener('click', closeModal);
+     modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+     document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal.classList.contains('active')) closeModal(); });
+
+     function showTab(which) {
+       const isLogin = which === 'login';
+       tabLogin.classList.toggle('active', isLogin);
+       tabCadastro.classList.toggle('active', !isLogin);
+       tabLogin.setAttribute('aria-selected', String(isLogin));
+       tabCadastro.setAttribute('aria-selected', String(!isLogin));
+       loginForm.hidden = !isLogin;
+       cadastroForm.hidden = isLogin;
+       clearFormError(loginForm); clearFormError(cadastroForm);
+     }
+     tabLogin.addEventListener('click', () => showTab('login'));
+     tabCadastro.addEventListener('click', () => showTab('cadastro'));
+     goCad.addEventListener('click', () => showTab('cadastro'));
+     goLogin.addEventListener('click', () => showTab('login'));
+
+     function clearFormError(form) {
+       const el = form.querySelector('.modal-error'); if (el) el.remove();
+     }
+     function showFormError(form, msg) {
+       clearFormError(form);
+       const el = document.createElement('p');
+       el.className = 'modal-error';
+       el.textContent = '⚠️ ' + msg;
+       form.insertBefore(el, form.firstChild);
+     }
+
+     loginForm.addEventListener('submit', e => {
+       e.preventDefault();
+       const email = ($('#loginEmail').value || '').trim().toLowerCase();
+       const senha = $('#loginSenha').value || '';
+       const user = findUserByEmail(email);
+       if (!user || user.senha !== senha) return showFormError(loginForm, 'E-mail ou senha incorretos.');
+       setSession(user.email);
+       closeModal();
+       refreshAuthBtn();
+       showToast(`Bem-vindo(a) de volta, ${user.nome.split(' ')[0]}!`);
+       setTimeout(() => { window.location.href = 'conta.html'; }, 600);
+     });
+
+     cadastroForm.addEventListener('submit', e => {
+       e.preventDefault();
+       const nome  = ($('#cadNome').value || '').trim();
+       const email = ($('#cadEmail').value || '').trim().toLowerCase();
+       const tel   = ($('#cadTel').value || '').trim();
+       const senha = $('#cadSenha').value || '';
+       const senha2= $('#cadSenha2').value || '';
+       if (!nome || !email || !tel || !senha) return showFormError(cadastroForm, 'Preencha todos os campos.');
+       if (senha.length < 6) return showFormError(cadastroForm, 'A senha deve ter ao menos 6 caracteres.');
+       if (senha !== senha2) return showFormError(cadastroForm, 'As senhas não coincidem.');
+       if (findUserByEmail(email)) return showFormError(cadastroForm, 'Já existe uma conta com este e-mail. Faça login.');
+       const users = getUsers();
+       users.push({ id: 'u' + Date.now(), nome, email, telefone: tel, senha, criadoEm: new Date().toISOString() });
+       saveUsers(users);
+       setSession(email);
+       closeModal();
+       refreshAuthBtn();
+       showToast('Conta criada com sucesso!');
+       setTimeout(() => { window.location.href = 'conta.html'; }, 600);
+     });
+
+     refreshAuthBtn();
+     /* exposto para o pop-up de completar cadastro do agendamento */
+     window.ditecRefreshAuthBtn = refreshAuthBtn;
+     window.ditecOpenAuthModal = openModal;
+   })();
+
+   (function initCompleteProfile() {
+     const modal = $('#completeProfileModal');
+     if (!modal) return;
+     const closeBtn = $('#completeProfileClose'), skipBtn = $('#completeProfileSkip');
+     const form = $('#completeProfileForm');
+
+     maskTelefoneInput($('#cpTel'));
+
+     function open(prefill) {
+       if (getCurrentUser()) return; /* já tem conta — não precisa completar cadastro */
+       prefill = prefill || {};
+       $('#cpNome').value = prefill.nome || '';
+       $('#cpTel').value  = prefill.telefone || '';
+       modal.hidden = false;
+       requestAnimationFrame(() => modal.classList.add('active'));
+       document.body.classList.add('modal-open');
+     }
+     function close() {
+       modal.classList.remove('active');
+       document.body.classList.remove('modal-open');
+       setTimeout(() => { modal.hidden = true; }, 250);
+     }
+     closeBtn.addEventListener('click', close);
+     skipBtn.addEventListener('click', close);
+     modal.addEventListener('click', e => { if (e.target === modal) close(); });
+
+     form.addEventListener('submit', e => {
+       e.preventDefault();
+       const nome  = ($('#cpNome').value || '').trim();
+       const email = ($('#cpEmail').value || '').trim().toLowerCase();
+       const tel   = ($('#cpTel').value || '').trim();
+       const senha = $('#cpSenha').value || '';
+       const old = form.querySelector('.modal-error'); if (old) old.remove();
+       if (!nome || !email || !tel || !senha) return showErr('Preencha todos os campos.');
+       if (senha.length < 6) return showErr('A senha deve ter ao menos 6 caracteres.');
+       if (findUserByEmail(email)) return showErr('Já existe uma conta com este e-mail. Use o botão "Entrar" no topo da página.');
+
+       const users = getUsers();
+       users.push({ id: 'u' + Date.now(), nome, email, telefone: tel, senha, criadoEm: new Date().toISOString() });
+       saveUsers(users);
+       setSession(email);
+
+       /* vincula o agendamento mais recente sem conta a este novo usuário */
+       const ags = getAgendamentos();
+       for (let i = ags.length - 1; i >= 0; i--) {
+         if (!ags[i].userEmail) { ags[i].userEmail = email; break; }
+       }
+       saveAgendamentos(ags);
+
+       if (typeof window.ditecRefreshAuthBtn === 'function') window.ditecRefreshAuthBtn();
+       close();
+       showToast('Cadastro completo! Você já pode acompanhar tudo pela Área do Cliente. 🎉');
+
+       function showErr(m) {
+         const el = document.createElement('p');
+         el.className = 'modal-error';
+         el.textContent = '⚠️ ' + m;
+         form.insertBefore(el, form.firstChild);
+       }
+     });
+
+     window.ditecOpenCompleteProfile = open;
+   })();
+
    (function initArea() {
      const inp = $('#areaInput'), btn = $('#checkAreaBtn'), res = $('#areaResult');
      if (!inp) return;
@@ -441,10 +666,19 @@
          schedSuccessText.textContent = `${nome}, seu agendamento para ${ap} em ${end} está confirmado para ${dateStr}.`;
          schedForm.style.display = 'none';
          schedSuccess.style.display = 'block';
+
+         /* salva o agendamento (mock local) e vincula à conta, se já logado */
+         registrarAgendamento({ nome, telefone: tel, aparelho: ap, endereco: end, dataStr: dateStr, hora: selectedTime });
+
          const msg = encodeURIComponent(
            `Olá! Gostaria de confirmar meu agendamento:\n\nNome: ${nome}\nAparelho: ${ap}\nEndereço: ${end}\nData: ${dateStr}\nTelefone: ${tel}`
          );
          setTimeout(() => window.open(`https://wa.me/${CONFIG.whatsappNumber}?text=${msg}`, '_blank'), 1200);
+
+         /* logo após o agendamento, convida a pessoa a completar o cadastro */
+         if (!getCurrentUser() && typeof window.ditecOpenCompleteProfile === 'function') {
+           setTimeout(() => window.ditecOpenCompleteProfile({ nome, telefone: tel }), 900);
+         }
        });
      }
    })();

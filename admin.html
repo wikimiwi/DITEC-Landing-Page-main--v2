@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel Administrativo | DITEC Assistência Técnica</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'><rect width='36' height='36' rx='9' fill='%230047AB'/><text x='18' y='25' text-anchor='middle' font-family='sans-serif' font-weight='900' font-size='16' fill='white'>DT</text></svg>" />
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="dash-header">
+  <div class="dash-header__inner">
+    <a href="index.html" class="logo" aria-label="DITEC — Página inicial">
+      <svg width="34" height="34" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect width="36" height="36" rx="9" fill="#0047AB"/>
+        <path d="M10 12h5c3.314 0 6 2.686 6 6s-2.686 6-6 6h-5V12z" fill="white"/>
+        <rect x="23" y="12" width="3" height="12" rx="1.5" fill="white"/>
+      </svg>
+      <span class="logo__text">DI<span>TEC</span> <small style="font-size:.6rem;font-weight:700;color:var(--text-light);vertical-align:middle;">ADMIN</small></span>
+    </a>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <a href="index.html" class="btn btn--outline btn--sm">← Ver site</a>
+      <button class="btn btn--primary btn--sm" id="logoutBtn" type="button" hidden>Sair</button>
+    </div>
+  </div>
+</header>
+
+<main class="dash-main">
+  <div class="container">
+
+    <!-- ===== ESTADO: NÃO LOGADO ===== -->
+    <section id="guestView" hidden>
+      <div class="dash-auth-wrap">
+        <h1 style="font-size:1.4rem;font-weight:700;margin-bottom:6px;">Acesso administrativo</h1>
+        <p style="color:var(--text-light);font-size:.9rem;margin-bottom:22px;">Área restrita à equipe DITEC.</p>
+        <form id="adminLoginForm" class="modal-form" novalidate>
+          <div class="form-group"><label class="form-label" for="aEmail">E-mail</label><input type="email" id="aEmail" class="input" required /></div>
+          <div class="form-group"><label class="form-label" for="aSenha">Senha</label><input type="password" id="aSenha" class="input" required /></div>
+          <button type="submit" class="btn btn--primary btn--full">Entrar</button>
+        </form>
+        <p style="font-size:.75rem;color:var(--text-muted);margin-top:16px;line-height:1.6;">
+          🔒 Protótipo sem backend: credencial fixa <strong>admin@ditec.com.br / ditec2025</strong>.
+          Será substituída por autenticação real quando o banco de dados for integrado.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===== ESTADO: LOGADO ===== -->
+    <section id="dashView" hidden>
+      <div class="dash-welcome">
+        <h1>Painel Administrativo</h1>
+        <p>Clientes, agendamentos e Ordens de Serviço da DITEC.</p>
+      </div>
+
+      <div class="dash-stats">
+        <div class="dash-stat"><div class="dash-stat__value" id="statClientes">0</div><div class="dash-stat__label">Clientes cadastrados</div></div>
+        <div class="dash-stat"><div class="dash-stat__value" id="statAgendamentos">0</div><div class="dash-stat__label">Agendamentos</div></div>
+        <div class="dash-stat"><div class="dash-stat__value" id="statOSAbertas">0</div><div class="dash-stat__label">OS em aberto</div></div>
+        <div class="dash-stat"><div class="dash-stat__value" id="statOSTotal">0</div><div class="dash-stat__label">OS no total</div></div>
+      </div>
+
+      <div class="dash-tabs">
+        <button class="dash-tab active" data-panel="clientesPanel" type="button">Clientes</button>
+        <button class="dash-tab" data-panel="agendamentosPanel" type="button">Agendamentos</button>
+        <button class="dash-tab" data-panel="osPanel" type="button">Ordens de Serviço</button>
+      </div>
+
+      <!-- CLIENTES -->
+      <div class="dash-panel active" id="clientesPanel">
+        <div class="dash-card">
+          <div class="dash-card__title">Clientes cadastrados</div>
+          <div class="dash-table-wrap">
+            <table class="dash-table">
+              <thead><tr><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Cadastro</th><th></th></tr></thead>
+              <tbody id="clientesTbody"></tbody>
+            </table>
+          </div>
+          <div id="clientesEmpty" class="dash-empty" hidden>Nenhum cliente cadastrado ainda.</div>
+        </div>
+      </div>
+
+      <!-- AGENDAMENTOS -->
+      <div class="dash-panel" id="agendamentosPanel">
+        <div class="dash-card">
+          <div class="dash-card__title">Agendamentos recebidos</div>
+          <div class="dash-table-wrap">
+            <table class="dash-table">
+              <thead><tr><th>Cliente</th><th>Aparelho</th><th>Endereço</th><th>Data</th><th>Conta vinculada</th><th>Status</th><th></th></tr></thead>
+              <tbody id="agendamentosTbody"></tbody>
+            </table>
+          </div>
+          <div id="agendamentosEmpty" class="dash-empty" hidden>Nenhum agendamento recebido ainda.</div>
+        </div>
+      </div>
+
+      <!-- ORDENS DE SERVIÇO -->
+      <div class="dash-panel" id="osPanel">
+        <div class="dash-card">
+          <div class="dash-card__title">Ordens de Serviço (dados simulados)</div>
+          <div class="dash-table-wrap">
+            <table class="dash-table">
+              <thead><tr><th>Número</th><th>Cliente</th><th>Aparelho</th><th>Bairro</th><th>Status</th></tr></thead>
+              <tbody id="osTbody"></tbody>
+            </table>
+          </div>
+          <p style="font-size:.78rem;color:var(--text-light);margin-top:12px;">
+            Os dados das OS ainda são simulados (<code>OS-2025-1001/1002/1003</code>). Quando o banco de dados for integrado,
+            esta tabela passará a refletir as Ordens de Serviço reais cadastradas no sistema.
+          </p>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+</main>
+
+<script src="dashboard-shared.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = s => document.querySelector(s);
+  const $$ = s => document.querySelectorAll(s);
+  function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  const guestView = $('#guestView'), dashView = $('#dashView'), logoutBtn = $('#logoutBtn');
+
+  function render() {
+    const admin = DitecDB.getAdminSession();
+    if (!admin) {
+      guestView.hidden = false; dashView.hidden = true; logoutBtn.hidden = true;
+      return;
+    }
+    guestView.hidden = true; dashView.hidden = false; logoutBtn.hidden = false;
+    renderStats();
+    renderClientes();
+    renderAgendamentos();
+    renderOS();
+  }
+
+  function renderStats() {
+    const users = DitecDB.getUsers();
+    const ags = DitecDB.getAgendamentos();
+    const os = Object.values(DitecDB.getAllOS());
+    $('#statClientes').textContent = users.length;
+    $('#statAgendamentos').textContent = ags.length;
+    $('#statOSAbertas').textContent = os.filter(o => o.status !== 'concluido' && o.status !== 'cancelado').length;
+    $('#statOSTotal').textContent = os.length;
+  }
+
+  function renderClientes() {
+    const users = DitecDB.getUsers();
+    const tbody = $('#clientesTbody');
+    $('#clientesEmpty').hidden = users.length > 0;
+    tbody.parentElement.parentElement.style.display = users.length ? '' : 'none';
+    tbody.innerHTML = users.map(u => `
+      <tr>
+        <td>${escHtml(u.nome)}</td>
+        <td>${escHtml(u.email)}</td>
+        <td>${escHtml(u.telefone)}</td>
+        <td>${new Date(u.criadoEm).toLocaleDateString('pt-BR')}</td>
+        <td><button class="dash-danger-btn" data-remove-user="${escHtml(u.email)}" type="button">Remover</button></td>
+      </tr>
+    `).join('');
+  }
+
+  function renderAgendamentos() {
+    const ags = DitecDB.getAgendamentos();
+    const tbody = $('#agendamentosTbody');
+    $('#agendamentosEmpty').hidden = ags.length > 0;
+    tbody.parentElement.parentElement.style.display = ags.length ? '' : 'none';
+    const labelMap = { pendente: 'Aguardando', confirmado: 'Confirmado', concluido: 'Concluído', cancelado: 'Cancelado' };
+    tbody.innerHTML = ags.slice().reverse().map((a, revIdx) => {
+      const idx = ags.length - 1 - revIdx;
+      const opts = Object.keys(labelMap).map(k => `<option value="${k}" ${a.status === k ? 'selected' : ''}>${labelMap[k]}</option>`).join('');
+      return `
+      <tr>
+        <td>${escHtml(a.nome)}<div style="font-size:.75rem;color:var(--text-light);">${escHtml(a.telefone)}</div></td>
+        <td>${escHtml(a.aparelho)}</td>
+        <td>${escHtml(a.endereco)}</td>
+        <td>${escHtml(a.dataStr)}</td>
+        <td>${a.userEmail ? '✅ ' + escHtml(a.userEmail) : '— convidado'}</td>
+        <td><select class="input" data-status-idx="${idx}">${opts}</select></td>
+        <td><button class="dash-danger-btn" data-remove-ag="${idx}" type="button">Remover</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderOS() {
+    const os = DitecDB.getAllOS();
+    const tbody = $('#osTbody');
+    tbody.innerHTML = Object.values(os).map(o => {
+      const opts = Object.keys(DitecDB.STATUS_LABELS).map(k =>
+        `<option value="${k}" ${o.status === k ? 'selected' : ''}>${DitecDB.STATUS_LABELS[k]}</option>`).join('');
+      return `
+      <tr>
+        <td>${escHtml(o.numero)}</td>
+        <td>${escHtml(o.cliente)}</td>
+        <td>${escHtml(o.aparelho)}</td>
+        <td>${escHtml(o.bairro)}</td>
+        <td><select class="input" data-os-numero="${escHtml(o.numero)}">${opts}</select></td>
+      </tr>`;
+    }).join('');
+  }
+
+  /* ---- Login admin ---- */
+  $('#adminLoginForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const email = $('#aEmail').value.trim();
+    const senha = $('#aSenha').value;
+    const ok = DitecDB.loginAdmin(email, senha);
+    const old = e.target.querySelector('.modal-error'); if (old) old.remove();
+    if (!ok) {
+      const el = document.createElement('p');
+      el.className = 'modal-error';
+      el.textContent = '⚠️ Credenciais inválidas.';
+      e.target.insertBefore(el, e.target.firstChild);
+      return;
+    }
+    render();
+  });
+
+  logoutBtn.addEventListener('click', () => { DitecDB.logoutAdmin(); render(); });
+
+  /* ---- Tabs ---- */
+  $$('.dash-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      $$('.dash-tab').forEach(t => t.classList.remove('active'));
+      $$('.dash-panel').forEach(p => p.classList.remove('active'));
+      tab.classList.add('active');
+      $('#' + tab.dataset.panel).classList.add('active');
+    });
+  });
+
+  /* ---- Ações delegadas (remover cliente / agendamento, mudar status) ---- */
+  document.addEventListener('click', e => {
+    const rmUser = e.target.closest('[data-remove-user]');
+    if (rmUser) {
+      const email = rmUser.getAttribute('data-remove-user');
+      if (confirm('Remover este cliente? Esta ação não pode ser desfeita.')) {
+        DitecDB.saveUsers(DitecDB.getUsers().filter(u => u.email !== email));
+        render();
+      }
+      return;
+    }
+    const rmAg = e.target.closest('[data-remove-ag]');
+    if (rmAg) {
+      const idx = Number(rmAg.getAttribute('data-remove-ag'));
+      if (confirm('Remover este agendamento?')) {
+        const ags = DitecDB.getAgendamentos();
+        ags.splice(idx, 1);
+        DitecDB.saveAgendamentos(ags);
+        render();
+      }
+      return;
+    }
+  });
+
+  document.addEventListener('change', e => {
+    const statusSel = e.target.closest('[data-status-idx]');
+    if (statusSel) {
+      const idx = Number(statusSel.getAttribute('data-status-idx'));
+      const ags = DitecDB.getAgendamentos();
+      if (ags[idx]) { ags[idx].status = statusSel.value; DitecDB.saveAgendamentos(ags); renderStats(); }
+      return;
+    }
+    const osSel = e.target.closest('[data-os-numero]');
+    if (osSel) {
+      DitecDB.updateOSStatus(osSel.getAttribute('data-os-numero'), osSel.value);
+      renderStats();
+      return;
+    }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

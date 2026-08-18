@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Área do Cliente | DITEC Assistência Técnica</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'><rect width='36' height='36' rx='9' fill='%230047AB'/><text x='18' y='25' text-anchor='middle' font-family='sans-serif' font-weight='900' font-size='16' fill='white'>DT</text></svg>" />
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="dash-header">
+  <div class="dash-header__inner">
+    <a href="index.html" class="logo" aria-label="DITEC — Página inicial">
+      <svg width="34" height="34" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect width="36" height="36" rx="9" fill="#0047AB"/>
+        <path d="M10 12h5c3.314 0 6 2.686 6 6s-2.686 6-6 6h-5V12z" fill="white"/>
+        <rect x="23" y="12" width="3" height="12" rx="1.5" fill="white"/>
+      </svg>
+      <span class="logo__text">DI<span>TEC</span></span>
+    </a>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <a href="index.html" class="btn btn--outline btn--sm">← Voltar ao site</a>
+      <button class="btn btn--primary btn--sm" id="logoutBtn" type="button" hidden>Sair</button>
+    </div>
+  </div>
+</header>
+
+<main class="dash-main">
+  <div class="container">
+
+    <!-- ===== ESTADO: NÃO LOGADO ===== -->
+    <section id="guestView" hidden>
+      <div class="dash-auth-wrap">
+        <h1 style="font-size:1.4rem;font-weight:700;margin-bottom:6px;">Acesse sua conta</h1>
+        <p style="color:var(--text-light);font-size:.9rem;margin-bottom:22px;">Entre ou cadastre-se para acompanhar seus agendamentos e Ordens de Serviço.</p>
+
+        <div class="dash-tabs" style="margin-bottom:20px;border-bottom:1px solid var(--border);">
+          <button class="dash-tab active" id="gTabLogin" type="button">Entrar</button>
+          <button class="dash-tab" id="gTabCadastro" type="button">Criar Conta</button>
+        </div>
+
+        <form id="gLoginForm" class="modal-form" novalidate>
+          <div class="form-group"><label class="form-label" for="gLoginEmail">E-mail</label><input type="email" id="gLoginEmail" class="input" required /></div>
+          <div class="form-group"><label class="form-label" for="gLoginSenha">Senha</label><input type="password" id="gLoginSenha" class="input" required /></div>
+          <button type="submit" class="btn btn--primary btn--full">Entrar</button>
+        </form>
+
+        <form id="gCadastroForm" class="modal-form" novalidate hidden>
+          <div class="form-group"><label class="form-label" for="gCadNome">Nome completo</label><input type="text" id="gCadNome" class="input" required /></div>
+          <div class="form-group"><label class="form-label" for="gCadEmail">E-mail</label><input type="email" id="gCadEmail" class="input" required /></div>
+          <div class="form-group"><label class="form-label" for="gCadTel">Telefone / WhatsApp</label><input type="tel" id="gCadTel" class="input" required /></div>
+          <div class="form-group"><label class="form-label" for="gCadSenha">Senha</label><input type="password" id="gCadSenha" class="input" placeholder="Mínimo 6 caracteres" required /></div>
+          <div class="form-group"><label class="form-label" for="gCadSenha2">Confirmar senha</label><input type="password" id="gCadSenha2" class="input" required /></div>
+          <button type="submit" class="btn btn--primary btn--full">Criar Conta</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ===== ESTADO: LOGADO ===== -->
+    <section id="dashView" hidden>
+      <div class="dash-welcome">
+        <h1 id="welcomeTitle">Olá! 👋</h1>
+        <p>Acompanhe seus dados, agendamentos e Ordens de Serviço.</p>
+      </div>
+
+      <!-- CARTÃO DE PERFIL / DADOS DE CADASTRO -->
+      <div class="profile-card">
+        <div class="profile-card__top">
+          <div class="profile-avatar" id="profileAvatar">--</div>
+          <div class="profile-info">
+            <h2 class="profile-name" id="profileName">—</h2>
+            <p class="profile-email" id="profileEmailDisplay">—</p>
+            <span class="profile-pill" id="profileSince">Cliente desde —</span>
+          </div>
+          <button class="btn btn--outline btn--sm profile-edit-btn" id="editDataBtn" type="button">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Editar dados
+          </button>
+        </div>
+
+        <form id="dataForm" class="profile-form" novalidate>
+          <div class="profile-form__grid">
+            <div class="form-group">
+              <label class="form-label" for="dNome">Nome completo</label>
+              <input type="text" id="dNome" class="input" disabled />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="dEmail">E-mail <span class="profile-form__hint">(não editável)</span></label>
+              <input type="email" id="dEmail" class="input" disabled />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="dTel">Telefone / WhatsApp</label>
+              <input type="tel" id="dTel" class="input" disabled />
+            </div>
+          </div>
+          <button type="submit" class="btn btn--primary" id="saveDataBtn" hidden>Salvar alterações</button>
+        </form>
+      </div>
+
+      <div class="dash-grid">
+        <!-- RASTREAMENTO RÁPIDO DE OS -->
+        <div class="dash-card">
+          <div class="dash-card__title">Rastrear Ordem de Serviço</div>
+          <div class="modal-form">
+            <input type="text" id="osInputConta" class="input" placeholder="Ex: OS-2025-1001" maxlength="20" />
+            <button class="btn btn--primary btn--full" id="osSearchConta" type="button">Rastrear</button>
+            <div id="osResultConta"></div>
+            <p style="font-size:.78rem;color:var(--text-light);">💡 Teste com: OS-2025-1001, OS-2025-1002 ou OS-2025-1003</p>
+          </div>
+        </div>
+
+        <!-- MEUS AGENDAMENTOS -->
+        <div class="dash-card">
+          <div class="dash-card__title">Meus agendamentos <span class="profile-pill" id="agendamentosCount" style="margin-left:4px;">0</span></div>
+          <div id="agendamentosList"></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script src="dashboard-shared.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = s => document.querySelector(s);
+  const $$ = s => document.querySelectorAll(s);
+
+  const guestView = $('#guestView'), dashView = $('#dashView');
+  const logoutBtn = $('#logoutBtn');
+
+  function onlyDigits(s) { return (s || '').replace(/\D/g, ''); }
+  function maskTel(input) {
+    if (!input) return;
+    input.addEventListener('input', () => {
+      let v = onlyDigits(input.value).slice(0, 11);
+      if (v.length > 6) v = `(${v.slice(0,2)}) ${v.slice(2,7)}-${v.slice(7)}`;
+      else if (v.length > 2) v = `(${v.slice(0,2)}) ${v.slice(2)}`;
+      input.value = v;
+    });
+  }
+  function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function getInitials(nome) {
+    const parts = String(nome || '').trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return '?';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  function formatSince(iso) {
+    const d = new Date(iso);
+    if (isNaN(d)) return '—';
+    let s = d.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }).replace('.', '');
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  function render() {
+    const user = DitecDB.getCurrentUser();
+    if (!user) {
+      guestView.hidden = false; dashView.hidden = true; logoutBtn.hidden = true;
+      return;
+    }
+    guestView.hidden = true; dashView.hidden = false; logoutBtn.hidden = false;
+    $('#welcomeTitle').textContent = `Olá, ${user.nome.split(' ')[0]}! 👋`;
+    $('#profileAvatar').textContent = getInitials(user.nome);
+    $('#profileName').textContent = user.nome;
+    $('#profileEmailDisplay').textContent = user.email;
+    $('#profileSince').textContent = `Cliente desde ${formatSince(user.criadoEm)}`;
+    $('#dNome').value = user.nome;
+    $('#dEmail').value = user.email;
+    $('#dTel').value = user.telefone;
+    renderAgendamentos(user.email);
+  }
+
+  function renderAgendamentos(email) {
+    const list = DitecDB.getAgendamentos().filter(a => a.userEmail === email).reverse();
+    $('#agendamentosCount').textContent = list.length;
+    const el = $('#agendamentosList');
+    if (!list.length) {
+      el.innerHTML = `<div class="dash-empty">Você ainda não tem agendamentos. <a href="index.html#agendamento" style="color:var(--blue);font-weight:600;">Agendar uma visita →</a></div>`;
+      return;
+    }
+    const badgeMap = { pendente: 'dash-badge--pendente', confirmado: 'dash-badge--diagnostico', concluido: 'dash-badge--concluido', cancelado: 'dash-badge--cancelado' };
+    const labelMap = { pendente: 'Aguardando confirmação', confirmado: 'Confirmado', concluido: 'Concluído', cancelado: 'Cancelado' };
+    el.innerHTML = list.map(a => `
+      <div class="dash-row">
+        <div>
+          <div class="dash-row__main">${escHtml(a.aparelho)} — ${escHtml(a.endereco)}</div>
+          <div class="dash-row__sub">📅 ${escHtml(a.dataStr)}</div>
+        </div>
+        <span class="dash-badge ${badgeMap[a.status] || 'dash-badge--pendente'}">${labelMap[a.status] || 'Aguardando confirmação'}</span>
+      </div>
+    `).join('');
+  }
+
+  /* ---- Auth (login/cadastro quando deslogado) ---- */
+  maskTel($('#gCadTel'));
+  $('#gTabLogin').addEventListener('click', () => showGuestTab('login'));
+  $('#gTabCadastro').addEventListener('click', () => showGuestTab('cadastro'));
+  function showGuestTab(which) {
+    const isLogin = which === 'login';
+    $('#gTabLogin').classList.toggle('active', isLogin);
+    $('#gTabCadastro').classList.toggle('active', !isLogin);
+    $('#gLoginForm').hidden = !isLogin;
+    $('#gCadastroForm').hidden = isLogin;
+  }
+  function formError(form, msg) {
+    const old = form.querySelector('.modal-error'); if (old) old.remove();
+    const el = document.createElement('p');
+    el.className = 'modal-error';
+    el.textContent = '⚠️ ' + msg;
+    form.insertBefore(el, form.firstChild);
+  }
+
+  $('#gLoginForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const email = $('#gLoginEmail').value.trim().toLowerCase();
+    const senha = $('#gLoginSenha').value;
+    const user = DitecDB.findUserByEmail(email);
+    if (!user || user.senha !== senha) return formError(e.target, 'E-mail ou senha incorretos.');
+    DitecDB.setSession(email);
+    render();
+  });
+
+  $('#gCadastroForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const nome = $('#gCadNome').value.trim();
+    const email = $('#gCadEmail').value.trim().toLowerCase();
+    const tel = $('#gCadTel').value.trim();
+    const senha = $('#gCadSenha').value;
+    const senha2 = $('#gCadSenha2').value;
+    if (!nome || !email || !tel || !senha) return formError(e.target, 'Preencha todos os campos.');
+    if (senha.length < 6) return formError(e.target, 'A senha deve ter ao menos 6 caracteres.');
+    if (senha !== senha2) return formError(e.target, 'As senhas não coincidem.');
+    if (DitecDB.findUserByEmail(email)) return formError(e.target, 'Já existe uma conta com este e-mail.');
+    const users = DitecDB.getUsers();
+    users.push({ id: 'u' + Date.now(), nome, email, telefone: tel, senha, criadoEm: new Date().toISOString() });
+    DitecDB.saveUsers(users);
+    DitecDB.setSession(email);
+    render();
+  });
+
+  /* ---- Editar dados ---- */
+  $('#editDataBtn').addEventListener('click', () => {
+    ['#dNome', '#dEmail', '#dTel'].forEach(id => $(id).disabled = false);
+    $('#dEmail').disabled = true; /* e-mail não é editável (é a chave da conta) */
+    $('#saveDataBtn').hidden = false;
+  });
+  $('#dataForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const user = DitecDB.getCurrentUser();
+    if (!user) return;
+    const users = DitecDB.getUsers();
+    const idx = users.findIndex(u => u.email === user.email);
+    if (idx > -1) {
+      users[idx].nome = $('#dNome').value.trim() || users[idx].nome;
+      users[idx].telefone = $('#dTel').value.trim() || users[idx].telefone;
+      DitecDB.saveUsers(users);
+    }
+    ['#dNome', '#dTel'].forEach(id => $(id).disabled = true);
+    $('#saveDataBtn').hidden = true;
+    render();
+  });
+
+  /* ---- Rastreamento de OS ---- */
+  $('#osInputConta').addEventListener('keypress', e => { if (e.key === 'Enter') $('#osSearchConta').click(); });
+  $('#osSearchConta').addEventListener('click', () => {
+    const val = ($('#osInputConta').value || '').trim().toUpperCase();
+    const res = $('#osResultConta');
+    const os = DitecDB.getAllOS()[val];
+    if (!os) {
+      res.innerHTML = `<p style="font-size:.85rem;color:var(--text-light);padding:10px 0;">OS não encontrada. Verifique o número recebido por WhatsApp.</p>`;
+      return;
+    }
+    res.innerHTML = `<div class="dash-row"><div><div class="dash-row__main">${escHtml(os.numero)}</div><div class="dash-row__sub">${escHtml(os.aparelho)}</div></div><span class="dash-badge dash-badge--${os.status}">${escHtml(os.statusLabel)}</span></div>`;
+  });
+
+  /* ---- Logout ---- */
+  logoutBtn.addEventListener('click', () => {
+    DitecDB.clearSession();
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
