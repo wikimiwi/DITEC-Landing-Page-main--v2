@@ -1,6 +1,8 @@
 /* ============================================================
-   DITEC Assistência — script.js  v5 (Com Backend em Java)
-   Chatbot com IA: Mistral 7B via Proxy Spring Boot
+   DITEC Assistência — script.js  v6 (Backend Java real + MySQL)
+   Chatbot com IA via proxy Spring Boot (Hugging Face / Qwen2.5-72B)
+   Autenticação, agendamento e rastreamento de OS via API REST —
+   ver dashboard-shared.js (window.DitecAPI) e /backend.
    ============================================================ */
    'use strict';
 
@@ -67,44 +69,11 @@
    2. Seja sempre gentil, objetivo e profissional (máximo 3 parágrafos).
    3. Quando pertinente, sugira entrar em contato pelo WhatsApp (11) 99999-9999 para agendar.`;
    
-   /* ─────────────────────────────────────────────────────────────
-      DADOS DE ORDENS DE SERVIÇO (simulados para demo)
-      ───────────────────────────────────────────────────────────── */
-   const OS_DATA = {
-     'OS-2025-1001': {
-       numero: 'OS-2025-1001', cliente: 'Maria Fernanda S.', aparelho: 'Geladeira Brastemp', bairro: 'Moema, SP',
-       status: 'concluido', statusLabel: 'Concluído ✅',
-       steps: [
-         { label: 'Agendamento recebido',  detail: '02/01/2025 às 09:15', done: true },
-         { label: 'Técnico a caminho',     detail: '02/01/2025 às 11:30', done: true },
-         { label: 'Diagnóstico realizado', detail: 'Compressor com defeito', done: true },
-         { label: 'Reparo em andamento',   detail: 'Peça solicitada e instalada', done: true },
-         { label: 'Serviço concluído',     detail: '02/01/2025 às 14:45 — Garantia ativa', done: true },
-       ],
-     },
-     'OS-2025-1002': {
-       numero: 'OS-2025-1002', cliente: 'Carlos Roberto M.', aparelho: 'Máquina de Lavar LG', bairro: 'Pinheiros, SP',
-       status: 'reparo', statusLabel: 'Em Reparo 🔧',
-       steps: [
-         { label: 'Agendamento recebido',  detail: '15/01/2025 às 10:00', done: true },
-         { label: 'Técnico a caminho',     detail: '15/01/2025 às 13:00', done: true },
-         { label: 'Diagnóstico realizado', detail: 'Rolamentos e correia com desgaste', done: true },
-         { label: 'Reparo em andamento',   detail: 'Peças em instalação — previsão: hoje', done: true, current: true },
-         { label: 'Serviço concluído',     detail: 'Aguardando finalização', done: false },
-       ],
-     },
-     'OS-2025-1003': {
-       numero: 'OS-2025-1003', cliente: 'Ana Paula T.', aparelho: 'Ar Condicionado Samsung', bairro: 'Vila Mariana, SP',
-       status: 'diagnostico', statusLabel: 'Em Diagnóstico 🔍',
-       steps: [
-         { label: 'Agendamento recebido',  detail: '20/01/2025 às 14:22', done: true },
-         { label: 'Técnico a caminho',     detail: '21/01/2025 — Hoje às 09:00', done: true },
-         { label: 'Diagnóstico realizado', detail: 'Técnico no local agora', done: false, current: true },
-         { label: 'Reparo em andamento',   detail: 'Aguardando aprovação do orçamento', done: false },
-         { label: 'Serviço concluído',     detail: 'Pendente', done: false },
-       ],
-     },
-   };
+/* ─────────────────────────────────────────────────────────────
+   DADOS DE ORDENS DE SERVIÇO — agora vêm da API real
+   (GET /api/ordens-servico/protocolo/{protocolo}, ver DitecAPI.rastrear
+   em dashboard-shared.js). O mock OS_DATA que existia aqui foi removido.
+   ───────────────────────────────────────────────────────────── */
    
    const QUICK_REPLIES_INICIAIS = [
      'Quais serviços vocês fazem?',
@@ -155,44 +124,13 @@
    }
 
    /* ─────────────────────────────────────────────────────────────
-      PERSISTÊNCIA LOCAL (mock — sem backend/BD integrado ainda)
-      As mesmas chaves são usadas em conta.html e admin.html.
-      TODO (próxima etapa): substituir por chamadas ao backend
-      Spring Boot + banco de dados real.
+      SESSÃO DO CLIENTE — agora via DitecAPI (JWT real emitido pelo
+      backend, ver dashboard-shared.js). getCurrentUser() é mantida
+      com o mesmo nome/assinatura de antes para não precisar reescrever
+      cada trecho do arquivo que já depende dela.
       ───────────────────────────────────────────────────────────── */
-   const DB_KEYS = { USERS: 'ditec_users', SESSION: 'ditec_session', AGENDAMENTOS: 'ditec_agendamentos' };
-
-   function dbGet(key, fallback) {
-     try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
-     catch { return fallback; }
-   }
-   function dbSet(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
-
-   function getUsers() { return dbGet(DB_KEYS.USERS, []); }
-   function saveUsers(users) { dbSet(DB_KEYS.USERS, users); }
-   function findUserByEmail(email) {
-     return getUsers().find(u => u.email.toLowerCase() === String(email || '').toLowerCase());
-   }
-   function getSession() { return dbGet(DB_KEYS.SESSION, null); }
-   function setSession(email) { dbSet(DB_KEYS.SESSION, { email, since: Date.now() }); }
-   function clearSession() { localStorage.removeItem(DB_KEYS.SESSION); }
    function getCurrentUser() {
-     const s = getSession();
-     return s ? findUserByEmail(s.email) : null;
-   }
-   function getAgendamentos() { return dbGet(DB_KEYS.AGENDAMENTOS, []); }
-   function saveAgendamentos(list) { dbSet(DB_KEYS.AGENDAMENTOS, list); }
-   function registrarAgendamento({ nome, telefone, aparelho, endereco, dataStr, hora }) {
-     const list = getAgendamentos();
-     const user = getCurrentUser();
-     list.push({
-       id: 'ag' + Date.now(),
-       nome, telefone, aparelho, endereco, dataStr, hora,
-       status: 'pendente',
-       userEmail: user ? user.email : null,
-       criadoEm: new Date().toISOString(),
-     });
-     saveAgendamentos(list);
+     return (typeof DitecAPI !== 'undefined' && DitecAPI.isLoggedIn()) ? DitecAPI.getUser() : null;
    }
 
    function showToast(msg, type) {
@@ -217,10 +155,21 @@
    /* ─────────────────────────────────────────────────────────────
       INTEGRAÇÃO COM BACKEND JAVA (Proxy Hugging Face)
       ───────────────────────────────────────────────────────────── */
-   
+
+   /* sessionId estável durante a aba (não é PII) — usado pelo admin
+      para agrupar o historico de uma conversa no relatorio do chatbot. */
+   function getChatSessionId() {
+     let id = sessionStorage.getItem('ditec_chat_session');
+     if (!id) {
+       id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'sess-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+       sessionStorage.setItem('ditec_chat_session', id);
+     }
+     return id;
+   }
+
    async function askMistral(userMessage, history = []) {
      const recentHistory = history.slice(-4);
-   
+
      const systemMsg = [
        'Você é o assistente virtual da DITEC Assistência Técnica em São Paulo.',
        'Responda SOMENTE sobre: conserto de eletrodomésticos, serviços, preços, garantia e agendamento da DITEC.',
@@ -228,39 +177,26 @@
        'Pagamento: Pix, cartão, parcelamento 12x, dinheiro (5% desconto).',
        'Responda em português brasileiro. Seja objetivo. Máximo 2 parágrafos curtos.',
      ].join(' ');
-   
+
      const messages = [
        { role: 'system', content: systemMsg },
        ...recentHistory,
        { role: 'user',   content: userMessage },
      ];
-   
-     /* ── Endpoint apontando para o seu Eclipse/Spring Boot ── */
-     const response = await fetch(
-       'http://localhost:8080/api/chat',
-       {
-         method: 'POST',
-         headers: {
-           'Content-Type': 'application/json',
-         },
-         body: JSON.stringify({
-           model: CONFIG.HF_MODEL,
-           messages,
-           max_tokens: 250,
-           temperature: 0.6,
-           stream: false,
-         }),
-       }
-     );
-   
-     if (!response.ok) {
-       throw new Error(`api_erro_${response.status}`);
-     }
-   
-     const data = await response.json();
+
+     /* ── Proxy real: Spring Boot esconde a HF_API_KEY e loga a interação ── */
+     const data = await DitecAPI.chat({
+       model: CONFIG.HF_MODEL,
+       messages,
+       max_tokens: 250,
+       temperature: 0.6,
+       stream: false,
+       sessionId: getChatSessionId(),
+     });
+
      const texto = data?.choices?.[0]?.message?.content;
      if (texto && texto.trim()) return texto.trim();
-   
+
      throw new Error('formato_inesperado');
    }
    
@@ -440,20 +376,28 @@
        form.insertBefore(el, form.firstChild);
      }
 
-     loginForm.addEventListener('submit', e => {
+     loginForm.addEventListener('submit', async e => {
        e.preventDefault();
        const email = ($('#loginEmail').value || '').trim().toLowerCase();
        const senha = $('#loginSenha').value || '';
-       const user = findUserByEmail(email);
-       if (!user || user.senha !== senha) return showFormError(loginForm, 'E-mail ou senha incorretos.');
-       setSession(user.email);
-       closeModal();
-       refreshAuthBtn();
-       showToast(`Bem-vindo(a) de volta, ${user.nome.split(' ')[0]}!`);
-       setTimeout(() => { window.location.href = 'conta.html'; }, 600);
+       if (!email || !senha) return showFormError(loginForm, 'Preencha e-mail e senha.');
+
+       const submitBtn = loginForm.querySelector('button[type="submit"]');
+       if (submitBtn) submitBtn.disabled = true;
+       try {
+         const data = await DitecAPI.login(email, senha);
+         closeModal();
+         refreshAuthBtn();
+         showToast(`Bem-vindo(a) de volta, ${data.nome.split(' ')[0]}!`);
+         setTimeout(() => { window.location.href = 'conta.html'; }, 600);
+       } catch (err) {
+         showFormError(loginForm, err.message || 'E-mail ou senha incorretos.');
+       } finally {
+         if (submitBtn) submitBtn.disabled = false;
+       }
      });
 
-     cadastroForm.addEventListener('submit', e => {
+     cadastroForm.addEventListener('submit', async e => {
        e.preventDefault();
        const nome  = ($('#cadNome').value || '').trim();
        const email = ($('#cadEmail').value || '').trim().toLowerCase();
@@ -463,15 +407,20 @@
        if (!nome || !email || !tel || !senha) return showFormError(cadastroForm, 'Preencha todos os campos.');
        if (senha.length < 6) return showFormError(cadastroForm, 'A senha deve ter ao menos 6 caracteres.');
        if (senha !== senha2) return showFormError(cadastroForm, 'As senhas não coincidem.');
-       if (findUserByEmail(email)) return showFormError(cadastroForm, 'Já existe uma conta com este e-mail. Faça login.');
-       const users = getUsers();
-       users.push({ id: 'u' + Date.now(), nome, email, telefone: tel, senha, criadoEm: new Date().toISOString() });
-       saveUsers(users);
-       setSession(email);
-       closeModal();
-       refreshAuthBtn();
-       showToast('Conta criada com sucesso!');
-       setTimeout(() => { window.location.href = 'conta.html'; }, 600);
+
+       const submitBtn = cadastroForm.querySelector('button[type="submit"]');
+       if (submitBtn) submitBtn.disabled = true;
+       try {
+         await DitecAPI.registrar({ nome, email, telefone: tel, senha });
+         closeModal();
+         refreshAuthBtn();
+         showToast('Conta criada com sucesso!');
+         setTimeout(() => { window.location.href = 'conta.html'; }, 600);
+       } catch (err) {
+         showFormError(cadastroForm, err.message || 'Não foi possível criar sua conta. Tente novamente.');
+       } finally {
+         if (submitBtn) submitBtn.disabled = false;
+       }
      });
 
      refreshAuthBtn();
@@ -506,7 +455,7 @@
      skipBtn.addEventListener('click', close);
      modal.addEventListener('click', e => { if (e.target === modal) close(); });
 
-     form.addEventListener('submit', e => {
+     form.addEventListener('submit', async e => {
        e.preventDefault();
        const nome  = ($('#cpNome').value || '').trim();
        const email = ($('#cpEmail').value || '').trim().toLowerCase();
@@ -515,23 +464,22 @@
        const old = form.querySelector('.modal-error'); if (old) old.remove();
        if (!nome || !email || !tel || !senha) return showErr('Preencha todos os campos.');
        if (senha.length < 6) return showErr('A senha deve ter ao menos 6 caracteres.');
-       if (findUserByEmail(email)) return showErr('Já existe uma conta com este e-mail. Use o botão "Entrar" no topo da página.');
 
-       const users = getUsers();
-       users.push({ id: 'u' + Date.now(), nome, email, telefone: tel, senha, criadoEm: new Date().toISOString() });
-       saveUsers(users);
-       setSession(email);
+       const submitBtn = form.querySelector('button[type="submit"]');
+       if (submitBtn) submitBtn.disabled = true;
+       try {
+         /* o backend vincula automaticamente o agendamento mais recente
+            sem conta que tenha o MESMO telefone informado aqui. */
+         await DitecAPI.registrar({ nome, email, telefone: tel, senha });
 
-       /* vincula o agendamento mais recente sem conta a este novo usuário */
-       const ags = getAgendamentos();
-       for (let i = ags.length - 1; i >= 0; i--) {
-         if (!ags[i].userEmail) { ags[i].userEmail = email; break; }
+         if (typeof window.ditecRefreshAuthBtn === 'function') window.ditecRefreshAuthBtn();
+         close();
+         showToast('Cadastro completo! Você já pode acompanhar tudo pela Área do Cliente. 🎉');
+       } catch (err) {
+         showErr(err.message || 'Não foi possível concluir o cadastro. Tente novamente.');
+       } finally {
+         if (submitBtn) submitBtn.disabled = false;
        }
-       saveAgendamentos(ags);
-
-       if (typeof window.ditecRefreshAuthBtn === 'function') window.ditecRefreshAuthBtn();
-       close();
-       showToast('Cadastro completo! Você já pode acompanhar tudo pela Área do Cliente. 🎉');
 
        function showErr(m) {
          const el = document.createElement('p');
@@ -578,9 +526,12 @@
      let viewYear = now.getFullYear(), viewMonth = now.getMonth();
      let selectedDate = null, selectedTime = null;
    
-     const HORARIOS = ['07:00','08:30','10:00','11:30','13:00','14:30','16:00','17:30','19:00'];
-     const OCUPADOS = { '1': ['07:00','10:00'], '3': ['14:30'], '8': ['07:00','08:30','10:00'], '15': ['13:00','14:30','16:00'] };
      const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+     /* YYYY-MM-DD local (evita o shift de fuso horário do toISOString()) */
+     function toISODateLocal(date) {
+       return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+     }
    
      function render() {
        calMonth.textContent = `${MESES[viewMonth]} ${viewYear}`;
@@ -615,29 +566,45 @@
        }
      }
    
-     function selectDate(date, day) {
+     async function selectDate(date, day) {
        selectedDate = date; selectedTime = null;
        render();
        tsTitle.textContent = `Horários — ${day} de ${MESES[viewMonth]}`;
+       schedSel.style.display = 'none';
+       tsGrid.innerHTML = '<p style="grid-column:1/-1;color:#6b7280;font-size:.85rem;padding:8px 0;">Carregando horários...</p>';
+       timeslots.style.display = 'block';
+
+       let disponibilidade;
+       try {
+         disponibilidade = await DitecAPI.disponibilidade(toISODateLocal(date));
+       } catch (err) {
+         tsGrid.innerHTML = `<p style="grid-column:1/-1;color:#dc2626;font-size:.85rem;padding:8px 0;">${escHtml(err.message || 'Não foi possível carregar os horários.')}</p>`;
+         return;
+       }
+
        tsGrid.innerHTML = '';
-       const ocupadosHoje = OCUPADOS[String(day)] || [];
-       HORARIOS.forEach(h => {
+       if (!disponibilidade.diaAtendido) {
+         tsGrid.innerHTML = '<p style="grid-column:1/-1;color:#6b7280;font-size:.85rem;padding:8px 0;">Não atendemos nesta data.</p>';
+         return;
+       }
+       const ocupadosHoje = disponibilidade.horariosOcupados || [];
+       const todosHorarios = [...(disponibilidade.horariosDisponiveis || []), ...ocupadosHoje].sort();
+       todosHorarios.forEach(h => {
          const btn = document.createElement('button');
          const ocupado = ocupadosHoje.includes(h);
          btn.className = 'timeslot' + (ocupado ? ' timeslot--taken' : '');
          btn.textContent = h; btn.type = 'button';
          btn.setAttribute('aria-label', h + (ocupado ? ' — indisponível' : ''));
          if (ocupado) { btn.disabled = true; }
-         else { btn.addEventListener('click', () => selectTime(h, day, MESES[viewMonth])); }
+         else { btn.addEventListener('click', () => selectTime(h, day, MESES[viewMonth], btn)); }
          tsGrid.appendChild(btn);
        });
-       timeslots.style.display = 'block';
      }
    
-     function selectTime(time, day, monthName) {
+     function selectTime(time, day, monthName, btnEl) {
        selectedTime = time;
        $$('.timeslot').forEach(b => b.classList.remove('timeslot--selected'));
-       event.target.classList.add('timeslot--selected');
+       if (btnEl) btnEl.classList.add('timeslot--selected');
        schedSelText.textContent = `📅 ${day} de ${monthName} às ${time}`;
        schedSel.style.display = 'flex';
      }
@@ -654,30 +621,46 @@
          else if (v.length > 2) v = `(${v.slice(0,2)}) ${v.slice(2)}`;
          sTel.value = v;
        });
-       schedForm.addEventListener('submit', e => {
+       schedForm.addEventListener('submit', async e => {
          e.preventDefault();
-         const nome = ($('#sNome').value || '').trim();
-         const tel  = ($('#sTel').value || '').trim();
-         const ap   = ($('#sAparelho').value || '').trim();
-         const end  = ($('#sEndereco').value || '').trim();
-         if (!nome || !tel || !ap || !end) { alert('Preencha todos os campos.'); return; }
+         const nome    = ($('#sNome').value || '').trim();
+         const tel     = ($('#sTel').value || '').trim();
+         const ap      = ($('#sAparelho').value || '').trim();
+         const bairro  = ($('#sBairro').value || '').trim();
+         const end     = ($('#sEndereco').value || '').trim();
+         const defeito = ($('#sDefeito') ? $('#sDefeito').value || '' : '').trim();
+         if (!nome || !tel || !ap || !bairro || !end) { alert('Preencha todos os campos obrigatórios.'); return; }
          if (!selectedDate || !selectedTime) { alert('Selecione uma data e horário no calendário.'); return; }
+
+         const dataHoraISO = `${toISODateLocal(selectedDate)}T${selectedTime}:00`;
          const dateStr = `${selectedDate.getDate()} de ${MESES[selectedDate.getMonth()]} às ${selectedTime}`;
-         schedSuccessText.textContent = `${nome}, seu agendamento para ${ap} em ${end} está confirmado para ${dateStr}.`;
-         schedForm.style.display = 'none';
-         schedSuccess.style.display = 'block';
 
-         /* salva o agendamento (mock local) e vincula à conta, se já logado */
-         registrarAgendamento({ nome, telefone: tel, aparelho: ap, endereco: end, dataStr: dateStr, hora: selectedTime });
+         const submitBtn = $('#scheduleSubmit');
+         if (submitBtn) submitBtn.disabled = true;
+         try {
+           const agendamento = await DitecAPI.criarAgendamento({
+             nome, telefone: tel, tipoAparelho: ap, descricaoProblema: defeito || null,
+             bairro, endereco: end, dataHora: dataHoraISO,
+           });
 
-         const msg = encodeURIComponent(
-           `Olá! Gostaria de confirmar meu agendamento:\n\nNome: ${nome}\nAparelho: ${ap}\nEndereço: ${end}\nData: ${dateStr}\nTelefone: ${tel}`
-         );
-         setTimeout(() => window.open(`https://wa.me/${CONFIG.whatsappNumber}?text=${msg}`, '_blank'), 1200);
+           schedSuccessText.innerHTML = `${nome}, seu agendamento para ${ap} em ${end} está confirmado para ${dateStr}.<br>` +
+             `<strong>Protocolo: ${escHtml(agendamento.protocolo)}</strong> — guarde para rastrear sua OS.`;
+           schedForm.style.display = 'none';
+           schedSuccess.style.display = 'block';
 
-         /* logo após o agendamento, convida a pessoa a completar o cadastro */
-         if (!getCurrentUser() && typeof window.ditecOpenCompleteProfile === 'function') {
-           setTimeout(() => window.ditecOpenCompleteProfile({ nome, telefone: tel }), 900);
+           const msg = encodeURIComponent(
+             `Olá! Gostaria de confirmar meu agendamento:\n\nNome: ${nome}\nAparelho: ${ap}\nEndereço: ${end}, ${bairro}\nData: ${dateStr}\nProtocolo: ${agendamento.protocolo}\nTelefone: ${tel}`
+           );
+           setTimeout(() => window.open(`https://wa.me/${CONFIG.whatsappNumber}?text=${msg}`, '_blank'), 1200);
+
+           /* logo após o agendamento, convida a pessoa a completar o cadastro */
+           if (!getCurrentUser() && typeof window.ditecOpenCompleteProfile === 'function') {
+             setTimeout(() => window.ditecOpenCompleteProfile({ nome, telefone: tel }), 900);
+           }
+         } catch (err) {
+           alert(err.message || 'Não foi possível concluir o agendamento. Tente novamente.');
+         } finally {
+           if (submitBtn) submitBtn.disabled = false;
          }
        });
      }
@@ -688,48 +671,70 @@
      if (!btn) return;
      btn.addEventListener('click', search);
      inp.addEventListener('keypress', e => e.key === 'Enter' && search());
-   
-     function search() {
+
+     /* status da OS (backend) -> rótulo/classe visual (mesmo estilo de badge que já existia) */
+     const STATUS_VISUAL = {
+       AGENDADO:       { label: 'Agendado 🗓️',        badge: 'os-badge--aguardando' },
+       EM_ATENDIMENTO: { label: 'Em Atendimento 🔧',   badge: 'os-badge--reparo' },
+       CONCLUIDO:      { label: 'Concluído ✅',        badge: 'os-badge--concluido' },
+       CANCELADO:      { label: 'Cancelado ❌',        badge: 'os-badge--aguardando' },
+     };
+
+     async function search() {
        const val = (inp.value || '').trim().toUpperCase();
        if (!val) { res.style.display = 'none'; return; }
-       const os = OS_DATA[val];
-       if (!os) {
+
+       res.style.display = 'block';
+       res.innerHTML = `<div style="text-align:center;padding:20px;color:#6b7280;">Buscando protocolo...</div>`;
+
+       let os;
+       try {
+         os = await DitecAPI.rastrear(val);
+       } catch (err) {
+         const naoEncontrado = err.status === 404;
          res.innerHTML = `<div style="text-align:center;padding:20px;">
-           <p style="font-size:1.5rem;margin-bottom:12px;">🔍</p>
-           <p style="font-weight:700;margin-bottom:8px;">OS não encontrada</p>
-           <p style="font-size:.88rem;color:#6b7280;">Verifique o número e tente novamente.<br>O número é enviado por WhatsApp no agendamento.</p>
+           <p style="font-size:1.5rem;margin-bottom:12px;">${naoEncontrado ? '🔍' : '⚠️'}</p>
+           <p style="font-weight:700;margin-bottom:8px;">${naoEncontrado ? 'OS não encontrada' : 'Não foi possível buscar agora'}</p>
+           <p style="font-size:.88rem;color:#6b7280;">${escHtml(err.message || 'Verifique o número e tente novamente.')}</p>
          </div>`;
-         res.style.display = 'block';
          return;
        }
-       const badgeClass = {
-         aguardando: 'os-badge--aguardando', diagnostico: 'os-badge--diagnostico',
-         reparo: 'os-badge--reparo', concluido: 'os-badge--concluido',
-       }[os.status] || 'os-badge--aguardando';
-   
-       const stepsHtml = os.steps.map((s, i) => {
-         const cls = 'os-step' + (s.current ? ' os-step--current' : s.done ? ' os-step--done' : ' os-step os-step--disabled');
-         const icon = s.done && !s.current ? '✓' : String(i + 1);
+
+       const visual = STATUS_VISUAL[os.status] || STATUS_VISUAL.AGENDADO;
+       const timeline = os.timeline || [];
+
+       const stepsHtml = timeline.map((t, i) => {
+         const isUltimo = i === timeline.length - 1;
+         const cls = 'os-step' + (isUltimo && os.status !== 'CONCLUIDO' ? ' os-step--current' : ' os-step--done');
+         const icon = isUltimo && os.status !== 'CONCLUIDO' ? String(i + 1) : '✓';
+         const quando = t.dataHora ? new Date(t.dataHora).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '';
          return `<div class="${cls}">
            <div class="os-step__dot">${icon}</div>
            <div class="os-step__info">
-             <div class="os-step__label">${escHtml(s.label)}</div>
-             <div class="os-step__detail">${escHtml(s.detail)}</div>
+             <div class="os-step__label">${escHtml(formatarStatusOS(t.statusNovo))}</div>
+             <div class="os-step__detail">${escHtml(t.observacao || '')} ${quando ? '— ' + quando : ''}</div>
            </div>
          </div>`;
        }).join('');
-   
+
        res.innerHTML = `<div class="os-status">
          <div class="os-header">
            <div>
-             <div class="os-number">${escHtml(os.numero)}</div>
-             <div style="font-size:.82rem;color:#6b7280;margin-top:2px;">${escHtml(os.cliente)} · ${escHtml(os.aparelho)}</div>
+             <div class="os-number">${escHtml(os.protocolo)}</div>
+             <div style="font-size:.82rem;color:#6b7280;margin-top:2px;">${escHtml(os.clienteNome || '')} · ${escHtml(os.tipoAparelho || '')}</div>
            </div>
-           <span class="os-badge ${badgeClass}">${os.statusLabel}</span>
+           <span class="os-badge ${visual.badge}">${visual.label}</span>
          </div>
-         <div class="os-timeline">${stepsHtml}</div>
+         <div class="os-timeline">${stepsHtml || '<p style="color:#6b7280;font-size:.85rem;">Sem histórico ainda.</p>'}</div>
        </div>`;
-       res.style.display = 'block';
+     }
+
+     function formatarStatusOS(status) {
+       const map = {
+         AGENDADO: 'Agendamento recebido', EM_ATENDIMENTO: 'Técnico em atendimento',
+         CONCLUIDO: 'Serviço concluído', CANCELADO: 'Cancelado',
+       };
+       return map[status] || status;
      }
    })();
    
@@ -820,9 +825,11 @@
        } catch (err) {
          removeTyping();
          console.error('[DITEC Chatbot] Erro na API (verifique se o Spring Boot está rodando):', err.message);
-         
-         const msgErro = '😕 Não consegui me conectar à IA agora. Verifique se o servidor Java está rodando na porta 8080!';
-   
+
+         const msgErro = (err && err.message)
+           ? `😕 ${err.message}`
+           : '😕 Não consegui me conectar à IA agora. Verifique se o servidor Java está rodando na porta 8080!';
+
          addBotMsg(msgErro);
          showQR(['Tentar novamente', 'Chamar no WhatsApp']);
    

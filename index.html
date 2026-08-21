@@ -377,7 +377,9 @@
               <option>Geladeira</option><option>Máquina de Lavar</option><option>Fogão</option><option>Micro-ondas</option><option>Ar Condicionado</option><option>Outro</option>
             </select>
           </div>
-          <div class="form-group"><label class="form-label" for="sEndereco">Bairro / Endereço *</label><input type="text" id="sEndereco" class="input" placeholder="Ex: Vila Mariana, SP" required /></div>
+          <div class="form-group"><label class="form-label" for="sBairro">Bairro *</label><input type="text" id="sBairro" class="input" placeholder="Ex: Vila Mariana" required /></div>
+          <div class="form-group"><label class="form-label" for="sEndereco">Endereço completo *</label><input type="text" id="sEndereco" class="input" placeholder="Rua, número, complemento" required /></div>
+          <div class="form-group"><label class="form-label" for="sDefeito">Descreva o problema (opcional)</label><input type="text" id="sDefeito" class="input" placeholder="Ex: não está gelando" /></div>
           <div class="schedule-selected" id="scheduleSelected" style="display:none;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
             <span id="scheduleSelectedText"></span>
@@ -409,7 +411,7 @@
     </div>
     <div class="tracking__wrapper">
       <div class="tracking__search">
-        <input type="text" id="osInput" class="input tracking__input" placeholder="Ex: OS-2025-1234" maxlength="20" aria-label="Número da ordem de serviço" />
+        <input type="text" id="osInput" class="input tracking__input" placeholder="Ex: DITEC-2026-000001" maxlength="20" aria-label="Número da ordem de serviço" />
         <button class="btn btn--primary" id="osSearch">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           Rastrear
@@ -417,7 +419,7 @@
       </div>
       <div class="tracking__result" id="trackingResult" style="display:none;" aria-live="polite"></div>
       <div class="tracking__demo">
-        <p class="tracking__demo-hint">💡 Experimente com os números: <button class="tracking__demo-btn" onclick="document.getElementById('osInput').value='OS-2025-1001';document.getElementById('osSearch').click()">OS-2025-1001</button> · <button class="tracking__demo-btn" onclick="document.getElementById('osInput').value='OS-2025-1002';document.getElementById('osSearch').click()">OS-2025-1002</button> · <button class="tracking__demo-btn" onclick="document.getElementById('osInput').value='OS-2025-1003';document.getElementById('osSearch').click()">OS-2025-1003</button></p>
+        <p class="tracking__demo-hint">💡 O protocolo é gerado no formato <strong>DITEC-AAAA-NNNNNN</strong> e aparece na tela de confirmação do seu agendamento.</p>
       </div>
     </div>
   </div>
@@ -688,6 +690,7 @@
   </div>
 </div>
 
+<script src="dashboard-shared.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

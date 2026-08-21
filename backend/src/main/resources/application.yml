@@ -1,0 +1,76 @@
+# ============================================================
+# DITEC Assistencia Tecnica — configuracao do backend
+# NUNCA coloque valores reais aqui. Tudo vem de variaveis de
+# ambiente (veja o .env.example na raiz do backend).
+# ============================================================
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ditec-assistencia-backend
+
+  profiles:
+    active: ${DITEC_PROFILE:dev}
+
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/ditec_assistencia?useSSL=false&serverTimezone=America/Sao_Paulo&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME:ditec_user}
+    password: ${DB_PASSWORD:changeme}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      # O schema e' controlado 100% pelo Flyway (V1__schema.sql) — 'none'
+      # em vez de 'validate' de proposito: o Hibernate as vezes mapeia tipos
+      # (ex: boolean -> BIT vs TINYINT(1)) de um jeito que diverge de um DDL
+      # escrito a mao mesmo quando os dados estao corretos, gerando falso
+      # erro no startup. O Flyway ja e' a fonte da verdade do schema; se uma
+      # entidade JPA realmente estiver fora de sincronia com uma tabela, isso
+      # aparece na hora (400/500) ao usar o endpoint correspondente, o que e'
+      # facil de notar durante os testes manuais.
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: America/Sao_Paulo
+    show-sql: ${DITEC_SHOW_SQL:false}
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  jackson:
+    default-property-inclusion: non_null
+    time-zone: America/Sao_Paulo
+
+# ------------------------------------------------------------
+# Configuracoes proprias da aplicacao DITEC
+# ------------------------------------------------------------
+ditec:
+  seed:
+    # Popula dados de desenvolvimento (admin/cliente/tecnico/servico/
+    # agendamento/OS de teste) no primeiro start. So roda se o banco
+    # ainda nao tiver nenhum ADMINISTRADOR cadastrado.
+    enabled: ${DITEC_SEED_ENABLED:true}
+  jwt:
+    secret: ${JWT_SECRET:}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:120}
+  cors:
+    allowed-origins: ${DITEC_ALLOWED_ORIGINS:http://localhost:5500,http://127.0.0.1:5500,http://localhost:5501,http://127.0.0.1:5501}
+  huggingface:
+    api-key: ${HF_API_KEY:}
+    base-url: ${HF_BASE_URL:https://router.huggingface.co/v1/chat/completions}
+    default-model: ${HF_MODEL:Qwen/Qwen2.5-72B-Instruct}
+  regras:
+    horario-inicio: 07:00
+    horario-fim: 20:00
+    garantia-dias: 90
+    desconto-pagamento-vista: 0.05
+
+logging:
+  level:
+    com.ditec.assistencia: ${DITEC_LOG_LEVEL:INFO}

@@ -98,6 +98,26 @@
               <label class="form-label" for="dTel">Telefone / WhatsApp</label>
               <input type="tel" id="dTel" class="input" disabled />
             </div>
+            <div class="form-group">
+              <label class="form-label" for="dEndereco">Endereço</label>
+              <input type="text" id="dEndereco" class="input" disabled placeholder="Rua, número, complemento" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="dBairro">Bairro</label>
+              <input type="text" id="dBairro" class="input" disabled />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="dCidade">Cidade</label>
+              <input type="text" id="dCidade" class="input" disabled />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="dUf">UF</label>
+              <input type="text" id="dUf" class="input" disabled maxlength="2" style="text-transform:uppercase;" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="dCep">CEP</label>
+              <input type="text" id="dCep" class="input" disabled maxlength="9" />
+            </div>
           </div>
           <button type="submit" class="btn btn--primary" id="saveDataBtn" hidden>Salvar alterações</button>
         </form>
@@ -108,10 +128,9 @@
         <div class="dash-card">
           <div class="dash-card__title">Rastrear Ordem de Serviço</div>
           <div class="modal-form">
-            <input type="text" id="osInputConta" class="input" placeholder="Ex: OS-2025-1001" maxlength="20" />
+            <input type="text" id="osInputConta" class="input" placeholder="Ex: DITEC-2026-000001" maxlength="20" />
             <button class="btn btn--primary btn--full" id="osSearchConta" type="button">Rastrear</button>
             <div id="osResultConta"></div>
-            <p style="font-size:.78rem;color:var(--text-light);">💡 Teste com: OS-2025-1001, OS-2025-1002 ou OS-2025-1003</p>
           </div>
         </div>
 
@@ -126,7 +145,6 @@
   </div>
 </main>
 
-<script src="dashboard-shared.js"></script>
 <script>
 (function () {
   'use strict';
@@ -146,57 +164,185 @@
       input.value = v;
     });
   }
-  function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function maskCep(input) {
+    if (!input) return;
+    input.addEventListener('input', () => {
+      let v = onlyDigits(input.value).slice(0, 8);
+      if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5);
+      input.value = v;
+    });
+  }
+  function escHtml(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function getInitials(nome) {
     const parts = String(nome || '').trim().split(/\s+/).filter(Boolean);
     if (!parts.length) return '?';
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
-  function formatSince(iso) {
-    const d = new Date(iso);
-    if (isNaN(d)) return '—';
-    let s = d.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }).replace('.', '');
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  }
 
-  function render() {
-    const user = DitecDB.getCurrentUser();
-    if (!user) {
+  /* ---- Render principal ---- */
+  async function render() {
+    if (!DitecAPI.isLoggedIn()) {
       guestView.hidden = false; dashView.hidden = true; logoutBtn.hidden = true;
       return;
     }
+
+    let perfil;
+    try {
+      perfil = await DitecAPI.meuPerfil();
+    } catch (err) {
+      /* token invalido/expirado (DitecAPI ja limpa a sessao em 401) ou backend fora do ar */
+      guestView.hidden = false; dashView.hidden = true; logoutBtn.hidden = true;
+      if (err.status !== 401) alert(err.message || 'Não foi possível carregar sua conta agora.');
+      return;
+    }
+
     guestView.hidden = true; dashView.hidden = false; logoutBtn.hidden = false;
-    $('#welcomeTitle').textContent = `Olá, ${user.nome.split(' ')[0]}! 👋`;
-    $('#profileAvatar').textContent = getInitials(user.nome);
-    $('#profileName').textContent = user.nome;
-    $('#profileEmailDisplay').textContent = user.email;
-    $('#profileSince').textContent = `Cliente desde ${formatSince(user.criadoEm)}`;
-    $('#dNome').value = user.nome;
-    $('#dEmail').value = user.email;
-    $('#dTel').value = user.telefone;
-    renderAgendamentos(user.email);
+    $('#welcomeTitle').textContent = `Olá, ${perfil.nome.split(' ')[0]}! 👋`;
+    $('#profileAvatar').textContent = getInitials(perfil.nome);
+    $('#profileName').textContent = perfil.nome;
+    $('#profileEmailDisplay').textContent = perfil.email;
+    $('#profileSince').textContent = `Cliente desde ${perfil.clienteDesde || '—'}`;
+    $('#dNome').value = perfil.nome || '';
+    $('#dEmail').value = perfil.email || '';
+    $('#dTel').value = perfil.telefone || '';
+    $('#dEndereco').value = perfil.endereco || '';
+    $('#dBairro').value = perfil.bairro || '';
+    $('#dCidade').value = perfil.cidade || '';
+    $('#dUf').value = perfil.uf || '';
+    $('#dCep').value = perfil.cep || '';
+
+    renderAgendamentos();
   }
 
-  function renderAgendamentos(email) {
-    const list = DitecDB.getAgendamentos().filter(a => a.userEmail === email).reverse();
-    $('#agendamentosCount').textContent = list.length;
+  const STATUS_BADGE = {
+    PENDENTE: 'dash-badge--pendente', AGENDADO: 'dash-badge--diagnostico',
+    EM_ATENDIMENTO: 'dash-badge--diagnostico', CONCLUIDO: 'dash-badge--concluido', CANCELADO: 'dash-badge--cancelado',
+  };
+  const STATUS_LABEL = {
+    PENDENTE: 'Aguardando confirmação', AGENDADO: 'Confirmado', EM_ATENDIMENTO: 'Em atendimento',
+    CONCLUIDO: 'Concluído', CANCELADO: 'Cancelado',
+  };
+
+  async function renderAgendamentos() {
     const el = $('#agendamentosList');
+    el.innerHTML = `<div class="dash-empty">Carregando...</div>`;
+
+    let list;
+    try {
+      list = await DitecAPI.meusAgendamentos();
+    } catch (err) {
+      el.innerHTML = `<div class="dash-empty">${escHtml(err.message || 'Não foi possível carregar seus agendamentos.')}</div>`;
+      return;
+    }
+
+    $('#agendamentosCount').textContent = list.length;
     if (!list.length) {
       el.innerHTML = `<div class="dash-empty">Você ainda não tem agendamentos. <a href="index.html#agendamento" style="color:var(--blue);font-weight:600;">Agendar uma visita →</a></div>`;
       return;
     }
-    const badgeMap = { pendente: 'dash-badge--pendente', confirmado: 'dash-badge--diagnostico', concluido: 'dash-badge--concluido', cancelado: 'dash-badge--cancelado' };
-    const labelMap = { pendente: 'Aguardando confirmação', confirmado: 'Confirmado', concluido: 'Concluído', cancelado: 'Cancelado' };
+
     el.innerHTML = list.map(a => `
-      <div class="dash-row">
+      <div class="dash-row" data-id="${a.id}" data-protocolo="${escHtml(a.protocolo || '')}" data-status="${a.status}">
         <div>
-          <div class="dash-row__main">${escHtml(a.aparelho)} — ${escHtml(a.endereco)}</div>
-          <div class="dash-row__sub">📅 ${escHtml(a.dataStr)}</div>
+          <div class="dash-row__main">${escHtml(a.tipoAparelho)} — ${escHtml(a.endereco)}</div>
+          <div class="dash-row__sub">📅 ${formatarDataHora(a.dataHora)} ${a.protocolo ? '· Protocolo: ' + escHtml(a.protocolo) : ''}</div>
+          <div class="dash-row__actions" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;"></div>
         </div>
-        <span class="dash-badge ${badgeMap[a.status] || 'dash-badge--pendente'}">${labelMap[a.status] || 'Aguardando confirmação'}</span>
+        <span class="dash-badge ${STATUS_BADGE[a.status] || 'dash-badge--pendente'}">${STATUS_LABEL[a.status] || a.status}</span>
       </div>
     `).join('');
+
+    /* acoes por linha: cancelar (se elegivel) / avaliar (se concluido) */
+    list.forEach(a => {
+      const row = el.querySelector(`.dash-row[data-id="${a.id}"] .dash-row__actions`);
+      if (!row) return;
+
+      if (a.elegivelParaAlteracao) {
+        const btnCancelar = document.createElement('button');
+        btnCancelar.className = 'btn btn--outline btn--sm';
+        btnCancelar.type = 'button';
+        btnCancelar.textContent = 'Cancelar agendamento';
+        btnCancelar.addEventListener('click', () => cancelarAgendamento(a.id, btnCancelar));
+        row.appendChild(btnCancelar);
+      }
+
+      if (a.status === 'CONCLUIDO') {
+        const btnAvaliar = document.createElement('button');
+        btnAvaliar.className = 'btn btn--outline btn--sm';
+        btnAvaliar.type = 'button';
+        btnAvaliar.textContent = '⭐ Avaliar atendimento';
+        btnAvaliar.addEventListener('click', () => abrirAvaliacao(a, btnAvaliar));
+        row.appendChild(btnAvaliar);
+      }
+    });
+  }
+
+  function formatarDataHora(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d)) return iso;
+    return d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+  }
+
+  async function cancelarAgendamento(id, btn) {
+    if (!confirm('Tem certeza que deseja cancelar este agendamento?')) return;
+    btn.disabled = true;
+    try {
+      await DitecAPI.cancelarAgendamento(id);
+      renderAgendamentos();
+    } catch (err) {
+      alert(err.message || 'Não foi possível cancelar. Tente novamente.');
+      btn.disabled = false;
+    }
+  }
+
+  async function abrirAvaliacao(agendamento, btn) {
+    const container = btn.closest('.dash-row__actions');
+    btn.remove();
+
+    /* precisamos do ID da OS (nao vem no agendamento) — busca pelo protocolo publico */
+    let os;
+    try {
+      os = await DitecAPI.rastrear(agendamento.protocolo);
+    } catch (err) {
+      alert(err.message || 'Não foi possível abrir a avaliação agora.');
+      return;
+    }
+
+    const form = document.createElement('div');
+    form.style.cssText = 'margin-top:6px;padding:12px;border:1px solid var(--border);border-radius:10px;width:100%;';
+    form.innerHTML = `
+      <div style="display:flex;gap:4px;margin-bottom:8px;" id="starsPick-${os.id}"></div>
+      <textarea class="input" rows="2" placeholder="Comentário (opcional)" id="comentario-${os.id}" style="margin-bottom:8px;"></textarea>
+      <button class="btn btn--primary btn--sm" type="button" id="enviarAvaliacao-${os.id}">Enviar avaliação</button>
+    `;
+    container.appendChild(form);
+
+    let notaEscolhida = 0;
+    const starsWrap = form.querySelector(`#starsPick-${os.id}`);
+    for (let i = 1; i <= 5; i++) {
+      const s = document.createElement('button');
+      s.type = 'button';
+      s.textContent = '☆';
+      s.style.cssText = 'font-size:1.3rem;background:none;border:none;cursor:pointer;color:#f59e0b;';
+      s.addEventListener('click', () => {
+        notaEscolhida = i;
+        [...starsWrap.children].forEach((el, idx) => { el.textContent = idx < i ? '★' : '☆'; });
+      });
+      starsWrap.appendChild(s);
+    }
+
+    form.querySelector(`#enviarAvaliacao-${os.id}`).addEventListener('click', async () => {
+      if (!notaEscolhida) { alert('Escolha uma nota de 1 a 5 estrelas.'); return; }
+      const comentario = form.querySelector(`#comentario-${os.id}`).value.trim();
+      try {
+        await DitecAPI.avaliarOS(os.id, { nota: notaEscolhida, comentario: comentario || null });
+        form.outerHTML = `<p style="font-size:.85rem;color:var(--text-light);">✅ Avaliação enviada. Obrigado!</p>`;
+      } catch (err) {
+        alert(err.message || 'Não foi possível enviar a avaliação.');
+      }
+    });
   }
 
   /* ---- Auth (login/cadastro quando deslogado) ---- */
@@ -218,17 +364,23 @@
     form.insertBefore(el, form.firstChild);
   }
 
-  $('#gLoginForm').addEventListener('submit', e => {
+  $('#gLoginForm').addEventListener('submit', async e => {
     e.preventDefault();
     const email = $('#gLoginEmail').value.trim().toLowerCase();
     const senha = $('#gLoginSenha').value;
-    const user = DitecDB.findUserByEmail(email);
-    if (!user || user.senha !== senha) return formError(e.target, 'E-mail ou senha incorretos.');
-    DitecDB.setSession(email);
-    render();
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    try {
+      await DitecAPI.login(email, senha);
+      await render();
+    } catch (err) {
+      formError(e.target, err.message || 'E-mail ou senha incorretos.');
+    } finally {
+      btn.disabled = false;
+    }
   });
 
-  $('#gCadastroForm').addEventListener('submit', e => {
+  $('#gCadastroForm').addEventListener('submit', async e => {
     e.preventDefault();
     const nome = $('#gCadNome').value.trim();
     const email = $('#gCadEmail').value.trim().toLowerCase();
@@ -238,52 +390,68 @@
     if (!nome || !email || !tel || !senha) return formError(e.target, 'Preencha todos os campos.');
     if (senha.length < 6) return formError(e.target, 'A senha deve ter ao menos 6 caracteres.');
     if (senha !== senha2) return formError(e.target, 'As senhas não coincidem.');
-    if (DitecDB.findUserByEmail(email)) return formError(e.target, 'Já existe uma conta com este e-mail.');
-    const users = DitecDB.getUsers();
-    users.push({ id: 'u' + Date.now(), nome, email, telefone: tel, senha, criadoEm: new Date().toISOString() });
-    DitecDB.saveUsers(users);
-    DitecDB.setSession(email);
-    render();
+
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    try {
+      await DitecAPI.registrar({ nome, email, telefone: tel, senha });
+      await render();
+    } catch (err) {
+      formError(e.target, err.message || 'Não foi possível criar sua conta.');
+    } finally {
+      btn.disabled = false;
+    }
   });
 
   /* ---- Editar dados ---- */
+  maskTel($('#dTel'));
+  maskCep($('#dCep'));
   $('#editDataBtn').addEventListener('click', () => {
-    ['#dNome', '#dEmail', '#dTel'].forEach(id => $(id).disabled = false);
-    $('#dEmail').disabled = true; /* e-mail não é editável (é a chave da conta) */
+    ['#dNome', '#dTel', '#dEndereco', '#dBairro', '#dCidade', '#dUf', '#dCep'].forEach(id => $(id).disabled = false);
     $('#saveDataBtn').hidden = false;
   });
-  $('#dataForm').addEventListener('submit', e => {
+  $('#dataForm').addEventListener('submit', async e => {
     e.preventDefault();
-    const user = DitecDB.getCurrentUser();
-    if (!user) return;
-    const users = DitecDB.getUsers();
-    const idx = users.findIndex(u => u.email === user.email);
-    if (idx > -1) {
-      users[idx].nome = $('#dNome').value.trim() || users[idx].nome;
-      users[idx].telefone = $('#dTel').value.trim() || users[idx].telefone;
-      DitecDB.saveUsers(users);
+    const btn = $('#saveDataBtn');
+    btn.disabled = true;
+    try {
+      await DitecAPI.atualizarPerfil({
+        nome: $('#dNome').value.trim(),
+        telefone: $('#dTel').value.trim(),
+        endereco: $('#dEndereco').value.trim(),
+        bairro: $('#dBairro').value.trim(),
+        cidade: $('#dCidade').value.trim(),
+        uf: $('#dUf').value.trim().toUpperCase(),
+        cep: $('#dCep').value.trim(),
+      });
+      ['#dNome', '#dTel', '#dEndereco', '#dBairro', '#dCidade', '#dUf', '#dCep'].forEach(id => $(id).disabled = true);
+      btn.hidden = true;
+      await render();
+    } catch (err) {
+      alert(err.message || 'Não foi possível salvar. Tente novamente.');
+    } finally {
+      btn.disabled = false;
     }
-    ['#dNome', '#dTel'].forEach(id => $(id).disabled = true);
-    $('#saveDataBtn').hidden = true;
-    render();
   });
 
   /* ---- Rastreamento de OS ---- */
   $('#osInputConta').addEventListener('keypress', e => { if (e.key === 'Enter') $('#osSearchConta').click(); });
-  $('#osSearchConta').addEventListener('click', () => {
+  $('#osSearchConta').addEventListener('click', async () => {
     const val = ($('#osInputConta').value || '').trim().toUpperCase();
     const res = $('#osResultConta');
-    const os = DitecDB.getAllOS()[val];
-    if (!os) {
-      res.innerHTML = `<p style="font-size:.85rem;color:var(--text-light);padding:10px 0;">OS não encontrada. Verifique o número recebido por WhatsApp.</p>`;
-      return;
+    if (!val) return;
+    res.innerHTML = `<p style="font-size:.85rem;color:var(--text-light);padding:10px 0;">Buscando...</p>`;
+    try {
+      const os = await DitecAPI.rastrear(val);
+      res.innerHTML = `<div class="dash-row"><div><div class="dash-row__main">${escHtml(os.protocolo)}</div><div class="dash-row__sub">${escHtml(os.tipoAparelho || '')}</div></div><span class="dash-badge ${STATUS_BADGE[os.status] || 'dash-badge--pendente'}">${STATUS_LABEL[os.status] || os.status}</span></div>`;
+    } catch (err) {
+      res.innerHTML = `<p style="font-size:.85rem;color:var(--text-light);padding:10px 0;">${escHtml(err.message || 'OS não encontrada.')}</p>`;
     }
-    res.innerHTML = `<div class="dash-row"><div><div class="dash-row__main">${escHtml(os.numero)}</div><div class="dash-row__sub">${escHtml(os.aparelho)}</div></div><span class="dash-badge dash-badge--${os.status}">${escHtml(os.statusLabel)}</span></div>`;
   });
 
   /* ---- Logout ---- */
   logoutBtn.addEventListener('click', () => {
-    DitecDB.clearSession();
+    DitecAPI.logout();
     render();
   });
 

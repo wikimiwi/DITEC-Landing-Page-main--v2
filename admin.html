@@ -45,8 +45,8 @@
           <button type="submit" class="btn btn--primary btn--full">Entrar</button>
         </form>
         <p style="font-size:.75rem;color:var(--text-muted);margin-top:16px;line-height:1.6;">
-          🔒 Protótipo sem backend: credencial fixa <strong>admin@ditec.com.br / ditec2025</strong>.
-          Será substituída por autenticação real quando o banco de dados for integrado.
+          🔒 Ambiente de desenvolvimento: <strong>admin@ditec.com.br / admin123</strong> (criado automaticamente
+          pelo <code>DataSeeder</code> do backend na primeira execução — ver README).
         </p>
       </div>
     </section>
@@ -55,20 +55,24 @@
     <section id="dashView" hidden>
       <div class="dash-welcome">
         <h1>Painel Administrativo</h1>
-        <p>Clientes, agendamentos e Ordens de Serviço da DITEC.</p>
+        <p>Clientes, agendamentos, Ordens de Serviço, técnicos e relatórios da DITEC.</p>
       </div>
 
       <div class="dash-stats">
         <div class="dash-stat"><div class="dash-stat__value" id="statClientes">0</div><div class="dash-stat__label">Clientes cadastrados</div></div>
         <div class="dash-stat"><div class="dash-stat__value" id="statAgendamentos">0</div><div class="dash-stat__label">Agendamentos</div></div>
         <div class="dash-stat"><div class="dash-stat__value" id="statOSAbertas">0</div><div class="dash-stat__label">OS em aberto</div></div>
-        <div class="dash-stat"><div class="dash-stat__value" id="statOSTotal">0</div><div class="dash-stat__label">OS no total</div></div>
+        <div class="dash-stat"><div class="dash-stat__value" id="statOSConcluidas">0</div><div class="dash-stat__label">OS concluídas</div></div>
+        <div class="dash-stat"><div class="dash-stat__value" id="statAtendimentosMes">0</div><div class="dash-stat__label">Atendimentos no mês</div></div>
       </div>
 
       <div class="dash-tabs">
         <button class="dash-tab active" data-panel="clientesPanel" type="button">Clientes</button>
         <button class="dash-tab" data-panel="agendamentosPanel" type="button">Agendamentos</button>
         <button class="dash-tab" data-panel="osPanel" type="button">Ordens de Serviço</button>
+        <button class="dash-tab" data-panel="tecnicosPanel" type="button">Técnicos</button>
+        <button class="dash-tab" data-panel="servicosPanel" type="button">Serviços</button>
+        <button class="dash-tab" data-panel="relatoriosPanel" type="button">Relatórios</button>
       </div>
 
       <!-- CLIENTES -->
@@ -77,7 +81,7 @@
           <div class="dash-card__title">Clientes cadastrados</div>
           <div class="dash-table-wrap">
             <table class="dash-table">
-              <thead><tr><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Cadastro</th><th></th></tr></thead>
+              <thead><tr><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Bairro</th><th>Cliente desde</th></tr></thead>
               <tbody id="clientesTbody"></tbody>
             </table>
           </div>
@@ -91,7 +95,7 @@
           <div class="dash-card__title">Agendamentos recebidos</div>
           <div class="dash-table-wrap">
             <table class="dash-table">
-              <thead><tr><th>Cliente</th><th>Aparelho</th><th>Endereço</th><th>Data</th><th>Conta vinculada</th><th>Status</th><th></th></tr></thead>
+              <thead><tr><th>Protocolo</th><th>Cliente</th><th>Aparelho</th><th>Bairro</th><th>Data</th><th>Técnico</th><th>Status</th><th>Ação</th></tr></thead>
               <tbody id="agendamentosTbody"></tbody>
             </table>
           </div>
@@ -102,17 +106,90 @@
       <!-- ORDENS DE SERVIÇO -->
       <div class="dash-panel" id="osPanel">
         <div class="dash-card">
-          <div class="dash-card__title">Ordens de Serviço (dados simulados)</div>
+          <div class="dash-card__title">Ordens de Serviço</div>
           <div class="dash-table-wrap">
             <table class="dash-table">
-              <thead><tr><th>Número</th><th>Cliente</th><th>Aparelho</th><th>Bairro</th><th>Status</th></tr></thead>
+              <thead><tr><th>Protocolo</th><th>Cliente</th><th>Técnico</th><th>Aparelho</th><th>Status</th><th>Valor</th><th>Ação</th></tr></thead>
               <tbody id="osTbody"></tbody>
             </table>
           </div>
-          <p style="font-size:.78rem;color:var(--text-light);margin-top:12px;">
-            Os dados das OS ainda são simulados (<code>OS-2025-1001/1002/1003</code>). Quando o banco de dados for integrado,
-            esta tabela passará a refletir as Ordens de Serviço reais cadastradas no sistema.
+          <div id="osEmpty" class="dash-empty" hidden>Nenhuma Ordem de Serviço ainda.</div>
+        </div>
+      </div>
+
+      <!-- TÉCNICOS -->
+      <div class="dash-panel" id="tecnicosPanel">
+        <div class="dash-card">
+          <div class="dash-card__title" style="display:flex;justify-content:space-between;align-items:center;">
+            <span>Técnicos</span>
+            <button class="btn btn--primary btn--sm" id="novoTecnicoBtn" type="button">+ Novo técnico</button>
+          </div>
+          <form id="tecnicoForm" class="modal-form" style="margin:14px 0;" hidden>
+            <div class="profile-form__grid">
+              <div class="form-group"><label class="form-label" for="tecNome">Nome</label><input type="text" id="tecNome" class="input" required /></div>
+              <div class="form-group"><label class="form-label" for="tecEmail">E-mail</label><input type="email" id="tecEmail" class="input" required /></div>
+              <div class="form-group"><label class="form-label" for="tecTelefone">Telefone</label><input type="tel" id="tecTelefone" class="input" /></div>
+              <div class="form-group"><label class="form-label" for="tecEspecialidade">Especialidade</label><input type="text" id="tecEspecialidade" class="input" /></div>
+              <div class="form-group"><label class="form-label" for="tecCertificacao">Certificação</label><input type="text" id="tecCertificacao" class="input" /></div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button type="submit" class="btn btn--primary btn--sm">Salvar técnico</button>
+              <button type="button" class="btn btn--outline btn--sm" id="cancelarTecnicoBtn">Cancelar</button>
+            </div>
+            <p id="tecnicoFormMsg" style="font-size:.8rem;margin-top:8px;"></p>
+          </form>
+          <div class="dash-table-wrap">
+            <table class="dash-table">
+              <thead><tr><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Especialidade</th><th>Status</th><th>Ação</th></tr></thead>
+              <tbody id="tecnicosTbody"></tbody>
+            </table>
+          </div>
+          <div id="tecnicosEmpty" class="dash-empty" hidden>Nenhum técnico cadastrado ainda.</div>
+        </div>
+      </div>
+
+      <!-- SERVIÇOS -->
+      <div class="dash-panel" id="servicosPanel">
+        <div class="dash-card">
+          <div class="dash-card__title" style="display:flex;justify-content:space-between;align-items:center;">
+            <span>Catálogo de serviços</span>
+            <button class="btn btn--primary btn--sm" id="novoServicoBtn" type="button">+ Novo serviço</button>
+          </div>
+          <form id="servicoForm" class="modal-form" style="margin:14px 0;" hidden>
+            <div class="profile-form__grid">
+              <div class="form-group"><label class="form-label" for="servNome">Nome</label><input type="text" id="servNome" class="input" required /></div>
+              <div class="form-group"><label class="form-label" for="servValor">Valor base (R$)</label><input type="number" step="0.01" min="0" id="servValor" class="input" required /></div>
+            </div>
+            <div class="form-group"><label class="form-label" for="servDescricao">Descrição</label><input type="text" id="servDescricao" class="input" /></div>
+            <div style="display:flex;gap:8px;">
+              <button type="submit" class="btn btn--primary btn--sm">Salvar serviço</button>
+              <button type="button" class="btn btn--outline btn--sm" id="cancelarServicoBtn">Cancelar</button>
+            </div>
+            <p id="servicoFormMsg" style="font-size:.8rem;margin-top:8px;"></p>
+          </form>
+          <div class="dash-table-wrap">
+            <table class="dash-table">
+              <thead><tr><th>Nome</th><th>Descrição</th><th>Valor base</th><th>Status</th><th>Ação</th></tr></thead>
+              <tbody id="servicosTbody"></tbody>
+            </table>
+          </div>
+          <div id="servicosEmpty" class="dash-empty" hidden>Nenhum serviço cadastrado ainda.</div>
+        </div>
+      </div>
+
+      <!-- RELATÓRIOS -->
+      <div class="dash-panel" id="relatoriosPanel">
+        <div class="dash-card">
+          <div class="dash-card__title">Exportar relatórios (CSV)</div>
+          <p style="font-size:.85rem;color:var(--text-light);margin-bottom:16px;">
+            Os arquivos abrem direto no Excel/Planilhas Google. Nenhum dado sensível (senha, hash) é incluído.
           </p>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;">
+            <button class="btn btn--outline btn--sm" id="relAgendamentosBtn" type="button">📅 Agendamentos</button>
+            <button class="btn btn--outline btn--sm" id="relOSBtn" type="button">🧾 Ordens de Serviço</button>
+            <button class="btn btn--outline btn--sm" id="relAvaliacoesBtn" type="button">⭐ Avaliações</button>
+            <button class="btn btn--outline btn--sm" id="relChatbotBtn" type="button">💬 Interações do chatbot</button>
+          </div>
         </div>
       </div>
 
@@ -127,106 +204,193 @@
   'use strict';
   const $ = s => document.querySelector(s);
   const $$ = s => document.querySelectorAll(s);
-  function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function escHtml(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function fmtData(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+  }
+  function fmtMoeda(v) {
+    if (v === null || v === undefined) return '—';
+    return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
 
   const guestView = $('#guestView'), dashView = $('#dashView'), logoutBtn = $('#logoutBtn');
+  let tecnicosCache = [];
 
-  function render() {
-    const admin = DitecDB.getAdminSession();
-    if (!admin) {
+  const STATUS_AG_LABEL = { PENDENTE: 'Pendente', AGENDADO: 'Confirmado', EM_ATENDIMENTO: 'Em atendimento', CONCLUIDO: 'Concluído', CANCELADO: 'Cancelado' };
+  const STATUS_AG_BADGE = { PENDENTE: 'dash-badge--pendente', AGENDADO: 'dash-badge--diagnostico', EM_ATENDIMENTO: 'dash-badge--reparo', CONCLUIDO: 'dash-badge--concluido', CANCELADO: 'dash-badge--cancelado' };
+  const STATUS_OS_LABEL = { AGENDADO: 'Agendado', EM_ATENDIMENTO: 'Em atendimento', CONCLUIDO: 'Concluído', CANCELADO: 'Cancelado' };
+
+  /* ---- Render principal ---- */
+  async function render() {
+    if (!DitecAPI.isLoggedIn() || DitecAPI.tipoUsuario() !== 'ADMINISTRADOR') {
+      if (DitecAPI.isLoggedIn()) DitecAPI.logout(); /* logado, mas nao e' admin */
       guestView.hidden = false; dashView.hidden = true; logoutBtn.hidden = true;
       return;
     }
     guestView.hidden = true; dashView.hidden = false; logoutBtn.hidden = false;
-    renderStats();
-    renderClientes();
-    renderAgendamentos();
-    renderOS();
+
+    try {
+      tecnicosCache = await DitecAPI.admin.tecnicos();
+    } catch (err) { tecnicosCache = []; }
+
+    await Promise.all([
+      renderStats(),
+      renderClientes(),
+      renderAgendamentos(),
+      renderOS(),
+      renderTecnicos(),
+      renderServicos(),
+    ]);
   }
 
-  function renderStats() {
-    const users = DitecDB.getUsers();
-    const ags = DitecDB.getAgendamentos();
-    const os = Object.values(DitecDB.getAllOS());
-    $('#statClientes').textContent = users.length;
-    $('#statAgendamentos').textContent = ags.length;
-    $('#statOSAbertas').textContent = os.filter(o => o.status !== 'concluido' && o.status !== 'cancelado').length;
-    $('#statOSTotal').textContent = os.length;
+  async function renderStats() {
+    try {
+      const d = await DitecAPI.admin.dashboard();
+      $('#statClientes').textContent = d.totalClientes;
+      $('#statAgendamentos').textContent = d.totalAgendamentos;
+      $('#statOSAbertas').textContent = d.osAbertas;
+      $('#statOSConcluidas').textContent = d.osConcluidas;
+      $('#statAtendimentosMes').textContent = d.atendimentosNoMes;
+    } catch (err) { console.error(err); }
   }
 
-  function renderClientes() {
-    const users = DitecDB.getUsers();
+  async function renderClientes() {
     const tbody = $('#clientesTbody');
-    $('#clientesEmpty').hidden = users.length > 0;
-    tbody.parentElement.parentElement.style.display = users.length ? '' : 'none';
-    tbody.innerHTML = users.map(u => `
-      <tr>
-        <td>${escHtml(u.nome)}</td>
-        <td>${escHtml(u.email)}</td>
-        <td>${escHtml(u.telefone)}</td>
-        <td>${new Date(u.criadoEm).toLocaleDateString('pt-BR')}</td>
-        <td><button class="dash-danger-btn" data-remove-user="${escHtml(u.email)}" type="button">Remover</button></td>
-      </tr>
-    `).join('');
+    try {
+      const clientes = await DitecAPI.admin.clientes();
+      $('#clientesEmpty').hidden = clientes.length > 0;
+      tbody.innerHTML = clientes.map(c => `
+        <tr>
+          <td>${escHtml(c.nome)}</td>
+          <td>${escHtml(c.email)}</td>
+          <td>${escHtml(c.telefone)}</td>
+          <td>${escHtml(c.bairro || '—')}</td>
+          <td>${escHtml(c.clienteDesde || '—')}</td>
+        </tr>`).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="5">${escHtml(err.message)}</td></tr>`;
+    }
   }
 
-  function renderAgendamentos() {
-    const ags = DitecDB.getAgendamentos();
+  function opcoesTecnicos(tecnicoAtualNome) {
+    const semAtribuir = `<option value="">— atribuir técnico —</option>`;
+    const opcoes = tecnicosCache.map(t => `<option value="${t.id}" ${t.nome === tecnicoAtualNome ? 'selected' : ''}>${escHtml(t.nome)}</option>`).join('');
+    return semAtribuir + opcoes;
+  }
+
+  async function renderAgendamentos() {
     const tbody = $('#agendamentosTbody');
-    $('#agendamentosEmpty').hidden = ags.length > 0;
-    tbody.parentElement.parentElement.style.display = ags.length ? '' : 'none';
-    const labelMap = { pendente: 'Aguardando', confirmado: 'Confirmado', concluido: 'Concluído', cancelado: 'Cancelado' };
-    tbody.innerHTML = ags.slice().reverse().map((a, revIdx) => {
-      const idx = ags.length - 1 - revIdx;
-      const opts = Object.keys(labelMap).map(k => `<option value="${k}" ${a.status === k ? 'selected' : ''}>${labelMap[k]}</option>`).join('');
-      return `
-      <tr>
-        <td>${escHtml(a.nome)}<div style="font-size:.75rem;color:var(--text-light);">${escHtml(a.telefone)}</div></td>
-        <td>${escHtml(a.aparelho)}</td>
-        <td>${escHtml(a.endereco)}</td>
-        <td>${escHtml(a.dataStr)}</td>
-        <td>${a.userEmail ? '✅ ' + escHtml(a.userEmail) : '— convidado'}</td>
-        <td><select class="input" data-status-idx="${idx}">${opts}</select></td>
-        <td><button class="dash-danger-btn" data-remove-ag="${idx}" type="button">Remover</button></td>
-      </tr>`;
-    }).join('');
+    try {
+      const pagina = await DitecAPI.admin.agendamentos(0, 200);
+      const lista = pagina.content || [];
+      $('#agendamentosEmpty').hidden = lista.length > 0;
+      tbody.innerHTML = lista.map(a => `
+        <tr data-ag-id="${a.id}">
+          <td>${escHtml(a.protocolo || '—')}</td>
+          <td>${escHtml(a.nome)}<div style="font-size:.75rem;color:var(--text-light);">${escHtml(a.telefone)}</div></td>
+          <td>${escHtml(a.tipoAparelho)}${a.prioridadeGas ? ' 🔥' : ''}</td>
+          <td>${escHtml(a.bairro)}</td>
+          <td>${fmtData(a.dataHora)}</td>
+          <td><select class="input dash-inline-select" data-tecnico-ag="${a.id}">${opcoesTecnicos(a.tecnicoNome)}</select></td>
+          <td><span class="dash-badge ${STATUS_AG_BADGE[a.status] || 'dash-badge--pendente'}">${STATUS_AG_LABEL[a.status] || a.status}</span></td>
+          <td>${a.status === 'PENDENTE' ? `<button class="btn btn--outline btn--sm" data-confirmar-ag="${a.id}" type="button">Confirmar</button>` : ''}</td>
+        </tr>`).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="8">${escHtml(err.message)}</td></tr>`;
+    }
   }
 
-  function renderOS() {
-    const os = DitecDB.getAllOS();
+  async function renderOS() {
     const tbody = $('#osTbody');
-    tbody.innerHTML = Object.values(os).map(o => {
-      const opts = Object.keys(DitecDB.STATUS_LABELS).map(k =>
-        `<option value="${k}" ${o.status === k ? 'selected' : ''}>${DitecDB.STATUS_LABELS[k]}</option>`).join('');
-      return `
-      <tr>
-        <td>${escHtml(o.numero)}</td>
-        <td>${escHtml(o.cliente)}</td>
-        <td>${escHtml(o.aparelho)}</td>
-        <td>${escHtml(o.bairro)}</td>
-        <td><select class="input" data-os-numero="${escHtml(o.numero)}">${opts}</select></td>
-      </tr>`;
-    }).join('');
+    try {
+      const lista = await DitecAPI.admin.ordensServico();
+      $('#osEmpty').hidden = lista.length > 0;
+      tbody.innerHTML = lista.map(os => {
+        const opts = Object.keys(STATUS_OS_LABEL).map(k =>
+          `<option value="${k}" ${os.status === k ? 'selected' : ''}>${STATUS_OS_LABEL[k]}</option>`).join('');
+        const finalizarBtn = os.status === 'EM_ATENDIMENTO'
+          ? `<button class="btn btn--primary btn--sm" data-finalizar-os="${os.id}" type="button">Finalizar</button>` : '';
+        return `
+        <tr data-os-id="${os.id}">
+          <td>${escHtml(os.protocolo)}</td>
+          <td>${escHtml(os.clienteNome || '—')}</td>
+          <td>${escHtml(os.tecnicoNome || '—')}</td>
+          <td>${escHtml(os.tipoAparelho || '—')}</td>
+          <td><select class="input dash-inline-select" data-status-os="${os.id}">${opts}</select></td>
+          <td>${fmtMoeda(os.valor)}</td>
+          <td>${finalizarBtn}<div class="finalizar-form-slot"></div></td>
+        </tr>`;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="7">${escHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  async function renderTecnicos() {
+    const tbody = $('#tecnicosTbody');
+    try {
+      const lista = await DitecAPI.admin.tecnicos();
+      $('#tecnicosEmpty').hidden = lista.length > 0;
+      tbody.innerHTML = lista.map(t => `
+        <tr data-tec-id="${t.id}">
+          <td>${escHtml(t.nome)}</td>
+          <td>${escHtml(t.email)}</td>
+          <td>${escHtml(t.telefone || '—')}</td>
+          <td>${escHtml(t.especialidade || '—')}</td>
+          <td><span class="dash-badge ${t.status === 'ATIVO' ? 'dash-badge--concluido' : 'dash-badge--cancelado'}">${t.status}</span></td>
+          <td><button class="btn btn--outline btn--sm" data-toggle-tecnico="${t.id}" data-ativo="${t.status === 'ATIVO'}" type="button">${t.status === 'ATIVO' ? 'Desativar' : 'Ativar'}</button></td>
+        </tr>`).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="6">${escHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  async function renderServicos() {
+    const tbody = $('#servicosTbody');
+    try {
+      const lista = await DitecAPI.admin.servicos();
+      $('#servicosEmpty').hidden = lista.length > 0;
+      tbody.innerHTML = lista.map(s => `
+        <tr data-serv-id="${s.id}">
+          <td>${escHtml(s.nome)}</td>
+          <td>${escHtml(s.descricao || '—')}</td>
+          <td>${fmtMoeda(s.valorBase)}</td>
+          <td><span class="dash-badge ${s.status === 'ATIVO' ? 'dash-badge--concluido' : 'dash-badge--cancelado'}">${s.status}</span></td>
+          <td><button class="btn btn--outline btn--sm" data-toggle-servico="${s.id}" data-ativo="${s.status === 'ATIVO'}" type="button">${s.status === 'ATIVO' ? 'Desativar' : 'Ativar'}</button></td>
+        </tr>`).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="5">${escHtml(err.message)}</td></tr>`;
+    }
   }
 
   /* ---- Login admin ---- */
-  $('#adminLoginForm').addEventListener('submit', e => {
+  $('#adminLoginForm').addEventListener('submit', async e => {
     e.preventDefault();
     const email = $('#aEmail').value.trim();
     const senha = $('#aSenha').value;
-    const ok = DitecDB.loginAdmin(email, senha);
     const old = e.target.querySelector('.modal-error'); if (old) old.remove();
-    if (!ok) {
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    try {
+      const data = await DitecAPI.login(email, senha);
+      if (data.tipo !== 'ADMINISTRADOR') {
+        DitecAPI.logout();
+        throw new Error('Esta conta não tem acesso administrativo.');
+      }
+      await render();
+    } catch (err) {
       const el = document.createElement('p');
       el.className = 'modal-error';
-      el.textContent = '⚠️ Credenciais inválidas.';
+      el.textContent = '⚠️ ' + (err.message || 'Credenciais inválidas.');
       e.target.insertBefore(el, e.target.firstChild);
-      return;
+    } finally {
+      btn.disabled = false;
     }
-    render();
   });
 
-  logoutBtn.addEventListener('click', () => { DitecDB.logoutAdmin(); render(); });
+  logoutBtn.addEventListener('click', () => { DitecAPI.logout(); render(); });
 
   /* ---- Tabs ---- */
   $$('.dash-tab').forEach(tab => {
@@ -238,42 +402,153 @@
     });
   });
 
-  /* ---- Ações delegadas (remover cliente / agendamento, mudar status) ---- */
-  document.addEventListener('click', e => {
-    const rmUser = e.target.closest('[data-remove-user]');
-    if (rmUser) {
-      const email = rmUser.getAttribute('data-remove-user');
-      if (confirm('Remover este cliente? Esta ação não pode ser desfeita.')) {
-        DitecDB.saveUsers(DitecDB.getUsers().filter(u => u.email !== email));
-        render();
-      }
+  /* ---- Novo técnico ---- */
+  $('#novoTecnicoBtn').addEventListener('click', () => { $('#tecnicoForm').hidden = false; });
+  $('#cancelarTecnicoBtn').addEventListener('click', () => { $('#tecnicoForm').hidden = true; $('#tecnicoForm').reset(); });
+  $('#tecnicoForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#tecnicoFormMsg');
+    msg.textContent = '';
+    try {
+      const resultado = await DitecAPI.admin.criarTecnico({
+        nome: $('#tecNome').value.trim(),
+        email: $('#tecEmail').value.trim(),
+        telefone: $('#tecTelefone').value.trim(),
+        especialidade: $('#tecEspecialidade').value.trim(),
+        certificacao: $('#tecCertificacao').value.trim(),
+      });
+      msg.style.color = '#16a34a';
+      msg.textContent = resultado.senhaTemporaria
+        ? `Técnico criado! Senha temporária: ${resultado.senhaTemporaria} (repasse por um canal seguro).`
+        : 'Técnico criado com sucesso!';
+      $('#tecnicoForm').reset();
+      renderTecnicos();
+    } catch (err) {
+      msg.style.color = '#dc2626';
+      msg.textContent = err.message || 'Não foi possível criar o técnico.';
+    }
+  });
+
+  /* ---- Novo serviço ---- */
+  $('#novoServicoBtn').addEventListener('click', () => { $('#servicoForm').hidden = false; });
+  $('#cancelarServicoBtn').addEventListener('click', () => { $('#servicoForm').hidden = true; $('#servicoForm').reset(); });
+  $('#servicoForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = $('#servicoFormMsg');
+    msg.textContent = '';
+    try {
+      await DitecAPI.admin.criarServico({
+        nome: $('#servNome').value.trim(),
+        descricao: $('#servDescricao').value.trim(),
+        valorBase: parseFloat($('#servValor').value),
+      });
+      msg.style.color = '#16a34a';
+      msg.textContent = 'Serviço criado com sucesso!';
+      $('#servicoForm').reset();
+      renderServicos();
+    } catch (err) {
+      msg.style.color = '#dc2626';
+      msg.textContent = err.message || 'Não foi possível criar o serviço.';
+    }
+  });
+
+  /* ---- Relatórios (CSV) ---- */
+  function bindRelatorio(btnId, fn) {
+    $('#' + btnId).addEventListener('click', async () => {
+      const btn = $('#' + btnId);
+      btn.disabled = true;
+      try { await fn(); } catch (err) { alert(err.message || 'Não foi possível gerar o relatório.'); }
+      finally { btn.disabled = false; }
+    });
+  }
+  bindRelatorio('relAgendamentosBtn', DitecAPI.admin.relatorioAgendamentos);
+  bindRelatorio('relOSBtn', DitecAPI.admin.relatorioOS);
+  bindRelatorio('relAvaliacoesBtn', DitecAPI.admin.relatorioAvaliacoes);
+  bindRelatorio('relChatbotBtn', DitecAPI.admin.relatorioChatbot);
+
+  /* ---- Ações delegadas (clique) ---- */
+  document.addEventListener('click', async e => {
+    const confirmarAg = e.target.closest('[data-confirmar-ag]');
+    if (confirmarAg) {
+      confirmarAg.disabled = true;
+      try { await DitecAPI.admin.confirmarAgendamento(confirmarAg.getAttribute('data-confirmar-ag')); renderAgendamentos(); renderStats(); }
+      catch (err) { alert(err.message); confirmarAg.disabled = false; }
       return;
     }
-    const rmAg = e.target.closest('[data-remove-ag]');
-    if (rmAg) {
-      const idx = Number(rmAg.getAttribute('data-remove-ag'));
-      if (confirm('Remover este agendamento?')) {
-        const ags = DitecDB.getAgendamentos();
-        ags.splice(idx, 1);
-        DitecDB.saveAgendamentos(ags);
-        render();
-      }
+
+    const toggleTec = e.target.closest('[data-toggle-tecnico]');
+    if (toggleTec) {
+      const ativo = toggleTec.getAttribute('data-ativo') === 'true';
+      try { await DitecAPI.admin.statusTecnico(toggleTec.getAttribute('data-toggle-tecnico'), !ativo); renderTecnicos(); }
+      catch (err) { alert(err.message); }
+      return;
+    }
+
+    const toggleServ = e.target.closest('[data-toggle-servico]');
+    if (toggleServ) {
+      const ativo = toggleServ.getAttribute('data-ativo') === 'true';
+      try { await DitecAPI.admin.statusServico(toggleServ.getAttribute('data-toggle-servico'), !ativo); renderServicos(); }
+      catch (err) { alert(err.message); }
+      return;
+    }
+
+    const finalizarBtn = e.target.closest('[data-finalizar-os]');
+    if (finalizarBtn) {
+      abrirFormFinalizar(finalizarBtn);
       return;
     }
   });
 
-  document.addEventListener('change', e => {
-    const statusSel = e.target.closest('[data-status-idx]');
-    if (statusSel) {
-      const idx = Number(statusSel.getAttribute('data-status-idx'));
-      const ags = DitecDB.getAgendamentos();
-      if (ags[idx]) { ags[idx].status = statusSel.value; DitecDB.saveAgendamentos(ags); renderStats(); }
+  function abrirFormFinalizar(btn) {
+    const osId = btn.getAttribute('data-finalizar-os');
+    const slot = btn.closest('td').querySelector('.finalizar-form-slot');
+    btn.hidden = true;
+    slot.innerHTML = `
+      <div style="margin-top:8px;padding:10px;border:1px solid var(--border);border-radius:10px;min-width:220px;">
+        <input type="number" step="0.01" min="0" class="input" placeholder="Valor (R$)" id="fVal-${osId}" style="margin-bottom:6px;" />
+        <select class="input" id="fPag-${osId}" style="margin-bottom:6px;">
+          <option value="pix">Pix</option><option value="dinheiro">Dinheiro (5% desc.)</option>
+          <option value="cartao">Cartão</option><option value="boleto">Boleto</option>
+        </select>
+        <input type="text" class="input" placeholder="Peças utilizadas" id="fPecas-${osId}" style="margin-bottom:6px;" />
+        <input type="text" class="input" placeholder="Nota fiscal (opcional)" id="fNf-${osId}" style="margin-bottom:6px;" />
+        <button class="btn btn--primary btn--sm" type="button" id="fEnviar-${osId}">Concluir OS</button>
+      </div>`;
+    $('#fEnviar-' + osId).addEventListener('click', async () => {
+      const valor = parseFloat($('#fVal-' + osId).value);
+      if (!valor && valor !== 0) { alert('Informe o valor cobrado.'); return; }
+      try {
+        await DitecAPI.finalizarOS(osId, {
+          valor, formaPagamento: $('#fPag-' + osId).value,
+          pecasUtilizadas: $('#fPecas-' + osId).value.trim() || null,
+          notaFiscalNumero: $('#fNf-' + osId).value.trim() || null,
+        });
+        renderOS(); renderStats(); renderAgendamentos();
+      } catch (err) { alert(err.message || 'Não foi possível finalizar.'); }
+    });
+  }
+
+  /* ---- Ações delegadas (mudança de select) ---- */
+  document.addEventListener('change', async e => {
+    const tecnicoSel = e.target.closest('[data-tecnico-ag]');
+    if (tecnicoSel) {
+      const id = tecnicoSel.getAttribute('data-tecnico-ag');
+      if (!tecnicoSel.value) return;
+      try { await DitecAPI.admin.atribuirTecnico(id, Number(tecnicoSel.value)); renderAgendamentos(); }
+      catch (err) { alert(err.message); }
       return;
     }
-    const osSel = e.target.closest('[data-os-numero]');
-    if (osSel) {
-      DitecDB.updateOSStatus(osSel.getAttribute('data-os-numero'), osSel.value);
-      renderStats();
+
+    const statusOsSel = e.target.closest('[data-status-os]');
+    if (statusOsSel) {
+      const id = statusOsSel.getAttribute('data-status-os');
+      try {
+        await DitecAPI.atualizarStatusOS(id, { status: statusOsSel.value });
+        renderOS(); renderStats(); renderAgendamentos();
+      } catch (err) {
+        alert(err.message);
+        renderOS(); // desfaz a selecao visual, redesenhando com o status real do servidor
+      }
       return;
     }
   });

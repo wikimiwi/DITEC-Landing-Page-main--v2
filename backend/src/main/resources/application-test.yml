@@ -1,0 +1,17 @@
+# Perfil usado pelos testes automatizados (H2 em memoria, sem MySQL).
+spring:
+  datasource:
+    url: jdbc:h2:mem:ditec_test;MODE=MySQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  flyway:
+    enabled: false
+ditec:
+  seed:
+    enabled: false
+  jwt:
+    secret: teste-secret-apenas-para-a-suite-automatizada-0123456789
