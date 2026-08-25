@@ -23,6 +23,7 @@ DITEC-Landing-Page-main--v2/
 ├── index.html              # site público (home, agendamento, rastreamento, chatbot)
 ├── conta.html               # área do cliente (login/cadastro real, perfil, agendamentos, avaliação)
 ├── admin.html                # painel administrativo (login real, dashboard, CRUD, relatórios)
+├── tecnico.html                # área do técnico (login real, minhas OS, iniciar/finalizar atendimento)
 ├── script.js                  # lógica do site público — agora consome a API real
 ├── dashboard-shared.js         # window.DitecAPI — cliente HTTP compartilhado pelas 3 páginas
 ├── styles.css                   # estilos (inalterado)
@@ -167,7 +168,8 @@ pelo telefone) → faz login em `conta.html` → vê o agendamento, o endereço/
 reais → confirma agendamentos pendentes → atribui um técnico → acompanha a OS → cadastra novos
 técnicos/serviços → exporta relatórios CSV (agendamentos, OS, avaliações, chatbot).
 
-**Técnico:** loga via `POST /api/auth/login` (não há tela própria — ver pendências) → assume a
+**Técnico:** loga em `tecnico.html` (`tecnico@ditec.com.br` / `tecnico123`) → vê as OS atribuídas a
+ele → assume a
 OS (associação automática ao primeiro técnico que mexe numa OS sem técnico) → avança o status
 `AGENDADO → EM_ATENDIMENTO → CONCLUIDO` → finaliza informando valor/peças/forma de pagamento →
 garantia de 90 dias é ativada automaticamente.
@@ -290,24 +292,51 @@ Detalhes completos em `backend/src/main/resources/db/migration/V1__schema.sql`.
 
 ## 11. Pendências (o que ficou para uma próxima etapa)
 
-- **Tela própria de técnico**: hoje o técnico usa a API diretamente (ou uma tela simples poderia ser montada reaproveitando `dashboard-shared.js`/`DitecAPI`); o backend já tem suporte completo ao perfil `TECNICO`.
-- **Edição inline de técnico/serviço** no painel admin: os endpoints (`PUT /admin/tecnicos/{id}`, `PUT /admin/servicos/{id}`) já existem e funcionam; só não há um botão "editar" na tabela (só criar e ativar/desativar).
-- **Edição de agendamento pelo cliente** (mudar data/aparelho): o endpoint `PUT /api/agendamentos/{id}` já existe e é testado; a tela do cliente hoje só oferece "cancelar".
 - **PWA**: manifesto e ícones já existiam; um Service Worker para funcionamento offline não foi adicionado (fora do escopo pedido).
-- **Compilação/execução real**: não verificada neste ambiente (sem internet/MySQL) — ver aviso na seção 3.2.
+- **Compilação/execução real**: ainda não confirmada pelo usuário neste projeto — rode `mvn compile` (ou `mvn test`) e reporte qualquer erro real de build.
 
 ---
 
-## 12. Checklist final
+## 12. Segunda rodada — bug corrigido e pendências resolvidas
+
+Depois da primeira entrega, revisei o backend de novo (sem depender de compilador — checagem
+estrutural de chaves/parênteses/imports/pacotes em todos os 88 arquivos) e encontrei um **bug real
+de lógica**, não relacionado a sintaxe:
+
+> `OrdemServicoService.listarMinhas()` usava `cud.getId()` (o ID do **Usuario** logado) para
+> buscar Ordens de Serviço por `tecnico_id` — mas `tecnico_id` referencia o ID da entidade
+> **Tecnico**, que tem sua própria chave primária (diferente da de Usuario). Na prática, um
+> técnico nunca conseguiria ver as próprias OS atribuídas. Corrigido para resolver primeiro o
+> `Tecnico` pelo `usuario_id` antes de buscar — e foi adicionado o teste
+> `tecnicoVeAOsQueAssumiuNaListagemDeMinhasOS` para não deixar essa regressão voltar.
+
+Também foram implementadas as três pendências da entrega anterior:
+
+- **`tecnico.html`** (novo): login próprio do técnico, lista de "Minhas Ordens de Serviço" com
+  estatísticas, botão para iniciar atendimento e formulário para finalizar (valor, forma de
+  pagamento, peças, nota fiscal) — usando os mesmos endpoints que já existiam.
+- **Edição de técnico/serviço no admin**: botão "Editar" nas tabelas de Técnicos e Serviços,
+  reaproveitando `PUT /admin/tecnicos/{id}` e `PUT /admin/servicos/{id}` (já existiam, só faltava
+  a UI). No caso do técnico, o e-mail fica bloqueado durante a edição — é a chave de login e o
+  backend não permite trocá-lo por essa rota.
+- **Edição de agendamento pelo cliente**: botão "✏️ Editar" ao lado de "Cancelar" em
+  `conta.html`, com um mini-formulário inline (aparelho, data/horário, bairro, endereço,
+  descrição) que chama `PUT /api/agendamentos/{id}` — reaproveita toda a validação que já existia
+  no backend (bairro atendido, horário permitido, conflito de agenda).
+
+---
+
+## 13. Checklist final
 
 - [x] Banco MySQL real com 9 tabelas, FKs, índices e constraints (Flyway)
 - [x] Autenticação real (Spring Security + JWT + BCrypt), 3 perfis (cliente/admin/técnico)
-- [x] Agendamento real (persistido, com validação de área/horário/conflito)
+- [x] Agendamento real (persistido, com validação de área/horário/conflito, edição e cancelamento pelo cliente)
 - [x] Rastreamento de OS real (timeline no banco, protocolo único)
-- [x] Painel administrativo real (dashboard, clientes, agendamentos, OS, técnicos, serviços)
+- [x] Painel administrativo real (dashboard, clientes, agendamentos, OS, técnicos, serviços — com criar/editar/ativar-desativar)
+- [x] Tela própria do técnico (login, minhas OS, iniciar/finalizar atendimento)
 - [x] Relatórios exportáveis em CSV (agendamentos, OS, avaliações, chatbot)
 - [x] Chatbot com proxy real (chave protegida, log de interações)
 - [x] Regras de negócio do DRS (horário, área, gás, garantia, desconto, progressão de status)
-- [x] Testes automatizados (H2, sem depender do MySQL para rodar)
+- [x] Testes automatizados (H2, sem depender do MySQL para rodar) — incluindo teste de regressão do bug corrigido em `listarMinhas()`
 - [x] Dados de teste seguros (gerados em runtime, nunca em SQL com senha fixa)
-- [ ] Build/execução confirmados fora deste ambiente (ver seção 3.2)
+- [ ] Build/execução confirmados pelo usuário — rode `mvn compile` (ou `mvn test`) e me avise o resultado

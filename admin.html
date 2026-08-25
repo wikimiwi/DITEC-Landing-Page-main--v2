@@ -125,6 +125,8 @@
             <button class="btn btn--primary btn--sm" id="novoTecnicoBtn" type="button">+ Novo técnico</button>
           </div>
           <form id="tecnicoForm" class="modal-form" style="margin:14px 0;" hidden>
+            <input type="hidden" id="tecEditId" value="" />
+            <p id="tecnicoFormTitulo" style="font-weight:600;margin-bottom:8px;">Novo técnico</p>
             <div class="profile-form__grid">
               <div class="form-group"><label class="form-label" for="tecNome">Nome</label><input type="text" id="tecNome" class="input" required /></div>
               <div class="form-group"><label class="form-label" for="tecEmail">E-mail</label><input type="email" id="tecEmail" class="input" required /></div>
@@ -156,6 +158,8 @@
             <button class="btn btn--primary btn--sm" id="novoServicoBtn" type="button">+ Novo serviço</button>
           </div>
           <form id="servicoForm" class="modal-form" style="margin:14px 0;" hidden>
+            <input type="hidden" id="servEditId" value="" />
+            <p id="servicoFormTitulo" style="font-weight:600;margin-bottom:8px;">Novo serviço</p>
             <div class="profile-form__grid">
               <div class="form-group"><label class="form-label" for="servNome">Nome</label><input type="text" id="servNome" class="input" required /></div>
               <div class="form-group"><label class="form-label" for="servValor">Valor base (R$)</label><input type="number" step="0.01" min="0" id="servValor" class="input" required /></div>
@@ -332,6 +336,7 @@
     const tbody = $('#tecnicosTbody');
     try {
       const lista = await DitecAPI.admin.tecnicos();
+      tecnicosCache = lista; // reaproveitado no <select> de atribuição de técnico e na edição
       $('#tecnicosEmpty').hidden = lista.length > 0;
       tbody.innerHTML = lista.map(t => `
         <tr data-tec-id="${t.id}">
@@ -340,17 +345,22 @@
           <td>${escHtml(t.telefone || '—')}</td>
           <td>${escHtml(t.especialidade || '—')}</td>
           <td><span class="dash-badge ${t.status === 'ATIVO' ? 'dash-badge--concluido' : 'dash-badge--cancelado'}">${t.status}</span></td>
-          <td><button class="btn btn--outline btn--sm" data-toggle-tecnico="${t.id}" data-ativo="${t.status === 'ATIVO'}" type="button">${t.status === 'ATIVO' ? 'Desativar' : 'Ativar'}</button></td>
+          <td style="display:flex;gap:6px;">
+            <button class="btn btn--outline btn--sm" data-editar-tecnico="${t.id}" type="button">Editar</button>
+            <button class="btn btn--outline btn--sm" data-toggle-tecnico="${t.id}" data-ativo="${t.status === 'ATIVO'}" type="button">${t.status === 'ATIVO' ? 'Desativar' : 'Ativar'}</button>
+          </td>
         </tr>`).join('');
     } catch (err) {
       tbody.innerHTML = `<tr><td colspan="6">${escHtml(err.message)}</td></tr>`;
     }
   }
 
+  let servicosCache = [];
   async function renderServicos() {
     const tbody = $('#servicosTbody');
     try {
       const lista = await DitecAPI.admin.servicos();
+      servicosCache = lista;
       $('#servicosEmpty').hidden = lista.length > 0;
       tbody.innerHTML = lista.map(s => `
         <tr data-serv-id="${s.id}">
@@ -358,7 +368,10 @@
           <td>${escHtml(s.descricao || '—')}</td>
           <td>${fmtMoeda(s.valorBase)}</td>
           <td><span class="dash-badge ${s.status === 'ATIVO' ? 'dash-badge--concluido' : 'dash-badge--cancelado'}">${s.status}</span></td>
-          <td><button class="btn btn--outline btn--sm" data-toggle-servico="${s.id}" data-ativo="${s.status === 'ATIVO'}" type="button">${s.status === 'ATIVO' ? 'Desativar' : 'Ativar'}</button></td>
+          <td style="display:flex;gap:6px;">
+            <button class="btn btn--outline btn--sm" data-editar-servico="${s.id}" type="button">Editar</button>
+            <button class="btn btn--outline btn--sm" data-toggle-servico="${s.id}" data-ativo="${s.status === 'ATIVO'}" type="button">${s.status === 'ATIVO' ? 'Desativar' : 'Ativar'}</button>
+          </td>
         </tr>`).join('');
     } catch (err) {
       tbody.innerHTML = `<tr><td colspan="5">${escHtml(err.message)}</td></tr>`;
@@ -402,53 +415,105 @@
     });
   });
 
-  /* ---- Novo técnico ---- */
-  $('#novoTecnicoBtn').addEventListener('click', () => { $('#tecnicoForm').hidden = false; });
-  $('#cancelarTecnicoBtn').addEventListener('click', () => { $('#tecnicoForm').hidden = true; $('#tecnicoForm').reset(); });
+  /* ---- Técnico: novo / editar ---- */
+  function abrirFormTecnicoNovo() {
+    $('#tecnicoForm').reset();
+    $('#tecEditId').value = '';
+    $('#tecnicoFormTitulo').textContent = 'Novo técnico';
+    $('#tecEmail').disabled = false;
+    $('#tecnicoFormMsg').textContent = '';
+    $('#tecnicoForm').hidden = false;
+  }
+  function abrirFormTecnicoEditar(tecnico) {
+    $('#tecEditId').value = tecnico.id;
+    $('#tecnicoFormTitulo').textContent = `Editando: ${tecnico.nome}`;
+    $('#tecNome').value = tecnico.nome || '';
+    $('#tecEmail').value = tecnico.email || '';
+    $('#tecEmail').disabled = true; // e-mail é a chave de login, não muda por aqui
+    $('#tecTelefone').value = tecnico.telefone || '';
+    $('#tecEspecialidade').value = tecnico.especialidade || '';
+    $('#tecCertificacao').value = tecnico.certificacao || '';
+    $('#tecnicoFormMsg').textContent = '';
+    $('#tecnicoForm').hidden = false;
+  }
+  $('#novoTecnicoBtn').addEventListener('click', abrirFormTecnicoNovo);
+  $('#cancelarTecnicoBtn').addEventListener('click', () => { $('#tecnicoForm').hidden = true; $('#tecnicoForm').reset(); $('#tecEmail').disabled = false; });
   $('#tecnicoForm').addEventListener('submit', async e => {
     e.preventDefault();
     const msg = $('#tecnicoFormMsg');
     msg.textContent = '';
+    const editId = $('#tecEditId').value;
+    const payload = {
+      nome: $('#tecNome').value.trim(),
+      email: $('#tecEmail').value.trim(),
+      telefone: $('#tecTelefone').value.trim(),
+      especialidade: $('#tecEspecialidade').value.trim(),
+      certificacao: $('#tecCertificacao').value.trim(),
+    };
     try {
-      const resultado = await DitecAPI.admin.criarTecnico({
-        nome: $('#tecNome').value.trim(),
-        email: $('#tecEmail').value.trim(),
-        telefone: $('#tecTelefone').value.trim(),
-        especialidade: $('#tecEspecialidade').value.trim(),
-        certificacao: $('#tecCertificacao').value.trim(),
-      });
-      msg.style.color = '#16a34a';
-      msg.textContent = resultado.senhaTemporaria
-        ? `Técnico criado! Senha temporária: ${resultado.senhaTemporaria} (repasse por um canal seguro).`
-        : 'Técnico criado com sucesso!';
-      $('#tecnicoForm').reset();
+      if (editId) {
+        await DitecAPI.admin.atualizarTecnico(editId, payload);
+        msg.style.color = '#16a34a';
+        msg.textContent = 'Técnico atualizado com sucesso!';
+      } else {
+        const resultado = await DitecAPI.admin.criarTecnico(payload);
+        msg.style.color = '#16a34a';
+        msg.textContent = resultado.senhaTemporaria
+          ? `Técnico criado! Senha temporária: ${resultado.senhaTemporaria} (repasse por um canal seguro).`
+          : 'Técnico criado com sucesso!';
+        $('#tecnicoForm').reset();
+      }
       renderTecnicos();
     } catch (err) {
       msg.style.color = '#dc2626';
-      msg.textContent = err.message || 'Não foi possível criar o técnico.';
+      msg.textContent = err.message || 'Não foi possível salvar o técnico.';
     }
   });
 
-  /* ---- Novo serviço ---- */
-  $('#novoServicoBtn').addEventListener('click', () => { $('#servicoForm').hidden = false; });
+  /* ---- Serviço: novo / editar ---- */
+  function abrirFormServicoNovo() {
+    $('#servicoForm').reset();
+    $('#servEditId').value = '';
+    $('#servicoFormTitulo').textContent = 'Novo serviço';
+    $('#servicoFormMsg').textContent = '';
+    $('#servicoForm').hidden = false;
+  }
+  function abrirFormServicoEditar(servico) {
+    $('#servEditId').value = servico.id;
+    $('#servicoFormTitulo').textContent = `Editando: ${servico.nome}`;
+    $('#servNome').value = servico.nome || '';
+    $('#servValor').value = servico.valorBase != null ? servico.valorBase : '';
+    $('#servDescricao').value = servico.descricao || '';
+    $('#servicoFormMsg').textContent = '';
+    $('#servicoForm').hidden = false;
+  }
+  $('#novoServicoBtn').addEventListener('click', abrirFormServicoNovo);
   $('#cancelarServicoBtn').addEventListener('click', () => { $('#servicoForm').hidden = true; $('#servicoForm').reset(); });
   $('#servicoForm').addEventListener('submit', async e => {
     e.preventDefault();
     const msg = $('#servicoFormMsg');
     msg.textContent = '';
+    const editId = $('#servEditId').value;
+    const payload = {
+      nome: $('#servNome').value.trim(),
+      descricao: $('#servDescricao').value.trim(),
+      valorBase: parseFloat($('#servValor').value),
+    };
     try {
-      await DitecAPI.admin.criarServico({
-        nome: $('#servNome').value.trim(),
-        descricao: $('#servDescricao').value.trim(),
-        valorBase: parseFloat($('#servValor').value),
-      });
-      msg.style.color = '#16a34a';
-      msg.textContent = 'Serviço criado com sucesso!';
-      $('#servicoForm').reset();
+      if (editId) {
+        await DitecAPI.admin.atualizarServico(editId, payload);
+        msg.style.color = '#16a34a';
+        msg.textContent = 'Serviço atualizado com sucesso!';
+      } else {
+        await DitecAPI.admin.criarServico(payload);
+        msg.style.color = '#16a34a';
+        msg.textContent = 'Serviço criado com sucesso!';
+        $('#servicoForm').reset();
+      }
       renderServicos();
     } catch (err) {
       msg.style.color = '#dc2626';
-      msg.textContent = err.message || 'Não foi possível criar o serviço.';
+      msg.textContent = err.message || 'Não foi possível salvar o serviço.';
     }
   });
 
@@ -484,11 +549,29 @@
       return;
     }
 
+    const editarTec = e.target.closest('[data-editar-tecnico]');
+    if (editarTec) {
+      const id = Number(editarTec.getAttribute('data-editar-tecnico'));
+      const tecnico = tecnicosCache.find(t => t.id === id);
+      if (tecnico) abrirFormTecnicoEditar(tecnico);
+      $('#tecnicoForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
     const toggleServ = e.target.closest('[data-toggle-servico]');
     if (toggleServ) {
       const ativo = toggleServ.getAttribute('data-ativo') === 'true';
       try { await DitecAPI.admin.statusServico(toggleServ.getAttribute('data-toggle-servico'), !ativo); renderServicos(); }
       catch (err) { alert(err.message); }
+      return;
+    }
+
+    const editarServ = e.target.closest('[data-editar-servico]');
+    if (editarServ) {
+      const id = Number(editarServ.getAttribute('data-editar-servico'));
+      const servico = servicosCache.find(s => s.id === id);
+      if (servico) abrirFormServicoEditar(servico);
+      $('#servicoForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 

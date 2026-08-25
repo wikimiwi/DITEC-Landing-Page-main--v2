@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Área do Técnico | DITEC Assistência Técnica</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'><rect width='36' height='36' rx='9' fill='%230047AB'/><text x='18' y='25' text-anchor='middle' font-family='sans-serif' font-weight='900' font-size='16' fill='white'>DT</text></svg>" />
+</head>
+<body>
+
+<header class="dash-header">
+  <div class="dash-header__inner">
+    <a href="index.html" class="logo" aria-label="DITEC — Página inicial">
+      <svg width="34" height="34" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect width="36" height="36" rx="9" fill="#0047AB"/>
+        <path d="M10 12h5c3.314 0 6 2.686 6 6s-2.686 6-6 6h-5V12z" fill="white"/>
+        <rect x="23" y="12" width="3" height="12" rx="1.5" fill="white"/>
+      </svg>
+      <span class="logo__text">DI<span>TEC</span> <small style="font-size:.6rem;font-weight:700;color:var(--text-light);vertical-align:middle;">TÉCNICO</small></span>
+    </a>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <a href="index.html" class="btn btn--outline btn--sm">← Ver site</a>
+      <button class="btn btn--primary btn--sm" id="logoutBtn" type="button" hidden>Sair</button>
+    </div>
+  </div>
+</header>
+
+<main class="dash-main">
+  <div class="container">
+
+    <!-- ===== NÃO LOGADO ===== -->
+    <section id="guestView" hidden>
+      <div class="dash-auth-wrap">
+        <h1 style="font-size:1.4rem;font-weight:700;margin-bottom:6px;">Acesso do técnico</h1>
+        <p style="color:var(--text-light);font-size:.9rem;margin-bottom:22px;">Entre com a conta cadastrada pela DITEC.</p>
+        <form id="tecLoginForm" class="modal-form" novalidate>
+          <div class="form-group"><label class="form-label" for="tEmail">E-mail</label><input type="email" id="tEmail" class="input" required /></div>
+          <div class="form-group"><label class="form-label" for="tSenha">Senha</label><input type="password" id="tSenha" class="input" required /></div>
+          <button type="submit" class="btn btn--primary btn--full">Entrar</button>
+        </form>
+        <p style="font-size:.75rem;color:var(--text-muted);margin-top:16px;line-height:1.6;">
+          🔒 Ambiente de desenvolvimento: <strong>tecnico@ditec.com.br / tecnico123</strong> (criado
+          automaticamente pelo <code>DataSeeder</code> do backend). Técnicos não se cadastram sozinhos —
+          quem cria a conta é o administrador, pelo painel.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===== LOGADO ===== -->
+    <section id="dashView" hidden>
+      <div class="dash-welcome">
+        <h1 id="welcomeTitle">Olá! 👋</h1>
+        <p>Suas Ordens de Serviço atribuídas — atualize o status conforme for atendendo.</p>
+      </div>
+
+      <div class="dash-stats">
+        <div class="dash-stat"><div class="dash-stat__value" id="statAgendadas">0</div><div class="dash-stat__label">Agendadas</div></div>
+        <div class="dash-stat"><div class="dash-stat__value" id="statEmAtendimento">0</div><div class="dash-stat__label">Em atendimento</div></div>
+        <div class="dash-stat"><div class="dash-stat__value" id="statConcluidas">0</div><div class="dash-stat__label">Concluídas</div></div>
+      </div>
+
+      <div class="dash-card">
+        <div class="dash-card__title">Minhas Ordens de Serviço</div>
+        <div id="osList"></div>
+        <div id="osEmpty" class="dash-empty" hidden>Nenhuma OS atribuída a você no momento.</div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script src="dashboard-shared.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = s => document.querySelector(s);
+  function escHtml(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function fmtData(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+  }
+
+  const guestView = $('#guestView'), dashView = $('#dashView'), logoutBtn = $('#logoutBtn');
+
+  const STATUS_LABEL = { AGENDADO: 'Agendado', EM_ATENDIMENTO: 'Em atendimento', CONCLUIDO: 'Concluído', CANCELADO: 'Cancelado' };
+  const STATUS_BADGE = { AGENDADO: 'dash-badge--diagnostico', EM_ATENDIMENTO: 'dash-badge--reparo', CONCLUIDO: 'dash-badge--concluido', CANCELADO: 'dash-badge--cancelado' };
+
+  async function render() {
+    if (!DitecAPI.isLoggedIn() || DitecAPI.tipoUsuario() !== 'TECNICO') {
+      if (DitecAPI.isLoggedIn()) DitecAPI.logout(); // logado, mas não é técnico
+      guestView.hidden = false; dashView.hidden = true; logoutBtn.hidden = true;
+      return;
+    }
+    guestView.hidden = true; dashView.hidden = false; logoutBtn.hidden = false;
+
+    try {
+      const me = await DitecAPI.me();
+      $('#welcomeTitle').textContent = `Olá, ${me.nome.split(' ')[0]}! 👋`;
+    } catch (err) { /* segue mesmo se falhar, não é crítico pra essa tela */ }
+
+    await renderOS();
+  }
+
+  async function renderOS() {
+    const wrap = $('#osList');
+    wrap.innerHTML = `<div class="dash-empty">Carregando...</div>`;
+    let lista;
+    try {
+      lista = await DitecAPI.minhasOS();
+    } catch (err) {
+      wrap.innerHTML = `<div class="dash-empty">${escHtml(err.message || 'Não foi possível carregar suas OS.')}</div>`;
+      return;
+    }
+
+    $('#statAgendadas').textContent = lista.filter(o => o.status === 'AGENDADO').length;
+    $('#statEmAtendimento').textContent = lista.filter(o => o.status === 'EM_ATENDIMENTO').length;
+    $('#statConcluidas').textContent = lista.filter(o => o.status === 'CONCLUIDO').length;
+
+    $('#osEmpty').hidden = lista.length > 0;
+    if (!lista.length) { wrap.innerHTML = ''; return; }
+
+    wrap.innerHTML = lista.map(os => `
+      <div class="dash-row" data-os-id="${os.id}" data-status="${os.status}" style="flex-direction:column;align-items:stretch;gap:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">
+          <div>
+            <div class="dash-row__main">${escHtml(os.protocolo)} — ${escHtml(os.tipoAparelho || '')}</div>
+            <div class="dash-row__sub">👤 ${escHtml(os.clienteNome || '—')} · 📍 ${escHtml(os.bairro || '—')}</div>
+            <div class="dash-row__sub">${escHtml(os.descricaoProblema || '')}</div>
+          </div>
+          <span class="dash-badge ${STATUS_BADGE[os.status] || ''}">${STATUS_LABEL[os.status] || os.status}</span>
+        </div>
+        <div class="os-actions-slot" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+      </div>
+    `).join('');
+
+    lista.forEach(os => {
+      const slot = wrap.querySelector(`.dash-row[data-os-id="${os.id}"] .os-actions-slot`);
+      if (!slot) return;
+
+      if (os.status === 'AGENDADO') {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn--primary btn--sm';
+        btn.type = 'button';
+        btn.textContent = '▶️ Iniciar atendimento';
+        btn.addEventListener('click', () => iniciarAtendimento(os.id, btn));
+        slot.appendChild(btn);
+      }
+
+      if (os.status === 'EM_ATENDIMENTO') {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn--primary btn--sm';
+        btn.type = 'button';
+        btn.textContent = '✅ Finalizar atendimento';
+        btn.addEventListener('click', () => abrirFinalizar(os.id, slot, btn));
+        slot.appendChild(btn);
+      }
+    });
+  }
+
+  async function iniciarAtendimento(osId, btn) {
+    btn.disabled = true;
+    try {
+      await DitecAPI.atualizarStatusOS(osId, { status: 'EM_ATENDIMENTO', observacao: 'Técnico iniciou o atendimento.' });
+      renderOS();
+    } catch (err) {
+      alert(err.message || 'Não foi possível iniciar o atendimento.');
+      btn.disabled = false;
+    }
+  }
+
+  function abrirFinalizar(osId, slot, btn) {
+    btn.hidden = true;
+    const form = document.createElement('div');
+    form.style.cssText = 'width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;';
+    form.innerHTML = `
+      <div class="profile-form__grid" style="margin-bottom:8px;">
+        <input type="number" step="0.01" min="0" class="input" placeholder="Valor cobrado (R$)" id="fVal-${osId}" />
+        <select class="input" id="fPag-${osId}">
+          <option value="pix">Pix</option><option value="dinheiro">Dinheiro (5% desc.)</option>
+          <option value="cartao">Cartão</option><option value="boleto">Boleto</option>
+        </select>
+      </div>
+      <input type="text" class="input" placeholder="Peças utilizadas (opcional)" id="fPecas-${osId}" style="margin-bottom:8px;" />
+      <textarea class="input" rows="2" placeholder="Descrição do serviço realizado (opcional)" id="fDesc-${osId}" style="margin-bottom:8px;"></textarea>
+      <input type="text" class="input" placeholder="Nº da nota fiscal (opcional)" id="fNf-${osId}" style="margin-bottom:8px;" />
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn--primary btn--sm" type="button" id="fEnviar-${osId}">Concluir OS</button>
+        <button class="btn btn--outline btn--sm" type="button" id="fCancelar-${osId}">Cancelar</button>
+      </div>
+    `;
+    slot.appendChild(form);
+
+    $('#fCancelar-' + osId).addEventListener('click', () => { form.remove(); btn.hidden = false; });
+    $('#fEnviar-' + osId).addEventListener('click', async () => {
+      const valor = parseFloat($('#fVal-' + osId).value);
+      if (isNaN(valor)) { alert('Informe o valor cobrado.'); return; }
+      try {
+        await DitecAPI.finalizarOS(osId, {
+          valor, formaPagamento: $('#fPag-' + osId).value,
+          pecasUtilizadas: $('#fPecas-' + osId).value.trim() || null,
+          descricaoFinal: $('#fDesc-' + osId).value.trim() || null,
+          notaFiscalNumero: $('#fNf-' + osId).value.trim() || null,
+        });
+        renderOS();
+      } catch (err) {
+        alert(err.message || 'Não foi possível finalizar a OS.');
+      }
+    });
+  }
+
+  $('#tecLoginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const email = $('#tEmail').value.trim();
+    const senha = $('#tSenha').value;
+    const old = e.target.querySelector('.modal-error'); if (old) old.remove();
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    try {
+      const data = await DitecAPI.login(email, senha);
+      if (data.tipo !== 'TECNICO') {
+        DitecAPI.logout();
+        throw new Error('Esta conta não é de técnico. Use a Área do Cliente ou o Painel Admin.');
+      }
+      await render();
+    } catch (err) {
+      const el = document.createElement('p');
+      el.className = 'modal-error';
+      el.textContent = '⚠️ ' + (err.message || 'Credenciais inválidas.');
+      e.target.insertBefore(el, e.target.firstChild);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  logoutBtn.addEventListener('click', () => { DitecAPI.logout(); render(); });
+
+  render();
+})();
+</script>
+</body>
+</html>

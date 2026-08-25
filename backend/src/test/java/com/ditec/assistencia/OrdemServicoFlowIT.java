@@ -32,6 +32,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.Year;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -93,6 +94,26 @@ class OrdemServicoFlowIT {
                 .andReturn().getResponse().getContentAsString();
         JsonNode node = objectMapper.readTree(resposta);
         return node.get("token").asText();
+    }
+
+    @Test
+    void tecnicoVeAOsQueAssumiuNaListagemDeMinhasOS() throws Exception {
+        // Regressão do bug: listarMinhas() usava o id do USUARIO em vez do id
+        // da entidade Tecnico (PKs diferentes) para buscar por tecnico_id.
+        String token = tokenTecnico();
+
+        mockMvc.perform(put("/api/ordens-servico/{id}/status", osTeste.getId())
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new StatusUpdateRequest("EM_ATENDIMENTO", null))))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/ordens-servico")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].protocolo").value(osTeste.getProtocolo()))
+                .andExpect(jsonPath("$[0].status").value("EM_ATENDIMENTO"));
     }
 
     @Test

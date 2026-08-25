@@ -55,7 +55,12 @@ public class OrdemServicoService {
     public List<OrdemServicoResponse> listarMinhas(Authentication auth) {
         CustomUserDetails cud = exigirAutenticado(auth);
         if (cud.getUsuario().getTipo() == TipoUsuario.TECNICO) {
-            return ordemServicoRepository.findByTecnico_IdOrderByCriadoEmDesc(cud.getId()).stream()
+            // cud.getId() é o id do USUARIO — a FK tecnico_id aponta pro id da entidade
+            // Tecnico (PK própria, diferente da de Usuario), por isso é preciso resolver
+            // primeiro qual Tecnico corresponde a este usuario antes de buscar as OS.
+            var tecnico = tecnicoRepository.findByUsuario_Id(cud.getId())
+                    .orElseThrow(() -> new RecursoNaoEncontradoException("Cadastro de tecnico nao encontrado."));
+            return ordemServicoRepository.findByTecnico_IdOrderByCriadoEmDesc(tecnico.getId()).stream()
                     .map(this::comTimeline).toList();
         }
         var cliente = clienteRepository.findByUsuario_Id(cud.getId())

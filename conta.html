@@ -253,12 +253,19 @@
       </div>
     `).join('');
 
-    /* acoes por linha: cancelar (se elegivel) / avaliar (se concluido) */
+    /* acoes por linha: editar/cancelar (se elegivel) / avaliar (se concluido) */
     list.forEach(a => {
       const row = el.querySelector(`.dash-row[data-id="${a.id}"] .dash-row__actions`);
       if (!row) return;
 
       if (a.elegivelParaAlteracao) {
+        const btnEditar = document.createElement('button');
+        btnEditar.className = 'btn btn--outline btn--sm';
+        btnEditar.type = 'button';
+        btnEditar.textContent = '✏️ Editar';
+        btnEditar.addEventListener('click', () => abrirEdicaoAgendamento(a, row));
+        row.appendChild(btnEditar);
+
         const btnCancelar = document.createElement('button');
         btnCancelar.className = 'btn btn--outline btn--sm';
         btnCancelar.type = 'button';
@@ -274,6 +281,61 @@
         btnAvaliar.textContent = '⭐ Avaliar atendimento';
         btnAvaliar.addEventListener('click', () => abrirAvaliacao(a, btnAvaliar));
         row.appendChild(btnAvaliar);
+      }
+    });
+  }
+
+  /* YYYY-MM-DDTHH:mm a partir de um ISO com segundos — formato aceito por <input type="datetime-local"> */
+  function toDatetimeLocalValue(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d)) return '';
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function abrirEdicaoAgendamento(agendamento, actionsRow) {
+    const jaAberto = actionsRow.querySelector('.edicao-agendamento-form');
+    if (jaAberto) { jaAberto.remove(); return; }
+
+    const form = document.createElement('div');
+    form.className = 'edicao-agendamento-form';
+    form.style.cssText = 'margin-top:10px;padding:12px;border:1px solid var(--border);border-radius:10px;width:100%;';
+    form.innerHTML = `
+      <div class="profile-form__grid" style="margin-bottom:8px;">
+        <input type="text" class="input" id="eAparelho-${agendamento.id}" placeholder="Tipo de aparelho" value="${escHtml(agendamento.tipoAparelho)}" />
+        <input type="datetime-local" class="input" id="eData-${agendamento.id}" value="${toDatetimeLocalValue(agendamento.dataHora)}" />
+        <input type="text" class="input" id="eBairro-${agendamento.id}" placeholder="Bairro" value="${escHtml(agendamento.bairro)}" />
+        <input type="text" class="input" id="eEndereco-${agendamento.id}" placeholder="Endereço completo" value="${escHtml(agendamento.endereco)}" />
+      </div>
+      <textarea class="input" rows="2" placeholder="Descrição do problema (opcional)" id="eDefeito-${agendamento.id}" style="margin-bottom:8px;">${escHtml(agendamento.descricaoProblema || '')}</textarea>
+      <p class="edicao-erro" style="color:#dc2626;font-size:.8rem;display:none;margin-bottom:8px;"></p>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn--primary btn--sm" type="button" id="eSalvar-${agendamento.id}">Salvar alterações</button>
+        <button class="btn btn--outline btn--sm" type="button" id="eCancelar-${agendamento.id}">Fechar</button>
+      </div>`;
+    actionsRow.appendChild(form);
+
+    form.querySelector(`#eCancelar-${agendamento.id}`).addEventListener('click', () => form.remove());
+    form.querySelector(`#eSalvar-${agendamento.id}`).addEventListener('click', async () => {
+      const erroEl = form.querySelector('.edicao-erro');
+      erroEl.style.display = 'none';
+      const dataVal = form.querySelector(`#eData-${agendamento.id}`).value;
+      if (!dataVal) { erroEl.textContent = 'Selecione data e horário.'; erroEl.style.display = 'block'; return; }
+
+      try {
+        await DitecAPI.atualizarAgendamento(agendamento.id, {
+          tipoAparelho: form.querySelector(`#eAparelho-${agendamento.id}`).value.trim(),
+          descricaoProblema: form.querySelector(`#eDefeito-${agendamento.id}`).value.trim() || null,
+          bairro: form.querySelector(`#eBairro-${agendamento.id}`).value.trim(),
+          endereco: form.querySelector(`#eEndereco-${agendamento.id}`).value.trim(),
+          dataHora: dataVal + ':00',
+        });
+        form.remove();
+        renderAgendamentos();
+      } catch (err) {
+        erroEl.textContent = err.message || 'Não foi possível salvar. Verifique o horário escolhido.';
+        erroEl.style.display = 'block';
       }
     });
   }
