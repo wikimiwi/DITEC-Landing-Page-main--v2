@@ -5,6 +5,14 @@
 # ============================================================
 server:
   port: 8080
+  error:
+    # Defesa em profundidade: o GlobalExceptionHandler ja' cobre os erros da
+    # aplicacao, mas isso garante que nem a pagina de erro padrao do Spring
+    # Boot vaze stacktrace, mensagem interna ou detalhes da excecao.
+    include-stacktrace: never
+    include-message: never
+    include-binding-errors: never
+    include-exception: false
 
 spring:
   application:
@@ -16,7 +24,10 @@ spring:
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/ditec_assistencia?useSSL=false&serverTimezone=America/Sao_Paulo&allowPublicKeyRetrieval=true}
     username: ${DB_USERNAME:ditec_user}
-    password: ${DB_PASSWORD:changeme}
+    # Sem valor padrao de proposito: se DB_PASSWORD nao for definida, o Spring Boot
+    # falha ao subir (em vez de conectar silenciosamente com uma senha adivinhavel
+    # como "changeme"). Mesma logica de fail-fast do JWT_SECRET (ver JwtUtil).
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -56,6 +67,12 @@ ditec:
     # agendamento/OS de teste) no primeiro start. So roda se o banco
     # ainda nao tiver nenhum ADMINISTRADOR cadastrado.
     enabled: ${DITEC_SEED_ENABLED:true}
+  ratelimit:
+    # Protecao contra forca bruta/spam (login, cadastro, chatbot,
+    # agendamento, avaliacao) — ver RateLimitFilter. Desligado apenas
+    # no perfil "test" (application-test.yml), pra nao interferir nos
+    # testes automatizados.
+    enabled: ${DITEC_RATELIMIT_ENABLED:true}
   jwt:
     secret: ${JWT_SECRET:}
     expiration-minutes: ${JWT_EXPIRATION_MINUTES:120}

@@ -18,9 +18,10 @@ public class OrdemServicoController {
 
     private final OrdemServicoService ordemServicoService;
 
-    /** Rastreamento publico — igual ao comportamento original da landing page. */
+    /** Rastreamento publico — igual ao comportamento original da landing page, porém
+     *  com resposta minimizada (ver OrdemServicoRastreioResponse). */
     @GetMapping("/protocolo/{protocolo}")
-    public OrdemServicoResponse buscarPorProtocolo(@PathVariable String protocolo) {
+    public OrdemServicoRastreioResponse buscarPorProtocolo(@PathVariable String protocolo) {
         return ordemServicoService.buscarPorProtocolo(protocolo);
     }
 

@@ -13,5 +13,7 @@ spring:
 ditec:
   seed:
     enabled: false
+  ratelimit:
+    enabled: false
   jwt:
     secret: teste-secret-apenas-para-a-suite-automatizada-0123456789

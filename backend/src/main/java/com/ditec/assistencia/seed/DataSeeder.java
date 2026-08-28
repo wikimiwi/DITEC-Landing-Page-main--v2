@@ -10,12 +10,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.env.Environment;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 
 /**
  * Popula dados de desenvolvimento/demonstracao no primeiro start (secao 31
@@ -30,6 +32,11 @@ import java.time.LocalDateTime;
  * So roda se DITEC_SEED_ENABLED=true (padrao) E ainda nao existir nenhum
  * ADMINISTRADOR no banco — ou seja, e' seguro reiniciar a aplicacao varias
  * vezes: o seed nunca duplica dados.
+ *
+ * TRAVA DE SEGURANCA (auditoria): alem da flag, o seed se RECUSA a rodar
+ * se o profile ativo contiver "prod" — mesmo que alguem esqueca
+ * DITEC_SEED_ENABLED=true configurado em producao, a conta
+ * admin@ditec.com.br/admin123 nunca sera criada la'.
  */
 @Component
 @RequiredArgsConstructor
@@ -39,6 +46,7 @@ public class DataSeeder implements CommandLineRunner {
     @Value("${ditec.seed.enabled:true}")
     private boolean seedEnabled;
 
+    private final Environment environment;
     private final UsuarioRepository usuarioRepository;
     private final ClienteRepository clienteRepository;
     private final TecnicoRepository tecnicoRepository;
@@ -48,9 +56,18 @@ public class DataSeeder implements CommandLineRunner {
     private final TimelineOSRepository timelineOSRepository;
     private final PasswordEncoder passwordEncoder;
 
+
     @Override
     @Transactional
     public void run(String... args) {
+        boolean profileDeProducao = Arrays.stream(environment.getActiveProfiles())
+                .anyMatch(p -> p.toLowerCase().contains("prod"));
+        if (profileDeProducao) {
+            log.warn("DITEC seed: profile de producao detectado ({}) — seed NUNCA roda aqui, " +
+                            "independente de DITEC_SEED_ENABLED.",
+                    Arrays.toString(environment.getActiveProfiles()));
+            return;
+        }
         if (!seedEnabled) {
             log.info("DITEC seed desabilitado (DITEC_SEED_ENABLED=false).");
             return;

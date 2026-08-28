@@ -643,7 +643,7 @@
              bairro, endereco: end, dataHora: dataHoraISO,
            });
 
-           schedSuccessText.innerHTML = `${nome}, seu agendamento para ${ap} em ${end} está confirmado para ${dateStr}.<br>` +
+           schedSuccessText.innerHTML = `${escHtml(nome)}, seu agendamento para ${escHtml(ap)} em ${escHtml(end)} está confirmado para ${escHtml(dateStr)}.<br>` +
              `<strong>Protocolo: ${escHtml(agendamento.protocolo)}</strong> — guarde para rastrear sua OS.`;
            schedForm.style.display = 'none';
            schedSuccess.style.display = 'block';
@@ -721,7 +721,7 @@
          <div class="os-header">
            <div>
              <div class="os-number">${escHtml(os.protocolo)}</div>
-             <div style="font-size:.82rem;color:#6b7280;margin-top:2px;">${escHtml(os.clienteNome || '')} · ${escHtml(os.tipoAparelho || '')}</div>
+             <div style="font-size:.82rem;color:#6b7280;margin-top:2px;">${escHtml(os.clienteNomeAbreviado || '')} · ${escHtml(os.tipoAparelho || '')}</div>
            </div>
            <span class="os-badge ${visual.badge}">${visual.label}</span>
          </div>

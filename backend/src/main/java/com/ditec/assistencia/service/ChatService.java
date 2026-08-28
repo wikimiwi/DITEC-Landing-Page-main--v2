@@ -33,6 +33,11 @@ import java.util.UUID;
 @Slf4j
 public class ChatService {
 
+    // Limites REAIS aplicados na chamada a Hugging Face — nunca o que o cliente pedir.
+    private static final int MAX_TOKENS_TETO = 500;
+    private static final int MAX_TOKENS_PADRAO = 250;
+    private static final double TEMPERATURE_PADRAO = 0.6;
+
     private final RestClient huggingFaceRestClient;
     private final HuggingFaceProperties hfProperties;
     private final ChatLogRepository chatLogRepository;
@@ -48,11 +53,23 @@ public class ChatService {
         }
 
         String modelo = (req.model() != null && !req.model().isBlank()) ? req.model() : hfProperties.defaultModel();
+
+        // Clamps de seguranca — o cliente pode SUGERIR max_tokens/temperature, mas o
+        // valor efetivamente usado nunca ultrapassa um teto seguro (DECISAO DE
+        // SEGURANCA, auditoria secao 18: evita que alguem force geracoes caras/
+        // longas demais contra uma API externa paga por token).
+        int maxTokens = req.maxTokens() != null
+                ? Math.min(Math.max(req.maxTokens(), 1), MAX_TOKENS_TETO)
+                : MAX_TOKENS_PADRAO;
+        double temperature = req.temperature() != null
+                ? Math.min(Math.max(req.temperature(), 0.0), 1.0)
+                : TEMPERATURE_PADRAO;
+
         Map<String, Object> corpo = Map.of(
                 "model", modelo,
                 "messages", req.messages(),
-                "max_tokens", req.maxTokens() != null ? req.maxTokens() : 250,
-                "temperature", req.temperature() != null ? req.temperature() : 0.6,
+                "max_tokens", maxTokens,
+                "temperature", temperature,
                 "stream", false
         );
 

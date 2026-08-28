@@ -38,11 +38,11 @@ public class OrdemServicoService {
     // ---------------------------------------------------------------
     // Rastreamento publico (por protocolo — nao exige login)
     // ---------------------------------------------------------------
-    public OrdemServicoResponse buscarPorProtocolo(String protocolo) {
+    public OrdemServicoRastreioResponse buscarPorProtocolo(String protocolo) {
         OrdemServico os = ordemServicoRepository.findByProtocolo(protocolo.trim().toUpperCase())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Protocolo nao encontrado."));
         List<TimelineOS> timeline = timelineOSRepository.findByOrdemServico_IdOrderByDataHoraAsc(os.getId());
-        return OrdemServicoMapper.toResponse(os, timeline);
+        return OrdemServicoMapper.toRastreioResponse(os, timeline);
     }
 
     public OrdemServicoResponse buscarPorId(Long id, Authentication auth) {

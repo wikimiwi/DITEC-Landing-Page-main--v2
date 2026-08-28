@@ -3,6 +3,7 @@ package com.ditec.assistencia.controller;
 import com.ditec.assistencia.dto.chat.ChatCompletionResponse;
 import com.ditec.assistencia.dto.chat.ChatRequest;
 import com.ditec.assistencia.service.ChatService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,7 +20,7 @@ public class ChatController {
     private final ChatService chatService;
 
     @PostMapping
-    public ChatCompletionResponse chat(@RequestBody ChatRequest request, Authentication auth) {
+    public ChatCompletionResponse chat(@Valid @RequestBody ChatRequest request, Authentication auth) {
         return chatService.enviar(request, auth);
     }
 }

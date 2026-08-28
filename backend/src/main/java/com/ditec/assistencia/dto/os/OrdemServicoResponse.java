@@ -11,6 +11,7 @@ public record OrdemServicoResponse(
         String tecnicoNome,
         String tipoAparelho,
         String bairro,
+        String endereco,
         String descricaoProblema,
         String status,
         BigDecimal valor,

@@ -105,4 +105,35 @@ class AgendamentoFlowIT {
         mockMvc.perform(get("/api/ordens-servico/protocolo/{protocolo}", "DITEC-2000-999999"))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    void rastreamentoPublicoNuncaExpoeDadosSensiveis() throws Exception {
+        // Regressão de seguranca: o protocolo e' publico e sequencial (qualquer
+        // pessoa pode tentar varios numeros), entao esse endpoint NUNCA pode
+        // devolver nome completo, valor cobrado, forma de pagamento, desconto,
+        // pecas utilizadas, nota fiscal, endereco completo ou o ID interno da OS.
+        AgendamentoCreateRequest req = new AgendamentoCreateRequest(
+                "Fulano de Souza Andrade", "(11) 90000-5555", "Fogão 4 bocas",
+                "Não acende", "Rua Sigilosa, 42", "Moema", proximoHorarioValido().plusDays(3), null);
+
+        String corpo = mockMvc.perform(post("/api/agendamentos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        String protocolo = objectMapper.readTree(corpo).get("protocolo").asText();
+
+        mockMvc.perform(get("/api/ordens-servico/protocolo/{protocolo}", protocolo))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.clienteNomeAbreviado").value("Fulano de Souza A."))
+                .andExpect(jsonPath("$.id").doesNotExist())
+                .andExpect(jsonPath("$.clienteNome").doesNotExist())
+                .andExpect(jsonPath("$.endereco").doesNotExist())
+                .andExpect(jsonPath("$.valor").doesNotExist())
+                .andExpect(jsonPath("$.formaPagamento").doesNotExist())
+                .andExpect(jsonPath("$.desconto").doesNotExist())
+                .andExpect(jsonPath("$.pecasUtilizadas").doesNotExist())
+                .andExpect(jsonPath("$.descricaoFinal").doesNotExist())
+                .andExpect(jsonPath("$.notaFiscalNumero").doesNotExist());
+    }
 }

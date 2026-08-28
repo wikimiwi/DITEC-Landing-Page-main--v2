@@ -25,12 +25,13 @@ DITEC-Landing-Page-main--v2/
 ├── admin.html                # painel administrativo (login real, dashboard, CRUD, relatórios)
 ├── tecnico.html                # área do técnico (login real, minhas OS, iniciar/finalizar atendimento)
 ├── script.js                  # lógica do site público — agora consome a API real
-├── dashboard-shared.js         # window.DitecAPI — cliente HTTP compartilhado pelas 3 páginas
+├── conta.js / admin.js / tecnico.js  # lógica de cada página (extraída do HTML — necessário pra CSP sem unsafe-inline)
+├── dashboard-shared.js         # window.DitecAPI — cliente HTTP compartilhado pelas 4 páginas
 ├── styles.css                   # estilos (inalterado)
 ├── Manifest.JSON                 # manifesto PWA (inalterado)
 ├── assetslogos/                   # logos das marcas atendidas
 │
-├── backend/                        # API Java/Spring Boot (NOVO)
+├── backend/                        # API Java/Spring Boot
 │   ├── pom.xml
 │   ├── .env.example
 │   └── src/main/java/com/ditec/assistencia/
@@ -39,7 +40,7 @@ DITEC-Landing-Page-main--v2/
 │       ├── repository/      # Spring Data JPA
 │       ├── service/         # regras de negócio
 │       ├── controller/      # endpoints REST
-│       ├── security/        # JWT + Spring Security
+│       ├── security/        # JWT + Spring Security + RateLimitFilter
 │       ├── dto/              # records de entrada/saída
 │       ├── exception/         # tratamento de erros (401/403/404/409/422/500)
 │       └── seed/               # dados de desenvolvimento (DataSeeder)
@@ -47,6 +48,7 @@ DITEC-Landing-Page-main--v2/
 │       └── db/migration/V1__schema.sql   # schema MySQL (Flyway)
 │
 ├── database/                        # cópia de leitura do schema + script de criação do banco
+├── SECURITY.md                       # auditoria de segurança (leia antes de ir pra produção)
 └── README.md                         # este arquivo
 ```
 
@@ -110,13 +112,15 @@ acontecem:
 | Variável | Obrigatória | Descrição |
 |---|---|---|
 | `DB_URL` | sim | JDBC URL do MySQL |
-| `DB_USERNAME` / `DB_PASSWORD` | sim | Credenciais do banco |
-| `JWT_SECRET` | sim | Segredo HS256, **mínimo 32 caracteres** (`openssl rand -base64 48`) |
+| `DB_USERNAME` | não (padrão `ditec_user`) | Usuário do banco |
+| `DB_PASSWORD` | **sim, sem valor padrão** | Senha do banco — app recusa subir sem isso |
+| `JWT_SECRET` | **sim, sem valor padrão** | Segredo HS256, **mínimo 32 caracteres** (`openssl rand -base64 48`) — app recusa subir sem isso |
 | `JWT_EXPIRATION_MINUTES` | não (padrão 120) | Validade do token |
 | `HF_API_KEY` | sim, para o chatbot funcionar | Token da Hugging Face (escopo *Inference Providers*) |
 | `HF_MODEL` | não (padrão `Qwen/Qwen2.5-72B-Instruct`) | Modelo usado no chatbot |
 | `DITEC_ALLOWED_ORIGINS` | não (padrão `localhost:5500`) | Origens liberadas no CORS |
-| `DITEC_SEED_ENABLED` | não (padrão `true`) | Liga/desliga o `DataSeeder` |
+| `DITEC_SEED_ENABLED` | não (padrão `true`) | Liga/desliga o `DataSeeder` (nunca roda se o profile ativo contiver "prod") |
+| `DITEC_RATELIMIT_ENABLED` | não (padrão `true`) | Liga/desliga a proteção contra força bruta/spam |
 
 Todos os detalhes e valores de exemplo estão em `backend/.env.example`. **A aplicação recusa
 subir sem `JWT_SECRET`** (falha rápida, em vez de usar uma chave fraca por padrão).
@@ -326,17 +330,59 @@ Também foram implementadas as três pendências da entrega anterior:
 
 ---
 
-## 13. Checklist final
+## 13. Terceira rodada — auditoria e implementação de segurança
+
+Depois das duas rodadas de funcionalidade, foi feita uma auditoria de segurança completa
+(login, JWT, autorização/IDOR, SQL injection, XSS, CORS/CSRF, headers HTTP, segredos,
+chatbot, rate limiting, validação de entrada). O relatório completo — vulnerabilidade por
+vulnerabilidade, com severidade, arquivo afetado, correção implementada e risco residual —
+está em **[`SECURITY.md`](./SECURITY.md)**.
+
+Resumo do que mudou nesta rodada:
+
+- 🔴 **Corrigido:** o rastreamento público de OS (`/api/ordens-servico/protocolo/{protocolo}`)
+  expunha nome completo, valor, forma de pagamento, desconto e nota fiscal de qualquer
+  cliente para qualquer pessoa capaz de adivinhar um protocolo sequencial. Agora devolve
+  um DTO minimizado, com nome abreviado e sem dados financeiros.
+- 🔴 **Corrigido:** XSS real em `script.js` (mensagem de confirmação do agendamento inseria
+  nome/aparelho/endereço sem escapar).
+- 🟠 **Adicionado:** rate limiting (login, cadastro, chatbot, agendamento, avaliação,
+  rastreamento público) — protege contra força bruta, spam e abuso de custo do chatbot.
+- 🟠 **Corrigido:** o chatbot confiava cegamente em `max_tokens`/`temperature` enviados
+  pelo cliente — agora o backend sempre aplica um teto de segurança.
+- 🟡 **Corrigido:** `DB_PASSWORD` tinha um valor padrão inseguro (`changeme`) caso a
+  variável de ambiente não fosse definida — agora a aplicação recusa subir sem ela.
+- 🟡 **Reforçado:** política de senha (mínimo 8 caracteres) e limite de tamanho máximo em
+  **todos** os campos de texto livre de todos os DTOs do projeto.
+- 🟡 **Corrigido:** `DataSeeder` agora se recusa a criar as contas de teste se o profile
+  ativo contiver "prod", mesmo que a flag de seed esteja ligada por engano.
+- 🟢 **Adicionado:** headers de segurança HTTP no backend (CSP, HSTS, Referrer-Policy,
+  Permissions-Policy) e CSP + Referrer-Policy no frontend — o que exigiu extrair os
+  scripts inline de `conta.html`/`admin.html`/`tecnico.html` para arquivos externos.
+- 🟢 **Corrigido (achado durante a auditoria, não é falha de segurança):** `conta.html`
+  estava sem a tag `<script src="dashboard-shared.js">` desde a primeira entrega — a
+  página inteira falhava com `DitecAPI is not defined`.
+- 🟢 **Corrigido (achado durante a auditoria):** o técnico não recebia o endereço completo
+  da visita, só o bairro — adicionado à resposta autenticada da OS.
+
+Tudo que **já estava** correto (BCrypt, JWT, JPA parametrizado, CORS restrito, autorização
+por propriedade do recurso, etc.) está documentado como "auditado e confirmado seguro" no
+`SECURITY.md`, seção 2.
+
+---
+
+## 14. Checklist final
 
 - [x] Banco MySQL real com 9 tabelas, FKs, índices e constraints (Flyway)
 - [x] Autenticação real (Spring Security + JWT + BCrypt), 3 perfis (cliente/admin/técnico)
 - [x] Agendamento real (persistido, com validação de área/horário/conflito, edição e cancelamento pelo cliente)
-- [x] Rastreamento de OS real (timeline no banco, protocolo único)
+- [x] Rastreamento de OS real (timeline no banco, protocolo único, resposta pública minimizada)
 - [x] Painel administrativo real (dashboard, clientes, agendamentos, OS, técnicos, serviços — com criar/editar/ativar-desativar)
 - [x] Tela própria do técnico (login, minhas OS, iniciar/finalizar atendimento)
 - [x] Relatórios exportáveis em CSV (agendamentos, OS, avaliações, chatbot)
-- [x] Chatbot com proxy real (chave protegida, log de interações)
+- [x] Chatbot com proxy real (chave protegida, log de interações, limites de custo aplicados no servidor)
 - [x] Regras de negócio do DRS (horário, área, gás, garantia, desconto, progressão de status)
-- [x] Testes automatizados (H2, sem depender do MySQL para rodar) — incluindo teste de regressão do bug corrigido em `listarMinhas()`
-- [x] Dados de teste seguros (gerados em runtime, nunca em SQL com senha fixa)
+- [x] Auditoria de segurança completa (ver `SECURITY.md`) — IDOR, XSS, rate limiting, headers, validação de entrada
+- [x] Testes automatizados (H2, sem depender do MySQL para rodar) — incluindo testes de segurança (rate limit, exposição de dados no rastreamento público)
+- [x] Dados de teste seguros (gerados em runtime, nunca em SQL com senha fixa, nunca criados em profile de produção)
 - [ ] Build/execução confirmados pelo usuário — rode `mvn compile` (ou `mvn test`) e me avise o resultado
