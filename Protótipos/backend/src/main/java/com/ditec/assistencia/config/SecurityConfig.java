@@ -72,13 +72,14 @@ public class SecurityConfig {
                         "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"))
                 .frameOptions(frame -> frame.deny())
                 .referrerPolicy(referrer -> referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
-                .permissionsPolicy(permissions -> permissions.policy(
-                        "geolocation=(), microphone=(), camera=(), payment=(), usb=()"))
-                // So' tem efeito quando servido via HTTPS de verdade (o navegador
-                // ignora esse header em HTTP puro) — necessario configurar em producao.
-                .httpStrictTransportSecurity(hsts -> hsts
-                        .includeSubDomains(true)
-                        .maxAgeInSeconds(31536000))
+.permissionsPolicy(permissions -> permissions.policy(
+        "geolocation=(), microphone=(), camera=(), payment=(), usb=()"))
+.and()
+// So' tem efeito quando servido via HTTPS de verdade (o navegador
+// ignora esse header em HTTP puro) — necessario configurar em producao.
+.httpStrictTransportSecurity(hsts -> hsts
+        .includeSubDomains(true)
+        .maxAgeInSeconds(31536000))
                 // Cache-Control: no-store ja' vem por padrao do Spring Security em
                 // todas as respostas (nao precisa configurar explicitamente).
             )

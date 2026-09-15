@@ -55,16 +55,16 @@ public class AuthService {
                 .build();
         usuario = usuarioRepository.save(usuario);
 
-        Cliente cliente = Cliente.builder().usuario(usuario).build();
-        cliente = clienteRepository.save(cliente);
+Cliente cliente = Cliente.builder().usuario(usuario).build();
+final Cliente clienteSalvo = clienteRepository.save(cliente);
 
-        // Mesma logica que existia em localStorage: vincula o agendamento mais
-        // recente feito como visitante (mesmo telefone) a conta recem-criada.
-        agendamentoRepository.findFirstByClienteIsNullAndTelefoneContatoOrderByCriadoEmDesc(usuario.getTelefone())
-                .ifPresent(ag -> {
-                    ag.setCliente(cliente);
-                    agendamentoRepository.save(ag);
-                });
+// Mesma logica que existia em localStorage: vincula o agendamento mais
+// recente feito como visitante (mesmo telefone) a conta recem-criada.
+agendamentoRepository.findFirstByClienteIsNullAndTelefoneContatoOrderByCriadoEmDesc(usuario.getTelefone())
+        .ifPresent(ag -> {
+            ag.setCliente(clienteSalvo);
+            agendamentoRepository.save(ag);
+        });
 
         return gerarResposta(usuario);
     }
