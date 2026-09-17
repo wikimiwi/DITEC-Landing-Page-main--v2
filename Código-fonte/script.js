@@ -329,7 +329,17 @@
        const user = getCurrentUser();
        if (user) {
          authBtnText.textContent = user.nome.split(' ')[0];
-         authBtn.onclick = () => { window.location.href = 'conta.html'; };
+         authBtn.onclick = () => {
+           const tipo = String(user.tipo || '').toUpperCase();
+
+           if (tipo === 'ADMINISTRADOR') {
+             window.location.href = 'admin.html';
+           } else if (tipo === 'TECNICO') {
+             window.location.href = 'tecnico.html';
+           } else {
+             window.location.href = 'conta.html';
+           }
+         };
        } else {
          authBtnText.textContent = 'Entrar';
          authBtn.onclick = openModal;
@@ -386,10 +396,33 @@
        if (submitBtn) submitBtn.disabled = true;
        try {
          const data = await DitecAPI.login(email, senha);
+
+         let destino;
+
+         switch (data.tipo) {
+           case 'ADMINISTRADOR':
+             destino = 'admin.html';
+             break;
+
+           case 'TECNICO':
+             destino = 'tecnico.html';
+             break;
+
+           case 'CLIENTE':
+             destino = 'conta.html';
+             break;
+
+           default:
+             throw new Error('Tipo de usuário inválido.');
+         }
+
          closeModal();
          refreshAuthBtn();
          showToast(`Bem-vindo(a) de volta, ${data.nome.split(' ')[0]}!`);
-         setTimeout(() => { window.location.href = 'conta.html'; }, 600);
+
+         setTimeout(() => {
+           window.location.href = destino;
+         }, 600);
        } catch (err) {
          showFormError(loginForm, err.message || 'E-mail ou senha incorretos.');
        } finally {
@@ -415,7 +448,34 @@
          closeModal();
          refreshAuthBtn();
          showToast('Conta criada com sucesso!');
-         setTimeout(() => { window.location.href = 'conta.html'; }, 600);
+         const data = await DitecAPI.login(email, senha);
+
+         let destino;
+
+         switch (data.tipo) {
+           case 'ADMINISTRADOR':
+             destino = 'admin.html';
+             break;
+
+           case 'TECNICO':
+             destino = 'tecnico.html';
+             break;
+
+           case 'CLIENTE':
+             destino = 'conta.html';
+             break;
+
+           default:
+             throw new Error('Tipo de usuário inválido.');
+         }
+
+         closeModal();
+         refreshAuthBtn();
+         showToast(`Bem-vindo(a) de volta, ${data.nome.split(' ')[0]}!`);
+
+         setTimeout(() => {
+           window.location.href = destino;
+         }, 600);
        } catch (err) {
          showFormError(cadastroForm, err.message || 'Não foi possível criar sua conta. Tente novamente.');
        } finally {
