@@ -14,7 +14,12 @@
 (function (global) {
   'use strict';
 
-  const BASE_URL = (global.DITEC_API_BASE_URL || 'http://localhost:8080') + '/api';
+const API_ROOT = global.DITEC_API_BASE_URL ||
+  (['localhost', '127.0.0.1'].includes(window.location.hostname)
+    ? 'http://localhost:8080'
+    : 'https://ditec-api.onrender.com');
+
+const BASE_URL = API_ROOT + '/api';
 
   const TOKEN_KEY = 'ditec_token';
   const USER_KEY  = 'ditec_user'; // cache local só p/ exibição (nome/e-mail/tipo) — nunca a senha
