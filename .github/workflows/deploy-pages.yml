@@ -23,11 +23,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-- name: Setup GitHub Pages
-  uses: actions/configure-pages@v5
-  with:
-    token: ${{ secrets.PAGES_TOKEN }}
-    enablement: true
+      - name: Setup GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          token: ${{ secrets.PAGES_TOKEN }}
+          enablement: true
 
       - name: Prepare site
         run: |
