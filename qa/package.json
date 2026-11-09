@@ -1,0 +1,21 @@
+{
+  "name": "ditec-qa",
+  "private": true,
+  "description": "Auditorias locais do front-end DITEC: Lighthouse e acessibilidade (axe-core + Playwright).",
+  "scripts": {
+    "lighthouse": "PLAYWRIGHT_BROWSERS_PATH=./.browsers node lighthouse.mjs",
+    "a11y": "PLAYWRIGHT_BROWSERS_PATH=./.browsers node a11y.mjs",
+    "instalar-navegador": "PLAYWRIGHT_BROWSERS_PATH=./.browsers playwright install chromium",
+    "teclado": "PLAYWRIGHT_BROWSERS_PATH=./.browsers node teclado.mjs",
+    "servidor-producao": "node servidor-producao.mjs",
+    "lighthouse:producao": "DITEC_FRONT_URL=http://127.0.0.1:5501 PLAYWRIGHT_BROWSERS_PATH=./.browsers node lighthouse.mjs",
+    "interface": "PLAYWRIGHT_BROWSERS_PATH=./.browsers node teste-interface.mjs",
+    "fluxo-os": "bash teste-fluxo-os.sh",
+    "benchmark-chat": "node benchmark-chat.mjs"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "lighthouse": "^12.8.2",
+    "playwright": "^1.65.0"
+  }
+}

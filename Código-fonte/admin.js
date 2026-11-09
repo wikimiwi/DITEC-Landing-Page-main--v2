@@ -18,7 +18,6 @@
 
   const STATUS_AG_LABEL = { PENDENTE: 'Pendente', AGENDADO: 'Confirmado', EM_ATENDIMENTO: 'Em atendimento', CONCLUIDO: 'Concluído', CANCELADO: 'Cancelado' };
   const STATUS_AG_BADGE = { PENDENTE: 'dash-badge--pendente', AGENDADO: 'dash-badge--diagnostico', EM_ATENDIMENTO: 'dash-badge--reparo', CONCLUIDO: 'dash-badge--concluido', CANCELADO: 'dash-badge--cancelado' };
-  const STATUS_OS_LABEL = { AGENDADO: 'Agendado', EM_ATENDIMENTO: 'Em atendimento', CONCLUIDO: 'Concluído', CANCELADO: 'Cancelado' };
 
   /* ---- Render principal ---- */
   async function render() {
@@ -74,7 +73,7 @@
 
   function opcoesTecnicos(tecnicoAtualNome) {
     const semAtribuir = `<option value="">— atribuir técnico —</option>`;
-    const opcoes = tecnicosCache.map(t => `<option value="${t.id}" ${t.nome === tecnicoAtualNome ? 'selected' : ''}>${escHtml(t.nome)}</option>`).join('');
+    const opcoes = tecnicosCache.filter(t => t.status === 'ATIVO' || t.nome === tecnicoAtualNome).map(t => `<option value="${t.id}" ${t.nome === tecnicoAtualNome ? 'selected' : ''}>${escHtml(t.nome)}</option>`).join('');
     return semAtribuir + opcoes;
   }
 
@@ -100,31 +99,79 @@
     }
   }
 
+  const O = window.DitecOS;
+
+  function filtrosOS() {
+    return {
+      protocolo: $('#fProtocolo').value, cliente: $('#fCliente').value,
+      status: $('#fStatus').value, tecnicoId: $('#fTecnico').value,
+    };
+  }
+
+  function preencherFiltros() {
+    const st = $('#fStatus');
+    if (st.options.length <= 1) {
+      Object.entries(O.STATUS).forEach(([k, v]) => st.insertAdjacentHTML('beforeend', `<option value="${k}">${O.esc(v.label)}</option>`));
+    }
+    const tec = $('#fTecnico');
+    const atual = tec.value;
+    tec.innerHTML = '<option value="">Todos os técnicos</option>' +
+      tecnicosCache.map(t => `<option value="${O.esc(t.id)}">${O.esc(t.nome)}</option>`).join('');
+    tec.value = atual;
+  }
+
   async function renderOS() {
     const tbody = $('#osTbody');
+    preencherFiltros();
+    tbody.innerHTML = '<tr><td colspan="8">Carregando...</td></tr>';
     try {
-      const lista = await DitecAPI.admin.ordensServico();
+      const lista = await DitecAPI.admin.ordensServico(filtrosOS());
       $('#osEmpty').hidden = lista.length > 0;
-      tbody.innerHTML = lista.map(os => {
-        const opts = Object.keys(STATUS_OS_LABEL).map(k =>
-          `<option value="${k}" ${os.status === k ? 'selected' : ''}>${STATUS_OS_LABEL[k]}</option>`).join('');
-        const finalizarBtn = os.status === 'EM_ATENDIMENTO'
-          ? `<button class="btn btn--primary btn--sm" data-finalizar-os="${os.id}" type="button">Finalizar</button>` : '';
-        return `
+      tbody.innerHTML = lista.map(os => `
         <tr data-os-id="${os.id}">
-          <td>${escHtml(os.protocolo)}</td>
-          <td>${escHtml(os.clienteNome || '—')}</td>
-          <td>${escHtml(os.tecnicoNome || '—')}</td>
-          <td>${escHtml(os.tipoAparelho || '—')}</td>
-          <td><select class="input dash-inline-select" data-status-os="${os.id}">${opts}</select></td>
-          <td>${fmtMoeda(os.valor)}</td>
-          <td>${finalizarBtn}<div class="finalizar-form-slot"></div></td>
-        </tr>`;
-      }).join('');
+          <td>${O.esc(os.protocolo)}${os.prioridadeGas ? ' 🔥' : ''}</td>
+          <td>${O.esc(os.clienteNome || '—')}</td>
+          <td>${O.esc(os.tecnicoNome || '—')}</td>
+          <td>${O.esc(os.tipoAparelho || '—')}</td>
+          <td>${O.badge(os.status)}</td>
+          <td>${O.esc(O.fmtData(os.previsaoConclusao) || '—')}</td>
+          <td>${O.fmtMoeda(os.valor)}</td>
+          <td><button class="btn btn--outline btn--sm" data-detalhe-os="${os.id}" type="button" aria-expanded="false">Detalhes</button></td>
+        </tr>
+        <tr class="os-detail-row" data-detalhe-de="${os.id}" hidden><td colspan="8"><div class="os-detail-slot"></div></td></tr>`).join('');
     } catch (err) {
-      tbody.innerHTML = `<tr><td colspan="7">${escHtml(err.message)}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8">${O.esc(err.message)}</td></tr>`;
     }
   }
+
+  $('#osFiltros').addEventListener('submit', e => { e.preventDefault(); renderOS(); });
+  $('#osFiltros').addEventListener('reset', () => setTimeout(renderOS, 0));
+
+  $('#osTbody').addEventListener('click', e => {
+    const btn = e.target.closest('[data-detalhe-os]');
+    if (!btn) return;
+    const id = btn.getAttribute('data-detalhe-os');
+    const linha = $(`tr[data-detalhe-de="${id}"]`);
+    const abrir = linha.hidden;
+    linha.hidden = !abrir;
+    btn.setAttribute('aria-expanded', String(abrir));
+    btn.textContent = abrir ? 'Fechar' : 'Detalhes';
+    if (abrir) {
+      DitecOSEquipe.abrir(linha.querySelector('.os-detail-slot'), Number(id), {
+        isAdmin: true,
+        tecnicos: tecnicosCache,
+        onChange: os => {
+          const tr = $(`tr[data-os-id="${id}"]`);
+          if (!tr) return;
+          tr.children[2].textContent = os.tecnicoNome || '—';
+          tr.children[4].innerHTML = O.badge(os.status);
+          tr.children[5].textContent = O.fmtData(os.previsaoConclusao) || '—';
+          tr.children[6].textContent = O.fmtMoeda(os.valor);
+          renderStats(); renderAgendamentos();
+        },
+      });
+    }
+  });
 
   async function renderTecnicos() {
     const tbody = $('#tecnicosTbody');
@@ -330,7 +377,7 @@
     const confirmarAg = e.target.closest('[data-confirmar-ag]');
     if (confirmarAg) {
       confirmarAg.disabled = true;
-      try { await DitecAPI.admin.confirmarAgendamento(confirmarAg.getAttribute('data-confirmar-ag')); renderAgendamentos(); renderStats(); }
+      try { await DitecAPI.admin.confirmarAgendamento(confirmarAg.getAttribute('data-confirmar-ag')); renderAgendamentos(); renderStats(); renderOS(); }
       catch (err) { alert(err.message); confirmarAg.disabled = false; }
       return;
     }
@@ -368,42 +415,7 @@
       $('#servicoForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
-
-    const finalizarBtn = e.target.closest('[data-finalizar-os]');
-    if (finalizarBtn) {
-      abrirFormFinalizar(finalizarBtn);
-      return;
-    }
   });
-
-  function abrirFormFinalizar(btn) {
-    const osId = btn.getAttribute('data-finalizar-os');
-    const slot = btn.closest('td').querySelector('.finalizar-form-slot');
-    btn.hidden = true;
-    slot.innerHTML = `
-      <div style="margin-top:8px;padding:10px;border:1px solid var(--border);border-radius:10px;min-width:220px;">
-        <input type="number" step="0.01" min="0" class="input" placeholder="Valor (R$)" id="fVal-${osId}" style="margin-bottom:6px;" />
-        <select class="input" id="fPag-${osId}" style="margin-bottom:6px;">
-          <option value="pix">Pix</option><option value="dinheiro">Dinheiro (5% desc.)</option>
-          <option value="cartao">Cartão</option><option value="boleto">Boleto</option>
-        </select>
-        <input type="text" class="input" placeholder="Peças utilizadas" id="fPecas-${osId}" style="margin-bottom:6px;" />
-        <input type="text" class="input" placeholder="Nota fiscal (opcional)" id="fNf-${osId}" style="margin-bottom:6px;" />
-        <button class="btn btn--primary btn--sm" type="button" id="fEnviar-${osId}">Concluir OS</button>
-      </div>`;
-    $('#fEnviar-' + osId).addEventListener('click', async () => {
-      const valor = parseFloat($('#fVal-' + osId).value);
-      if (!valor && valor !== 0) { alert('Informe o valor cobrado.'); return; }
-      try {
-        await DitecAPI.finalizarOS(osId, {
-          valor, formaPagamento: $('#fPag-' + osId).value,
-          pecasUtilizadas: $('#fPecas-' + osId).value.trim() || null,
-          notaFiscalNumero: $('#fNf-' + osId).value.trim() || null,
-        });
-        renderOS(); renderStats(); renderAgendamentos();
-      } catch (err) { alert(err.message || 'Não foi possível finalizar.'); }
-    });
-  }
 
   /* ---- Ações delegadas (mudança de select) ---- */
   document.addEventListener('change', async e => {
@@ -411,21 +423,8 @@
     if (tecnicoSel) {
       const id = tecnicoSel.getAttribute('data-tecnico-ag');
       if (!tecnicoSel.value) return;
-      try { await DitecAPI.admin.atribuirTecnico(id, Number(tecnicoSel.value)); renderAgendamentos(); }
+      try { await DitecAPI.admin.atribuirTecnico(id, Number(tecnicoSel.value)); renderAgendamentos(); renderOS(); }
       catch (err) { alert(err.message); }
-      return;
-    }
-
-    const statusOsSel = e.target.closest('[data-status-os]');
-    if (statusOsSel) {
-      const id = statusOsSel.getAttribute('data-status-os');
-      try {
-        await DitecAPI.atualizarStatusOS(id, { status: statusOsSel.value });
-        renderOS(); renderStats(); renderAgendamentos();
-      } catch (err) {
-        alert(err.message);
-        renderOS(); // desfaz a selecao visual, redesenhando com o status real do servidor
-      }
       return;
     }
   });

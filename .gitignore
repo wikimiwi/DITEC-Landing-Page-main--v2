@@ -1,2 +1,19 @@
+# Segredos locais — nunca versionar
+.env
+*.env.local
+Prototipos/backend/.env
+
+# Build / IDE
+Prototipos/backend/target/
+.idea/
+*.iml
 .DS_Store
+
+# Ferramentas de QA locais (reinstalaveis com "npm install" em qa/)
+qa/node_modules/
+qa/.browsers/
+qa/relatorios/*.html
+
+# Configuracao local do app Claude
+.claude/
 **/.DS_Store

@@ -1,0 +1,134 @@
+[
+  {
+    "nome": "Página inicial",
+    "url": "/index.html",
+    "viewport": 1280,
+    "violacoes": []
+  },
+  {
+    "nome": "Rastreamento com resultado",
+    "url": "/index.html#rastreamento",
+    "viewport": 1280,
+    "violacoes": []
+  },
+  {
+    "nome": "Rastreamento com erro",
+    "url": "/index.html#rastreamento",
+    "viewport": 1280,
+    "violacoes": []
+  },
+  {
+    "nome": "Chatbot aberto",
+    "url": "/index.html",
+    "viewport": 1280,
+    "violacoes": []
+  },
+  {
+    "nome": "Modal de login/cadastro",
+    "url": "/index.html",
+    "viewport": 1280,
+    "violacoes": []
+  },
+  {
+    "nome": "Login cliente",
+    "url": "/conta.html",
+    "viewport": 1280,
+    "violacoes": []
+  },
+  {
+    "nome": "Área do cliente (logado)",
+    "url": "/conta.html",
+    "viewport": 1280,
+    "violacoes": []
+  },
+  {
+    "nome": "Login técnico",
+    "url": "/tecnico.html",
+    "viewport": 1280,
+    "violacoes": []
+  },
+  {
+    "nome": "Painel técnico (logado, OS aberta)",
+    "url": "/tecnico.html",
+    "viewport": 1280,
+    "violacoes": []
+  },
+  {
+    "nome": "Login admin",
+    "url": "/admin.html",
+    "viewport": 1280,
+    "violacoes": []
+  },
+  {
+    "nome": "Painel admin (logado, OS aberta)",
+    "url": "/admin.html",
+    "viewport": 1280,
+    "violacoes": []
+  },
+  {
+    "nome": "Página inicial",
+    "url": "/index.html",
+    "viewport": 375,
+    "violacoes": []
+  },
+  {
+    "nome": "Rastreamento com resultado",
+    "url": "/index.html#rastreamento",
+    "viewport": 375,
+    "violacoes": []
+  },
+  {
+    "nome": "Rastreamento com erro",
+    "url": "/index.html#rastreamento",
+    "viewport": 375,
+    "violacoes": []
+  },
+  {
+    "nome": "Chatbot aberto",
+    "url": "/index.html",
+    "viewport": 375,
+    "violacoes": []
+  },
+  {
+    "nome": "Modal de login/cadastro",
+    "url": "/index.html",
+    "viewport": 375,
+    "violacoes": []
+  },
+  {
+    "nome": "Login cliente",
+    "url": "/conta.html",
+    "viewport": 375,
+    "violacoes": []
+  },
+  {
+    "nome": "Área do cliente (logado)",
+    "url": "/conta.html",
+    "viewport": 375,
+    "violacoes": []
+  },
+  {
+    "nome": "Login técnico",
+    "url": "/tecnico.html",
+    "viewport": 375,
+    "violacoes": []
+  },
+  {
+    "nome": "Painel técnico (logado, OS aberta)",
+    "url": "/tecnico.html",
+    "viewport": 375,
+    "violacoes": []
+  },
+  {
+    "nome": "Login admin",
+    "url": "/admin.html",
+    "viewport": 375,
+    "violacoes": []
+  },
+  {
+    "nome": "Painel admin (logado, OS aberta)",
+    "url": "/admin.html",
+    "viewport": 375,
+    "violacoes": []
+  }
+]

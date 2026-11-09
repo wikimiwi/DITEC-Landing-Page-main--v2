@@ -49,4 +49,18 @@ class RateLimitIT {
                         .content(corpo))
                 .andExpect(status().isTooManyRequests());
     }
+
+    @Test
+    void naoAceitaXForwardedForForjadoParaBurlarOLimite() throws Exception {
+        String corpo = objectMapper.writeValueAsString(new LoginRequest("outro@ditec.com.br", "senhaqualquer"));
+        // mesmo trocando o X-Forwarded-For a cada tentativa, o limite e' por conexao real
+        // (sem DITEC_TRUST_PROXY=true o header e' ignorado)
+        for (int i = 0; i < 10; i++) {
+            mockMvc.perform(post("/api/auth/register").header("X-Forwarded-For", "10.0.0." + i)
+                    .contentType(MediaType.APPLICATION_JSON).content("{}"));
+        }
+        mockMvc.perform(post("/api/auth/register").header("X-Forwarded-For", "10.9.9.9")
+                        .contentType(MediaType.APPLICATION_JSON).content(corpo))
+                .andExpect(status().isTooManyRequests());
+    }
 }

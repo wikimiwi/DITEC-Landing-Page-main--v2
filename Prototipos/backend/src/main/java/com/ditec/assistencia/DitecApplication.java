@@ -9,7 +9,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
  *
  * Este backend substitui os dados simulados (localStorage / OS_DATA / OCUPADOS)
  * do frontend por persistencia real em MySQL, autenticacao real (Spring Security
- * + JWT + BCrypt) e um proxy seguro para o chatbot de IA (Hugging Face).
+ * + JWT + BCrypt) e um proxy seguro para o chatbot de IA (Google Gemini API).
  */
 @SpringBootApplication
 @ConfigurationPropertiesScan

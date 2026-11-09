@@ -30,6 +30,7 @@ public class TecnicoService {
 
     private static final String ALFABETO_SENHA = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
+    @Transactional(readOnly = true)
     public List<TecnicoResponse> listar() {
         return tecnicoRepository.findAll().stream().map(this::toResponse).toList();
     }

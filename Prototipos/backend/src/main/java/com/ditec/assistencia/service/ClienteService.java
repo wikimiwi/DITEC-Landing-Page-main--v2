@@ -9,6 +9,7 @@ import com.ditec.assistencia.entity.Usuario;
 import com.ditec.assistencia.exception.RecursoNaoEncontradoException;
 import com.ditec.assistencia.repository.AgendamentoRepository;
 import com.ditec.assistencia.repository.ClienteRepository;
+import com.ditec.assistencia.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,9 +20,11 @@ import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ClienteService {
 
     private final ClienteRepository clienteRepository;
+    private final UsuarioRepository usuarioRepository;
     private final AgendamentoRepository agendamentoRepository;
 
     private static final DateTimeFormatter DESDE_FMT = DateTimeFormatter.ofPattern("MMM yyyy", new Locale("pt", "BR"));
@@ -43,8 +46,14 @@ public class ClienteService {
     @Transactional
     public ClientePerfilResponse atualizarPerfil(Usuario usuario, ClienteUpdateRequest req) {
         Cliente c = buscarClientePorUsuario(usuario);
-        usuario.setNome(req.nome().trim());
-        usuario.setTelefone(req.telefone().trim());
+        // O Usuario do token vem de outra sessao (detached): sem salvar explicitamente,
+        // nome e telefone NUNCA eram persistidos (bug corrigido).
+        Usuario gerenciado = usuarioRepository.findById(usuario.getId())
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Usuario nao encontrado."));
+        gerenciado.setNome(req.nome().trim());
+        gerenciado.setTelefone(req.telefone().trim());
+        usuarioRepository.save(gerenciado);
+        usuario = gerenciado;
         c.setEndereco(req.endereco());
         c.setBairro(req.bairro());
         c.setCidade(req.cidade());

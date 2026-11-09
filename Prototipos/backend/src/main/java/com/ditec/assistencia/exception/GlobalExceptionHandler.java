@@ -3,6 +3,7 @@ package com.ditec.assistencia.exception;
 import com.ditec.assistencia.dto.common.ErrorResponse;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -20,6 +21,7 @@ import java.util.Map;
  * (secao 29 do prompt mestre: 401/403/404/409/422/500).
  */
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(RecursoNaoEncontradoException.class)
@@ -70,6 +72,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenerico(Exception ex, HttpServletRequest req) {
+        // Loga a causa no servidor (nunca no corpo da resposta) — antes o erro era
+        // engolido sem rastro, o que escondia bugs reais (ex.: 500 no rastreamento).
+        log.error("Erro inesperado em {} {}", req.getMethod(), req.getRequestURI(), ex);
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error",
                 "Ocorreu um erro inesperado. Tente novamente em instantes.", req);
     }

@@ -2,18 +2,22 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:8080 https://ditec-api.onrender.com; frame-src https://www.google.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:8080 https://ditec-api.onrender.com; frame-src https://www.google.com; base-uri 'self'; form-action 'self'; object-src 'none'" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <title>Área do Cliente | DITEC Assistência Técnica</title>
+  <meta name="description" content="Área do cliente DITEC: acompanhe seus agendamentos e Ordens de Serviço e aprove orçamentos." />
   <meta name="robots" content="noindex, nofollow" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" />
+  <script src="carregar-fontes.js" async></script>
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'><rect width='36' height='36' rx='9' fill='%230047AB'/><text x='18' y='25' text-anchor='middle' font-family='sans-serif' font-weight='900' font-size='16' fill='white'>DT</text></svg>" />
 </head>
 <body>
+<a class="skip-link" href="#main-content">Pular para o conteúdo</a>
 
 <!-- ===== HEADER ===== -->
 <header class="dash-header">
@@ -33,7 +37,7 @@
   </div>
 </header>
 
-<main class="dash-main">
+<main class="dash-main" id="main-content" tabindex="-1">
   <div class="container">
 
     <!-- ===== ESTADO: NÃO LOGADO ===== -->
@@ -57,7 +61,7 @@
           <div class="form-group"><label class="form-label" for="gCadNome">Nome completo</label><input type="text" id="gCadNome" class="input" required /></div>
           <div class="form-group"><label class="form-label" for="gCadEmail">E-mail</label><input type="email" id="gCadEmail" class="input" required /></div>
           <div class="form-group"><label class="form-label" for="gCadTel">Telefone / WhatsApp</label><input type="tel" id="gCadTel" class="input" required /></div>
-          <div class="form-group"><label class="form-label" for="gCadSenha">Senha</label><input type="password" id="gCadSenha" class="input" placeholder="Mínimo 6 caracteres" required /></div>
+          <div class="form-group"><label class="form-label" for="gCadSenha">Senha</label><input type="password" id="gCadSenha" class="input" placeholder="Mínimo 8 caracteres" minlength="8" required /></div>
           <div class="form-group"><label class="form-label" for="gCadSenha2">Confirmar senha</label><input type="password" id="gCadSenha2" class="input" required /></div>
           <button type="submit" class="btn btn--primary btn--full">Criar Conta</button>
         </form>
@@ -126,14 +130,10 @@
       </div>
 
       <div class="dash-grid">
-        <!-- RASTREAMENTO RÁPIDO DE OS -->
+        <!-- MINHAS ORDENS DE SERVIÇO (acompanhamento completo) -->
         <div class="dash-card">
-          <div class="dash-card__title">Rastrear Ordem de Serviço</div>
-          <div class="modal-form">
-            <input type="text" id="osInputConta" class="input" placeholder="Ex: DITEC-2026-000001" maxlength="20" />
-            <button class="btn btn--primary btn--full" id="osSearchConta" type="button">Rastrear</button>
-            <div id="osResultConta"></div>
-          </div>
+          <div class="dash-card__title">Minhas Ordens de Serviço <span class="profile-pill" id="osCount" style="margin-left:4px;">0</span></div>
+          <div id="osListConta" aria-live="polite"></div>
         </div>
 
         <!-- MEUS AGENDAMENTOS -->
@@ -147,6 +147,7 @@
   </div>
 </main>
 
+<script src="config.js"></script>
 <script src="dashboard-shared.js"></script>
 <script src="conta.js"></script>
 </body>

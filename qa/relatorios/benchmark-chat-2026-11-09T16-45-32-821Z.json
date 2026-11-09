@@ -1,0 +1,74 @@
+{
+  "resumo": {
+    "total": 5,
+    "sucesso": 5,
+    "falhas": 0,
+    "taxaSucesso": "100.0%",
+    "respostasDaIA": 0,
+    "respostasAutomaticas": 5,
+    "primeira": {
+      "n": 1,
+      "media": 121,
+      "min": 121,
+      "max": 121,
+      "p95": 121
+    },
+    "subsequentes": {
+      "n": 4,
+      "media": 6,
+      "min": 5,
+      "max": 7,
+      "p95": 7
+    },
+    "todas": {
+      "n": 5,
+      "media": 29,
+      "min": 5,
+      "max": 121,
+      "p95": 121
+    },
+    "somenteIA": null
+  },
+  "amostras": [
+    {
+      "i": 1,
+      "ms": 121.00029199999999,
+      "status": 200,
+      "fonte": "automatica",
+      "pergunta": "Vocês consertam geladeira que não gela?",
+      "resposta": "Consertamos geladeiras e freezers, máquinas de lavar e secadoras, fogões e fornos, micro-o"
+    },
+    {
+      "i": 2,
+      "ms": 6.02279200000001,
+      "status": 200,
+      "fonte": "automatica",
+      "pergunta": "Qual a garantia do serviço?",
+      "resposta": "Todos os serviços têm **garantia de 90 dias** em peças e mão de obra, contada a partir da "
+    },
+    {
+      "i": 3,
+      "ms": 5.830667000000005,
+      "status": 200,
+      "fonte": "automatica",
+      "pergunta": "O diagnóstico é gratuito?",
+      "resposta": "O **diagnostico é gratuito**. Depois da avaliação você recebe o orçamento e decide se apro"
+    },
+    {
+      "i": 4,
+      "ms": 6.554333000000014,
+      "status": 200,
+      "fonte": "automatica",
+      "pergunta": "Minha máquina de lavar não centrifuga, o que pode ser?",
+      "resposta": "Consertamos geladeiras e freezers, máquinas de lavar e secadoras, fogões e fornos, micro-o"
+    },
+    {
+      "i": 5,
+      "ms": 4.757792000000023,
+      "status": 200,
+      "fonte": "automatica",
+      "pergunta": "Atendem aos domingos?",
+      "resposta": "Atendimento presencial de **segunda a sábado, das 07h às 20h** (não atendemos aos domingos"
+    }
+  ]
+}

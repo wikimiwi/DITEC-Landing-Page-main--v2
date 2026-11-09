@@ -43,6 +43,14 @@ public class RateLimitFilter extends OncePerRequestFilter {
     @Value("${ditec.ratelimit.enabled:true}")
     private boolean habilitado;
 
+    /**
+     * So' confia no X-Forwarded-For quando a API roda atras de um proxy reverso
+     * conhecido (ex.: Render/Nginx). Antes o header era SEMPRE aceito, e qualquer
+     * cliente burlava o limite trocando o valor a cada requisicao.
+     */
+    @Value("${ditec.ratelimit.trust-forwarded-for:false}")
+    private boolean confiarForwardedFor;
+
     private record Regra(Pattern caminho, String metodo, int maxRequisicoes, long janelaMillis) {
     }
 
@@ -57,7 +65,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
             new Regra(Pattern.compile("^/api/auth/register$"), "POST", 5, 60 * 60_000L),
             new Regra(Pattern.compile("^/api/chat$"), "POST", 20, 5 * 60_000L),
             new Regra(Pattern.compile("^/api/agendamentos$"), "POST", 10, 60 * 60_000L),
-            new Regra(Pattern.compile("^/api/ordens-servico/protocolo/.+$"), "GET", 30, 5 * 60_000L),
+            new Regra(Pattern.compile("^/api/ordens-servico/rastreio$"), "POST", 20, 5 * 60_000L),
+            new Regra(Pattern.compile("^/api/ordens-servico/\\d+/orcamento/resposta$"), "POST", 10, 60 * 60_000L),
             new Regra(Pattern.compile("^/api/ordens-servico/\\d+/avaliacao$"), "POST", 10, 60 * 60_000L)
     );
 
@@ -106,7 +115,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     /** Confia em X-Forwarded-For apenas se vier de um proxy reverso configurado (ver README/producao); caso contrario usa o IP direto da conexao. */
     private String clienteId(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
+        String forwarded = confiarForwardedFor ? request.getHeader("X-Forwarded-For") : null;
         if (forwarded != null && !forwarded.isBlank()) {
             return forwarded.split(",")[0].trim();
         }

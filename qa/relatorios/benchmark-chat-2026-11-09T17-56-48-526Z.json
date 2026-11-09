@@ -1,0 +1,136 @@
+{
+  "resumo": {
+    "total": 12,
+    "sucesso": 12,
+    "falhas": 0,
+    "taxaSucesso": "100.0%",
+    "respostasDaIA": 12,
+    "respostasAutomaticas": 0,
+    "primeira": {
+      "n": 1,
+      "media": 1969,
+      "min": 1969,
+      "max": 1969,
+      "p95": 1969
+    },
+    "subsequentes": {
+      "n": 11,
+      "media": 1066,
+      "min": 869,
+      "max": 1457,
+      "p95": 1457
+    },
+    "todas": {
+      "n": 12,
+      "media": 1141,
+      "min": 869,
+      "max": 1969,
+      "p95": 1969
+    },
+    "somenteIA": {
+      "n": 12,
+      "media": 1141,
+      "min": 869,
+      "max": 1969,
+      "p95": 1969
+    }
+  },
+  "amostras": [
+    {
+      "i": 1,
+      "ms": 1969.3414589999998,
+      "status": 200,
+      "fonte": "ia",
+      "pergunta": "Vocês consertam geladeira que não gela?",
+      "resposta": "Olá! Sim, realizamos manutenção e conserto em geladeiras e freezers que não estão gelando,"
+    },
+    {
+      "i": 2,
+      "ms": 868.7754999999997,
+      "status": 200,
+      "fonte": "ia",
+      "pergunta": "Qual a garantia do serviço?",
+      "resposta": "Olá! Nossos serviços de manutenção e conserto possuem garantia de 90 dias, cobrindo tanto "
+    },
+    {
+      "i": 3,
+      "ms": 1272.3342919999996,
+      "status": 200,
+      "fonte": "ia",
+      "pergunta": "O diagnóstico é gratuito?",
+      "resposta": "Sim, o diagnóstico na DITEC Assistência Técnica é totalmente gratuito! Além disso, oferece"
+    },
+    {
+      "i": 4,
+      "ms": 960.830582999999,
+      "status": 200,
+      "fonte": "ia",
+      "pergunta": "Minha máquina de lavar não centrifuga, o que pode ser?",
+      "resposta": "Olá! Sinto muito pelo transtorno com a sua máquina de lavar. Para entendermos melhor o pro"
+    },
+    {
+      "i": 5,
+      "ms": 1425.3450830000002,
+      "status": 200,
+      "fonte": "ia",
+      "pergunta": "Atendem aos domingos?",
+      "resposta": "Olá! Não realizamos atendimentos presenciais aos domingos, mas nosso atendimento presencia"
+    },
+    {
+      "i": 6,
+      "ms": 915.8818339999998,
+      "status": 200,
+      "fonte": "ia",
+      "pergunta": "Tem desconto no Pix?",
+      "resposta": "Sim, oferecemos 5% de desconto para pagamentos à vista via Pix ou dinheiro. Também aceitam"
+    },
+    {
+      "i": 7,
+      "ms": 993.5366250000006,
+      "status": 200,
+      "fonte": "ia",
+      "pergunta": "Meu fogão a gás está com cheiro de gás, o que faço?",
+      "resposta": "Olá! Sinto muito por essa situação, mas mantenha a calma. Feche imediatamente o registro d"
+    },
+    {
+      "i": 8,
+      "ms": 942.5685840000006,
+      "status": 200,
+      "fonte": "ia",
+      "pergunta": "Como acompanho minha ordem de serviço?",
+      "resposta": "Olá! Para acompanhar sua ordem de serviço, basta acessar a seção \"Rastrear OS\" em nosso si"
+    },
+    {
+      "i": 9,
+      "ms": 948.1960410000029,
+      "status": 200,
+      "fonte": "ia",
+      "pergunta": "Vocês atendem em Osasco?",
+      "resposta": "Olá! Sim, atendemos em regiões selecionadas da Grande São Paulo, incluindo Osasco. Para co"
+    },
+    {
+      "i": 10,
+      "ms": 1024.839666999993,
+      "status": 200,
+      "fonte": "ia",
+      "pergunta": "Quanto custa consertar um micro-ondas?",
+      "resposta": "Olá! Seja bem-vindo à DITEC Assistência Técnica. Nós realizamos o conserto de micro-ondas,"
+    },
+    {
+      "i": 11,
+      "ms": 919.5508750000008,
+      "status": 200,
+      "fonte": "ia",
+      "pergunta": "Vocês consertam geladeira que não gela?",
+      "resposta": "Sim, consertamos geladeiras e freezers que não estão gelando! O diagnóstico é totalmente g"
+    },
+    {
+      "i": 12,
+      "ms": 1456.6660839999968,
+      "status": 200,
+      "fonte": "ia",
+      "pergunta": "Qual a garantia do serviço?",
+      "resposta": "Olá! A DITEC Assistencia Tecnica oferece garantia de 90 dias em todos os servicos realizad"
+    }
+  ]
+}

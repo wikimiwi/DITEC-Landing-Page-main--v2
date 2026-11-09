@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Proxy do chatbot — publico, mesmo contrato ja usado pelo script.js (askMistral). */
+/** Proxy do chatbot — publico, mesmo contrato ja usado pelo script.js (perguntarIA). */
 @RestController
 @RequestMapping("/api/chat")
 @RequiredArgsConstructor

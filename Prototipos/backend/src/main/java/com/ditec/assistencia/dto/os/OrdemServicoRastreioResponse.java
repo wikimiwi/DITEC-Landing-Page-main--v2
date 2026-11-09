@@ -1,30 +1,39 @@
 package com.ditec.assistencia.dto.os;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Resposta do rastreamento PUBLICO (GET /api/ordens-servico/protocolo/{protocolo}).
+ * Resposta do rastreamento PUBLICO (POST /api/ordens-servico/rastreio).
  *
- * DECISAO DE SEGURANCA (auditoria): o protocolo e' um identificador sequencial e
- * publico por design (o cliente rastreia sem precisar logar, como um rastreio de
- * encomenda) — mas isso o torna adivinhavel/enumeravel. Antes desta correcao, esse
- * endpoint devolvia o MESMO objeto completo usado pelo dono/admin/tecnico, incluindo
- * nome completo do cliente, valor cobrado, forma de pagamento, desconto, pecas
- * utilizadas e numero da nota fiscal — ou seja, qualquer pessoa testando
- * "DITEC-2026-000001", "000002", "000003"... conseguia ver dados financeiros e
- * pessoais de terceiros. Este DTO existe para conter apenas o necessario para a
- * finalidade de rastreamento, sem esses dados sensiveis. O nome do cliente e'
- * abreviado (primeiro nome + inicial do ultimo sobrenome), igual ao padrao que a
- * propria landing page ja usava nos dados de exemplo antes desta integracao.
+ * Contem apenas o necessario para o cliente acompanhar o atendimento:
+ * nunca inclui o ID interno, endereco, telefone, forma de pagamento, pecas,
+ * nota fiscal ou anotacoes internas; o nome do cliente vem abreviado.
+ * O valor do orcamento e' exibido porque o cliente precisa dele para
+ * aprovar o servico — e a consulta ja exige protocolo + telefone.
  */
 public record OrdemServicoRastreioResponse(
         String protocolo,
         String clienteNomeAbreviado,
-        String tecnicoNome,
         String tipoAparelho,
-        String bairro,
+        String descricaoProblema,
         String status,
+        String statusDescricao,
+        int etapa,
+        LocalDateTime dataAbertura,
+        LocalDateTime ultimaAtualizacao,
+        LocalDateTime dataAgendada,
+        String diagnostico,
+        BigDecimal valorOrcamento,
+        Boolean orcamentoAprovado,
+        String tecnicoNome,
+        LocalDate previsaoConclusao,
+        LocalDateTime dataConclusao,
+        LocalDateTime dataEntrega,
         Integer garantiaDias,
+        LocalDate garantiaAte,
         List<TimelineItemResponse> timeline
 ) {
 }

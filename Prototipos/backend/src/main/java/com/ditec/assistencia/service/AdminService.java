@@ -8,6 +8,7 @@ import com.ditec.assistencia.enums.StatusOS;
 import com.ditec.assistencia.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.YearMonth;
@@ -17,6 +18,7 @@ import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AdminService {
 
     private final ClienteRepository clienteRepository;
@@ -28,15 +30,15 @@ public class AdminService {
     public DashboardResponse dashboard() {
         long totalClientes = clienteRepository.count();
         long totalAgendamentos = agendamentoRepository.count();
-        long osAbertas = ordemServicoRepository.countByStatusIn(List.of(StatusOS.AGENDADO, StatusOS.EM_ATENDIMENTO));
-        long osConcluidas = ordemServicoRepository.countByStatus(StatusOS.CONCLUIDO);
+        long osAbertas = ordemServicoRepository.countByStatusIn(StatusOS.abertos());
+        long osConcluidas = ordemServicoRepository.countByStatusIn(
+                List.of(StatusOS.CONCLUIDO, StatusOS.AGUARDANDO_RETIRADA, StatusOS.ENTREGUE));
 
         YearMonth mesAtual = YearMonth.now();
         LocalDateTime inicioMes = mesAtual.atDay(1).atStartOfDay();
         LocalDateTime fimMes = mesAtual.atEndOfMonth().atTime(23, 59, 59);
-        long atendimentosNoMes = agendamentoRepository.findAll().stream()
-                .filter(a -> !a.getDataHora().isBefore(inicioMes) && !a.getDataHora().isAfter(fimMes))
-                .count();
+        // contagem direto no banco (antes carregava TODOS os agendamentos em memoria)
+        long atendimentosNoMes = agendamentoRepository.countByDataHoraBetween(inicioMes, fimMes);
 
         return new DashboardResponse(totalClientes, totalAgendamentos, osAbertas, osConcluidas, atendimentosNoMes);
     }

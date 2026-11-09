@@ -4,6 +4,7 @@ import com.ditec.assistencia.entity.*;
 import com.ditec.assistencia.enums.StatusAgendamento;
 import com.ditec.assistencia.enums.StatusConta;
 import com.ditec.assistencia.enums.StatusOS;
+import com.ditec.assistencia.enums.TipoEventoOS;
 import com.ditec.assistencia.enums.TipoUsuario;
 import com.ditec.assistencia.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -55,6 +56,7 @@ public class DataSeeder implements CommandLineRunner {
     private final OrdemServicoRepository ordemServicoRepository;
     private final TimelineOSRepository timelineOSRepository;
     private final PasswordEncoder passwordEncoder;
+    private final com.ditec.assistencia.service.ProtocoloService protocoloService;
 
 
     @Override
@@ -134,47 +136,87 @@ public class DataSeeder implements CommandLineRunner {
         servicoRepository.save(Servico.builder().nome("Conserto de maquina de lavar").descricao("Diagnostico e reparo de maquinas de lavar e secadoras.").valorBase(new BigDecimal("160.00")).status(StatusConta.ATIVO).build());
         servicoRepository.save(Servico.builder().nome("Manutencao de ar-condicionado").descricao("Limpeza, recarga de gas e reparo de ar-condicionado.").valorBase(new BigDecimal("220.00")).status(StatusConta.ATIVO).build());
 
-        // ---- Agendamento + OS de exemplo (concluida, com timeline e nota fiscal) ----
-        Agendamento agendamento = agendamentoRepository.save(Agendamento.builder()
-                .cliente(cliente)
-                .tecnico(tecnico)
-                .tipoAparelho("Geladeira Brastemp")
-                .descricaoProblema("Nao gela e faz ruido no compressor.")
-                .endereco("Rua das Acacias, 123")
-                .bairro("Moema")
-                .dataHora(LocalDateTime.now().minusDays(5).withHour(10).withMinute(0))
-                .status(StatusAgendamento.CONCLUIDO)
-                .prioridadeGas(false)
-                .build());
-        agendamento.setProtocolo("DITEC-" + java.time.Year.now() + "-" + String.format("%06d", agendamento.getId()));
-        agendamento = agendamentoRepository.save(agendamento);
+        // ---- Agendamentos + OS de DEMONSTRACAO (dados ficticios) ----
+        // Tres OS em momentos diferentes do ciclo, para testar o rastreamento:
+        //  1) ENTREGUE (historico completo)   2) AGUARDANDO_APROVACAO (orcamento)
+        //  3) CANCELADA (visitante sem conta)
+        LocalDateTime base = LocalDateTime.now().minusDays(6).withHour(10).withMinute(0).withSecond(0).withNano(0);
 
-        OrdemServico os = ordemServicoRepository.save(OrdemServico.builder()
-                .agendamento(agendamento)
-                .cliente(cliente)
-                .tecnico(tecnico)
-                .protocolo(agendamento.getProtocolo())
-                .descricaoProblema(agendamento.getDescricaoProblema())
-                .status(StatusOS.CONCLUIDO)
-                .valor(new BigDecimal("171.00"))
-                .formaPagamento("pix")
-                .desconto(new BigDecimal("0.05"))
-                .pecasUtilizadas("Compressor novo")
-                .descricaoFinal("Compressor substituido. Testado e funcionando normalmente.")
-                .dataInicio(LocalDateTime.now().minusDays(5).withHour(10).withMinute(30))
-                .dataConclusao(LocalDateTime.now().minusDays(5).withHour(13).withMinute(0))
-                .garantiaDias(90)
-                .notaFiscalNumero("NF-000123")
-                .build());
+        OrdemServico os1 = criarOS(cliente, null, null, tecnico, "Geladeira Brastemp", "Nao gela e faz ruido no compressor.",
+                "Rua das Acacias, 123", "Moema", base, StatusOS.ENTREGUE);
+        os1.setDiagnostico("Compressor com falha de partida; rele queimado.");
+        os1.setValorOrcamento(new BigDecimal("180.00"));
+        os1.setOrcamentoAprovado(true);
+        os1.setValor(new BigDecimal("171.00"));
+        os1.setFormaPagamento("pix");
+        os1.setDesconto(new BigDecimal("0.05"));
+        os1.setPecasUtilizadas("Rele de partida do compressor");
+        os1.setDescricaoFinal("Rele substituido. Testado por 2h e funcionando normalmente.");
+        os1.setDataInicio(base.plusMinutes(30));
+        os1.setDataConclusao(base.plusHours(3));
+        os1.setDataEntrega(base.plusHours(3).plusMinutes(10));
+        os1.setGarantiaDias(90);
+        os1.setNotaFiscalNumero("REC-000123 (exemplo)");
+        ordemServicoRepository.save(os1);
+        evento(os1, TipoEventoOS.ABERTURA, null, "AGENDADO", "Agendamento recebido pelo site. Aguardando avaliacao tecnica.", null, base.minusDays(1));
+        evento(os1, TipoEventoOS.OBSERVACAO, "AGENDADO", "AGENDADO", "Visita tecnica confirmada.", admin, base.minusDays(1).plusHours(1));
+        evento(os1, TipoEventoOS.STATUS, "AGENDADO", "EM_DIAGNOSTICO", "Tecnico iniciou a avaliacao no local.", usuarioTecnico, base.plusMinutes(30));
+        evento(os1, TipoEventoOS.DIAGNOSTICO, "EM_DIAGNOSTICO", "EM_DIAGNOSTICO", "Diagnostico: compressor com falha de partida; rele queimado. | Orcamento: R$ 180,00", usuarioTecnico, base.plusMinutes(50));
+        evento(os1, TipoEventoOS.STATUS, "EM_DIAGNOSTICO", "AGUARDANDO_APROVACAO", "Orcamento enviado ao cliente.", usuarioTecnico, base.plusMinutes(55));
+        evento(os1, TipoEventoOS.STATUS, "AGUARDANDO_APROVACAO", "EM_MANUTENCAO", "Orcamento aprovado pelo cliente.", usuarioCliente, base.plusHours(1));
+        evento(os1, TipoEventoOS.STATUS, "EM_MANUTENCAO", "EM_TESTES", "Rele substituido; aparelho em teste.", usuarioTecnico, base.plusHours(1).plusMinutes(30));
+        evento(os1, TipoEventoOS.STATUS, "EM_TESTES", "CONCLUIDO", "Servico concluido. Garantia de 90 dias ativada.", usuarioTecnico, base.plusHours(3));
+        evento(os1, TipoEventoOS.STATUS, "CONCLUIDO", "ENTREGUE", "Aparelho entregue funcionando ao cliente.", usuarioTecnico, base.plusHours(3).plusMinutes(10));
 
-        timelineOSRepository.save(TimelineOS.builder().ordemServico(os).statusAnterior(null).statusNovo("AGENDADO").observacao("Agendamento recebido pelo site.").alteradoPor("sistema").dataHora(agendamento.getDataHora().minusHours(2)).build());
-        timelineOSRepository.save(TimelineOS.builder().ordemServico(os).statusAnterior("AGENDADO").statusNovo("EM_ATENDIMENTO").observacao("Tecnico a caminho.").alteradoPor(tecnico.getNome()).dataHora(os.getDataInicio()).build());
-        timelineOSRepository.save(TimelineOS.builder().ordemServico(os).statusAnterior("EM_ATENDIMENTO").statusNovo("CONCLUIDO").observacao("Atendimento finalizado. Garantia de 90 dias ativada.").alteradoPor(tecnico.getNome()).dataHora(os.getDataConclusao()).build());
+        LocalDateTime base2 = LocalDateTime.now().minusDays(1).withHour(14).withMinute(30).withSecond(0).withNano(0);
+        OrdemServico os2 = criarOS(cliente, null, null, tecnico, "Maquina de lavar Electrolux", "Nao centrifuga e faz barulho.",
+                "Rua das Acacias, 123", "Moema", base2, StatusOS.AGUARDANDO_APROVACAO);
+        os2.setDiagnostico("Rolamento do cesto desgastado; necessaria troca do kit de rolamentos.");
+        os2.setValorOrcamento(new BigDecimal("260.00"));
+        os2.setPrevisaoConclusao(java.time.LocalDate.now().plusDays(3));
+        os2.setDataInicio(base2.plusMinutes(15));
+        ordemServicoRepository.save(os2);
+        evento(os2, TipoEventoOS.ABERTURA, null, "AGENDADO", "Agendamento recebido pelo site. Aguardando avaliacao tecnica.", null, base2.minusDays(1));
+        evento(os2, TipoEventoOS.STATUS, "AGENDADO", "EM_DIAGNOSTICO", "Tecnico iniciou a avaliacao no local.", usuarioTecnico, base2.plusMinutes(15));
+        evento(os2, TipoEventoOS.DIAGNOSTICO, "EM_DIAGNOSTICO", "EM_DIAGNOSTICO", "Diagnostico: rolamento do cesto desgastado. | Orcamento: R$ 260,00", usuarioTecnico, base2.plusMinutes(45));
+        evento(os2, TipoEventoOS.STATUS, "EM_DIAGNOSTICO", "AGUARDANDO_APROVACAO", "Orcamento enviado ao cliente.", usuarioTecnico, base2.plusMinutes(50));
 
-        log.warn(" Protocolo de teste para rastreamento: {}", agendamento.getProtocolo());
+        LocalDateTime base3 = LocalDateTime.now().minusDays(2).withHour(8).withMinute(30).withSecond(0).withNano(0);
+        OrdemServico os3 = criarOS(null, "Joao Pereira Lima", "(11) 96666-3333", null, "Micro-ondas Panasonic", "Nao esquenta.",
+                "Av. Paulista, 1000", "Bela Vista", base3, StatusOS.CANCELADO);
+        evento(os3, TipoEventoOS.ABERTURA, null, "AGENDADO", "Agendamento recebido pelo site. Aguardando avaliacao tecnica.", null, base3.minusDays(1));
+        evento(os3, TipoEventoOS.STATUS, "AGENDADO", "CANCELADO", "Cancelado a pedido do cliente.", admin, base3.minusHours(5));
+
+        log.warn(" OS de demonstracao (rastreio = protocolo + telefone):");
+        log.warn("   {} (entregue)            tel. (11) 97777-2222", os1.getProtocolo());
+        log.warn("   {} (aguardando aprovacao) tel. (11) 97777-2222", os2.getProtocolo());
+        log.warn("   {} (cancelada)           tel. (11) 96666-3333", os3.getProtocolo());
         log.warn(" Login admin:    admin@ditec.com.br    / admin123");
         log.warn(" Login tecnico:  tecnico@ditec.com.br   / tecnico123");
         log.warn(" Login cliente:  cliente@ditec.com.br   / cliente123");
         log.warn("==========================================================");
+    }
+
+    private OrdemServico criarOS(Cliente cliente, String nomeContato, String telefoneContato, Tecnico tecnico,
+                                 String aparelho, String problema, String endereco, String bairro,
+                                 LocalDateTime dataHora, StatusOS status) {
+        Agendamento ag = agendamentoRepository.save(Agendamento.builder()
+                .cliente(cliente).nomeContato(nomeContato).telefoneContato(telefoneContato).tecnico(tecnico)
+                .tipoAparelho(aparelho).descricaoProblema(problema).endereco(endereco).bairro(bairro)
+                .dataHora(dataHora).status(status.paraStatusAgendamento()).prioridadeGas(false)
+                .build());
+        ag.setProtocolo(protocoloService.gerar(ag.getId()));
+        ag = agendamentoRepository.save(ag);
+        return ordemServicoRepository.save(OrdemServico.builder()
+                .agendamento(ag).cliente(cliente).tecnico(tecnico).protocolo(ag.getProtocolo())
+                .descricaoProblema(problema).status(status).garantiaDias(90)
+                .criadoEm(dataHora.minusDays(1)).build());
+    }
+
+    private void evento(OrdemServico os, TipoEventoOS tipo, String anterior, String novo, String obs,
+                        Usuario usuario, LocalDateTime quando) {
+        timelineOSRepository.save(TimelineOS.builder().ordemServico(os).tipo(tipo).statusAnterior(anterior)
+                .statusNovo(novo).observacao(obs).alteradoPor(usuario != null ? usuario.getNome() : "sistema")
+                .usuario(usuario).visivelCliente(true).dataHora(quando).build());
     }
 }
