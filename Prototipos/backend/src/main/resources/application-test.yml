@@ -17,3 +17,6 @@ ditec:
     enabled: false
   jwt:
     secret: teste-secret-apenas-para-a-suite-automatizada-0123456789
+  gemini:
+    api-key: ""            # testes nunca usam a API real (consumiria a cota gratuita)
+    retry-backoff-ms: 10

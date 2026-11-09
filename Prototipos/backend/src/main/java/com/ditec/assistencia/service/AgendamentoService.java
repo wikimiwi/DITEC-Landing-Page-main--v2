@@ -32,18 +32,20 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AgendamentoService {
 
     private final AgendamentoRepository agendamentoRepository;
     private final OrdemServicoRepository ordemServicoRepository;
-    private final TimelineOSRepository timelineOSRepository;
     private final ClienteRepository clienteRepository;
     private final ServicoRepository servicoRepository;
     private final TecnicoRepository tecnicoRepository;
     private final RegrasNegocioService regras;
     private final ProtocoloService protocoloService;
+    private final OrdemServicoService ordemServicoService;
 
     private static final DateTimeFormatter HORA_FMT = DateTimeFormatter.ofPattern("HH:mm");
+    private static final DateTimeFormatter DATA_HORA_BR = DateTimeFormatter.ofPattern("dd/MM/yyyy 'as' HH:mm");
 
     // ---------------------------------------------------------------
     // Disponibilidade (usada pelo calendario antes de agendar)
@@ -119,24 +121,17 @@ public class AgendamentoService {
     }
 
     private void criarOrdemServicoInicial(Agendamento agendamento, Cliente cliente) {
-        OrdemServico os = OrdemServico.builder()
+        OrdemServico os = ordemServicoRepository.save(OrdemServico.builder()
                 .agendamento(agendamento)
                 .cliente(cliente)
                 .protocolo(agendamento.getProtocolo())
                 .descricaoProblema(agendamento.getDescricaoProblema())
                 .status(StatusOS.AGENDADO)
                 .garantiaDias(90)
-                .build();
-        os = ordemServicoRepository.save(os);
-
-        TimelineOS evento = TimelineOS.builder()
-                .ordemServico(os)
-                .statusAnterior(null)
-                .statusNovo(StatusOS.AGENDADO.name())
-                .observacao("Agendamento recebido pelo site.")
-                .alteradoPor("sistema")
-                .build();
-        timelineOSRepository.save(evento);
+                .build());
+        ordemServicoService.registrarAbertura(os, agendamento.isPrioridadeGas()
+                ? "Agendamento recebido pelo site. Aparelho a gas: atendimento prioritario."
+                : "Agendamento recebido pelo site. Aguardando avaliacao tecnica.");
     }
 
     // ---------------------------------------------------------------
@@ -200,50 +195,51 @@ public class AgendamentoService {
             throw new RegraDeNegocioException("Este agendamento nao pode mais ser cancelado (ja esta " +
                     a.getStatus().name().toLowerCase() + ").");
         }
-        a.setStatus(StatusAgendamento.CANCELADO);
-        agendamentoRepository.save(a);
-
-        ordemServicoRepository.findByAgendamento_Id(a.getId()).ifPresent(os -> {
-            StatusOS anterior = os.getStatus();
-            os.setStatus(StatusOS.CANCELADO);
-            ordemServicoRepository.save(os);
-            timelineOSRepository.save(TimelineOS.builder()
-                    .ordemServico(os).statusAnterior(anterior.name()).statusNovo(StatusOS.CANCELADO.name())
-                    .observacao("Cancelado pelo cliente.").alteradoPor(nomeDoAutenticado(auth)).build());
-        });
+        OrdemServico os = ordemServicoRepository.findByAgendamento_Id(a.getId()).orElse(null);
+        if (os != null) {
+            // muda OS + agendamento juntos e grava o historico
+            ordemServicoService.cancelarPorAgendamento(os, "Cancelado a pedido do cliente.", (CustomUserDetails) auth.getPrincipal());
+        } else {
+            a.setStatus(StatusAgendamento.CANCELADO);
+            agendamentoRepository.save(a);
+        }
     }
 
     // ---------------------------------------------------------------
     // Admin
     // ---------------------------------------------------------------
+    /** Lista do admin: aparelhos a gas primeiro (prioridade), depois por data. */
     public Page<AgendamentoResponse> listarTodos(Pageable pageable) {
-        return agendamentoRepository.findAll(pageable).map(AgendamentoMapper::toResponse);
+        return agendamentoRepository.findAllByOrderByPrioridadeGasDescDataHoraAsc(pageable).map(AgendamentoMapper::toResponse);
     }
 
     @Transactional
-    public AgendamentoResponse atribuirTecnico(Long id, Long tecnicoId) {
+    public AgendamentoResponse atribuirTecnico(Long id, Long tecnicoId, Authentication auth) {
         Agendamento a = agendamentoRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Agendamento nao encontrado."));
-        Tecnico tecnico = tecnicoRepository.findById(tecnicoId)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Tecnico nao encontrado."));
-        a.setTecnico(tecnico);
-        agendamentoRepository.save(a);
-        ordemServicoRepository.findByAgendamento_Id(a.getId()).ifPresent(os -> {
-            os.setTecnico(tecnico);
-            ordemServicoRepository.save(os);
-        });
+        if (a.getStatus() == StatusAgendamento.CANCELADO || a.getStatus() == StatusAgendamento.CONCLUIDO) {
+            throw new RegraDeNegocioException("Nao e' possivel atribuir tecnico a um agendamento cancelado ou concluido.");
+        }
+        OrdemServico os = ordemServicoRepository.findByAgendamento_Id(a.getId())
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Ordem de Servico do agendamento nao encontrada."));
+        ordemServicoService.aplicarTecnico(os, tecnicoId, (CustomUserDetails) auth.getPrincipal());
         return AgendamentoMapper.toResponse(a);
     }
 
     @Transactional
-    public AgendamentoResponse confirmar(Long id) {
+    public AgendamentoResponse confirmar(Long id, Authentication auth) {
         Agendamento a = agendamentoRepository.findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Agendamento nao encontrado."));
         if (a.getStatus() != StatusAgendamento.PENDENTE) {
             throw new RegraDeNegocioException("Somente agendamentos pendentes podem ser confirmados.");
         }
         a.setStatus(StatusAgendamento.AGENDADO);
-        return AgendamentoMapper.toResponse(agendamentoRepository.save(a));
+        agendamentoRepository.save(a);
+        ordemServicoRepository.findByAgendamento_Id(a.getId()).ifPresent(os ->
+                ordemServicoService.registrarConfirmacaoVisita(os,
+                        "Visita tecnica confirmada para " + DATA_HORA_BR.format(a.getDataHora()) + ".",
+                        (CustomUserDetails) auth.getPrincipal()));
+        return AgendamentoMapper.toResponse(a);
     }
 
     // ---------------------------------------------------------------

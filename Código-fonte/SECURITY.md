@@ -12,6 +12,17 @@ Relatório da auditoria de segurança realizada sobre o sistema DITEC Assistênc
 
 ## 1. Vulnerabilidades encontradas e corrigidas
 
+> **Chatbot (09/11/2026):** a IA passou a ser a Google Gemini API; a chave `GEMINI_API_KEY` fica só no backend e vai no header `x-goog-api-key` (nunca na URL, no front-end ou nos logs).
+>
+> **Atualização v7 (09/11/2026):** o risco residual do rastreamento foi eliminado — o endpoint
+> `GET /api/ordens-servico/protocolo/{protocolo}` foi **removido** e substituído por
+> `POST /api/ordens-servico/rastreio`, que exige **protocolo + telefone do agendamento** e responde 404
+> idêntico para "não existe" e "telefone não confere". Também nesta versão: rate limit deixou de
+> confiar em `X-Forwarded-For` (só com `DITEC_TRUST_PROXY=true`), token de conta desativada perde o
+> acesso na hora, requisição sem login devolve 401 (antes 403), prompt de sistema e modelo do chatbot
+> passaram a ser definidos só no servidor, e o vínculo automático de agendamento por telefone no
+> cadastro ficou limitado às últimas 24h. Detalhes em `docs/AUDITORIA-2026-11-09.md`.
+
 ### 🔴 ALTA — Exposição excessiva de dados no rastreamento público de OS
 - **Arquivo:** `backend/.../controller/OrdemServicoController.java`, `service/OrdemServicoService.java`
 - **Problema:** `GET /api/ordens-servico/protocolo/{protocolo}` é público por design (rastreamento

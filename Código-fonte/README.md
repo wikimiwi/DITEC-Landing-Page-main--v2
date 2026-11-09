@@ -1,5 +1,7 @@
 # 🛠️ DITEC Assistência Técnica — Sistema Completo (v6)
 
+> **Localização dos componentes neste repositório:** front-end em `Código-fonte/` (esta pasta), backend em `Prototipos/backend/` e banco de dados em `Banco de Dados/database/`. Onde este README cita `backend/` ou `database/`, leia esses caminhos.
+
 Sistema de atendimento da **DITEC Assistência Técnica**, empresa fictícia de manutenção de
 eletrodomésticos em São Paulo e Grande SP. Este README documenta a versão **v6**, que evolui a
 landing page (v5, 100% front-end com dados simulados) para um sistema **real e integrado**:
@@ -73,7 +75,7 @@ O frontend **não precisa de Node/npm** — é HTML/CSS/JS puro.
 
 ```bash
 # 1) Crie o banco e o usuário (uma única vez)
-mysql -u root -p < database/00-criar-banco-e-usuario.sql
+mysql -u root -p < "Banco de Dados/database/00-criar-banco-e-usuario.sql"   # a partir da raiz do repositório
 ```
 
 Isso cria o database `ditec_assistencia` e o usuário `ditec_user`. As tabelas **não** precisam
@@ -90,7 +92,7 @@ inspecionar a estrutura sem abrir o projeto Java.
 ## 3. Backend (Spring Boot)
 
 ```bash
-cd backend
+cd Prototipos/backend      # a partir da raiz do repositório
 cp .env.example .env       # edite com suas credenciais reais
 # exporte as variáveis do .env no seu terminal/IDE, ou configure-as
 # diretamente nas variáveis de ambiente do sistema/IDE (IntelliJ, Eclipse, VS Code)
@@ -128,7 +130,7 @@ subir sem `JWT_SECRET`** (falha rápida, em vez de usar uma chave fraca por padr
 ### 3.2. Testes automatizados
 
 ```bash
-cd backend
+cd Prototipos/backend
 mvn test
 ```
 
@@ -175,8 +177,9 @@ técnicos/serviços → exporta relatórios CSV (agendamentos, OS, avaliações,
 **Técnico:** loga em `tecnico.html` (`tecnico@ditec.com.br` / `tecnico123`) → vê as OS atribuídas a
 ele → assume a
 OS (associação automática ao primeiro técnico que mexe numa OS sem técnico) → avança o status
-`AGENDADO → EM_ATENDIMENTO → CONCLUIDO` → finaliza informando valor/peças/forma de pagamento →
-garantia de 90 dias é ativada automaticamente.
+`AGENDADO → EM_DIAGNOSTICO → (AGUARDANDO_APROVACAO / AGUARDANDO_PECAS) → EM_MANUTENCAO → EM_TESTES`,
+registrando diagnóstico, orçamento, previsão e observações → finaliza informando valor/peças/forma de
+pagamento/descrição → garantia de 90 dias é ativada → `ENTREGUE` (v7 — ver README da raiz).
 
 **Chatbot:** o widget já existente continua funcionando exatamente igual — só que agora fala
 com o Spring Boot de verdade, que esconde a `HF_API_KEY`, repassa para a Hugging Face e grava
@@ -216,7 +219,10 @@ Prefixo: `http://localhost:8080/api`
 | GET | `/agendamentos/disponibilidade?data=AAAA-MM-DD` | público | Horários livres/ocupados |
 | POST | `/agendamentos` | público (ou cliente) | Criar agendamento |
 | GET / PUT / DELETE | `/agendamentos/{id}` | dono ou admin | Ver / alterar / cancelar |
-| GET | `/ordens-servico/protocolo/{protocolo}` | público | Rastreamento (com timeline) |
+| POST | `/ordens-servico/rastreio` `{protocolo, telefone}` | público | Rastreamento (com timeline) — v7: substituiu o antigo `GET /ordens-servico/protocolo/{protocolo}` |
+| PUT | `/ordens-servico/{id}/diagnostico` · `/previsao` | técnico ou admin | Diagnóstico/orçamento e previsão (v7) |
+| POST | `/ordens-servico/{id}/observacoes` | técnico ou admin | Observação no histórico (v7) |
+| POST | `/ordens-servico/{id}/orcamento/resposta` | cliente dono | Aprovar/recusar orçamento (v7) |
 | GET | `/ordens-servico/{id}` | dono, técnico ou admin | Detalhe da OS |
 | GET | `/ordens-servico` | cliente ou técnico | Minhas OS |
 | PUT | `/ordens-servico/{id}/status` | técnico ou admin | Avançar status (sem regressão) |
@@ -286,7 +292,7 @@ Detalhes completos em `backend/src/main/resources/db/migration/V1__schema.sql`.
 - Bairro fora da área de cobertura é **recusado no backend** (não só escondido no front).
 - Aparelhos a gás recebem `prioridadeGas = true` automaticamente.
 - Cancelamento/alteração só permitidos em `PENDENTE` ou `AGENDADO`.
-- Progressão da OS **sem regressão**: `AGENDADO → EM_ATENDIMENTO → CONCLUIDO` (ou `CANCELADO` a qualquer momento antes de concluir).
+- Progressão da OS (v7): 10 status com transições controladas por `StatusOS` — ver "Ordem de Serviço: ciclo de vida" no README da raiz.
 - Pagamento à vista (Pix ou dinheiro) aplica **5% de desconto** automaticamente na finalização.
 - Garantia de **90 dias** ativada na finalização da OS.
 - Protocolo único (`DITEC-AAAA-NNNNNN`), gerado no backend, nunca no frontend.

@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 /** E-mail nao entra aqui: e' a chave de login e nao e' editavel (mesma regra do front antigo). */
 public record ClienteUpdateRequest(
         @NotBlank(message = "Informe o nome completo.") @Size(max = 150, message = "Nome muito longo.") String nome,
-        @NotBlank(message = "Informe o telefone.") @Size(max = 20, message = "Telefone muito longo.") String telefone,
+        @NotBlank(message = "Informe o telefone.") @Size(max = 20, message = "Telefone muito longo.") @jakarta.validation.constraints.Pattern(regexp = "^(?=(?:\\D*\\d){10,13}\\D*$)[0-9 ()+.-]+$", message = "Informe um telefone com DDD (10 a 13 digitos).") String telefone,
         @Size(max = 255, message = "Endereco muito longo.") String endereco,
         @Size(max = 100, message = "Bairro muito longo.") String bairro,
         @Size(max = 100, message = "Cidade muito longa.") String cidade,

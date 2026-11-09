@@ -45,4 +45,9 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
     long countByStatusNot(StatusAgendamento status);
 
     Page<Agendamento> findAll(Pageable pageable);
+
+    /** Prioridade para aparelhos a gas, depois por data da visita. */
+    Page<Agendamento> findAllByOrderByPrioridadeGasDescDataHoraAsc(Pageable pageable);
+
+    long countByDataHoraBetween(LocalDateTime inicio, LocalDateTime fim);
 }

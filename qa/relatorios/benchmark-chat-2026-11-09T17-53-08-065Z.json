@@ -1,0 +1,160 @@
+{
+  "resumo": {
+    "total": 15,
+    "sucesso": 15,
+    "falhas": 0,
+    "taxaSucesso": "100.0%",
+    "respostasDaIA": 9,
+    "respostasAutomaticas": 6,
+    "primeira": {
+      "n": 1,
+      "media": 2550,
+      "min": 2550,
+      "max": 2550,
+      "p95": 2550
+    },
+    "subsequentes": {
+      "n": 14,
+      "media": 822,
+      "min": 6,
+      "max": 2834,
+      "p95": 2834
+    },
+    "todas": {
+      "n": 15,
+      "media": 937,
+      "min": 6,
+      "max": 2834,
+      "p95": 2834
+    },
+    "somenteIA": {
+      "n": 9,
+      "media": 1242,
+      "min": 885,
+      "max": 2550,
+      "p95": 2550
+    }
+  },
+  "amostras": [
+    {
+      "i": 1,
+      "ms": 2549.995959,
+      "status": 200,
+      "fonte": "ia",
+      "pergunta": "Vocês consertam geladeira que não gela?",
+      "resposta": "Sim, consertamos geladeiras e freezers que não estão gelando! O diagnóstico é gratuito e o"
+    },
+    {
+      "i": 2,
+      "ms": 959.4357909999999,
+      "status": 200,
+      "fonte": "ia",
+      "pergunta": "Qual a garantia do serviço?",
+      "resposta": "Olá! Na DITEC Assistência Técnica, oferecemos uma garantia de 90 dias em todos os serviços"
+    },
+    {
+      "i": 3,
+      "ms": 1255.0914579999999,
+      "status": 200,
+      "fonte": "ia",
+      "pergunta": "O diagnóstico é gratuito?",
+      "resposta": "Sim, o diagnóstico é totalmente gratuito! Além disso, oferecemos garantia de 90 dias em to"
+    },
+    {
+      "i": 4,
+      "ms": 1138.1148330000005,
+      "status": 200,
+      "fonte": "ia",
+      "pergunta": "Minha máquina de lavar não centrifuga, o que pode ser?",
+      "resposta": "Olá! Sinto muito pelo transtorno com a sua máquina de lavar. Para entendermos melhor o que"
+    },
+    {
+      "i": 5,
+      "ms": 977.0688750000008,
+      "status": 200,
+      "fonte": "ia",
+      "pergunta": "Atendem aos domingos?",
+      "resposta": "Olá! Seja bem-vindo à DITEC Assistência Técnica. Não realizamos atendimentos presenciais"
+    },
+    {
+      "i": 6,
+      "ms": 884.984125,
+      "status": 200,
+      "fonte": "ia",
+      "pergunta": "Tem desconto no Pix?",
+      "resposta": "Sim, oferecemos 5% de desconto para pagamentos à vista via Pix ou dinheiro. Também aceitam"
+    },
+    {
+      "i": 7,
+      "ms": 1058.3556250000001,
+      "status": 200,
+      "fonte": "ia",
+      "pergunta": "Meu fogão a gás está com cheiro de gás, o que faço?",
+      "resposta": "Olá! Por favor, feche imediatamente o registro de gás, abra portas e janelas para ventilar"
+    },
+    {
+      "i": 8,
+      "ms": 1026.5512919999983,
+      "status": 200,
+      "fonte": "ia",
+      "pergunta": "Como acompanho minha ordem de serviço?",
+      "resposta": "Olá! Para acompanhar o andamento da sua ordem de serviço, basta acessar a seção \"Rastrear "
+    },
+    {
+      "i": 9,
+      "ms": 1332.3681670000005,
+      "status": 200,
+      "fonte": "ia",
+      "pergunta": "Vocês atendem em Osasco?",
+      "resposta": "Olá! Sim, atendemos em regiões selecionadas da Grande São Paulo, incluindo Osasco. Para co"
+    },
+    {
+      "i": 10,
+      "ms": 2834.1171670000003,
+      "status": 200,
+      "fonte": "automatica",
+      "pergunta": "Quanto custa consertar um micro-ondas?",
+      "resposta": "Consertamos geladeiras e freezers, máquinas de lavar e secadoras, fogões e fornos, micro-o"
+    },
+    {
+      "i": 11,
+      "ms": 13.753457999999227,
+      "status": 200,
+      "fonte": "automatica",
+      "pergunta": "Vocês consertam geladeira que não gela?",
+      "resposta": "Consertamos geladeiras e freezers, máquinas de lavar e secadoras, fogões e fornos, micro-o"
+    },
+    {
+      "i": 12,
+      "ms": 8.751541999999972,
+      "status": 200,
+      "fonte": "automatica",
+      "pergunta": "Qual a garantia do serviço?",
+      "resposta": "Todos os serviços têm **garantia de 90 dias** em peças e mão de obra, contada a partir da "
+    },
+    {
+      "i": 13,
+      "ms": 7.497957999999926,
+      "status": 200,
+      "fonte": "automatica",
+      "pergunta": "O diagnóstico é gratuito?",
+      "resposta": "O **diagnostico é gratuito**. Depois da avaliação você recebe o orçamento e decide se apro"
+    },
+    {
+      "i": 14,
+      "ms": 5.8272909999996045,
+      "status": 200,
+      "fonte": "automatica",
+      "pergunta": "Minha máquina de lavar não centrifuga, o que pode ser?",
+      "resposta": "Consertamos geladeiras e freezers, máquinas de lavar e secadoras, fogões e fornos, micro-o"
+    },
+    {
+      "i": 15,
+      "ms": 5.897208999998838,
+      "status": 200,
+      "fonte": "automatica",
+      "pergunta": "Atendem aos domingos?",
+      "resposta": "Atendimento presencial de **segunda a sábado, das 07h às 20h** (não atendemos aos domingos"
+    }
+  ]
+}

@@ -2,7 +2,9 @@ package com.ditec.assistencia.controller;
 
 import com.ditec.assistencia.dto.admin.*;
 import com.ditec.assistencia.dto.agendamento.AgendamentoResponse;
+import com.ditec.assistencia.dto.os.AtribuirTecnicoRequest;
 import com.ditec.assistencia.dto.os.OrdemServicoResponse;
+import org.springframework.security.core.Authentication;
 import com.ditec.assistencia.service.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -52,19 +54,30 @@ public class AdminController {
     }
 
     @PutMapping("/agendamentos/{id}/confirmar")
-    public AgendamentoResponse confirmarAgendamento(@PathVariable Long id) {
-        return agendamentoService.confirmar(id);
+    public AgendamentoResponse confirmarAgendamento(@PathVariable Long id, Authentication auth) {
+        return agendamentoService.confirmar(id, auth);
     }
 
     @PutMapping("/agendamentos/{id}/tecnico")
-    public AgendamentoResponse atribuirTecnico(@PathVariable Long id, @RequestBody Map<String, Long> body) {
-        return agendamentoService.atribuirTecnico(id, body.get("tecnicoId"));
+    public AgendamentoResponse atribuirTecnico(@PathVariable Long id, @Valid @RequestBody AtribuirTecnicoRequest body,
+                                               Authentication auth) {
+        return agendamentoService.atribuirTecnico(id, body.tecnicoId(), auth);
     }
 
     // ---------------- Ordens de Servico ----------------
+    /** Filtros opcionais: status (ex.: EM_DIAGNOSTICO), tecnicoId, protocolo (contem) e cliente (nome, contem). */
     @GetMapping("/ordens-servico")
-    public List<OrdemServicoResponse> ordensServico() {
-        return ordemServicoService.listarTodasAdmin();
+    public List<OrdemServicoResponse> ordensServico(@RequestParam(required = false) String status,
+                                                    @RequestParam(required = false) Long tecnicoId,
+                                                    @RequestParam(required = false) String protocolo,
+                                                    @RequestParam(required = false) String cliente) {
+        return ordemServicoService.listarAdmin(status, tecnicoId, protocolo, cliente);
+    }
+
+    @PutMapping("/ordens-servico/{id}/tecnico")
+    public OrdemServicoResponse atribuirTecnicoOS(@PathVariable Long id, @Valid @RequestBody AtribuirTecnicoRequest body,
+                                                  Authentication auth) {
+        return ordemServicoService.atribuirTecnico(id, body.tecnicoId(), auth);
     }
 
     // ---------------- Tecnicos ----------------

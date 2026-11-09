@@ -2,22 +2,26 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:8080 https://ditec-api.onrender.com; frame-src https://www.google.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:8080 https://ditec-api.onrender.com; frame-src https://www.google.com; base-uri 'self'; form-action 'self'; object-src 'none'" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <title>Área do Técnico | DITEC Assistência Técnica</title>
+  <meta name="description" content="Área do técnico DITEC: Ordens de Serviço atribuídas, diagnóstico e andamento do atendimento." />
   <meta name="robots" content="noindex, nofollow" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" />
+  <script src="carregar-fontes.js" async></script>
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'><rect width='36' height='36' rx='9' fill='%230047AB'/><text x='18' y='25' text-anchor='middle' font-family='sans-serif' font-weight='900' font-size='16' fill='white'>DT</text></svg>" />
 </head>
 <body>
+<a class="skip-link" href="#main-content">Pular para o conteúdo</a>
 
 <header class="dash-header">
   <div class="dash-header__inner">
-    <a href="index.html" class="logo" aria-label="DITEC — Página inicial">
+    <a href="index.html" class="logo" aria-label="DITEC Técnico — ir para a página inicial">
       <svg width="34" height="34" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <rect width="36" height="36" rx="9" fill="#0047AB"/>
         <path d="M10 12h5c3.314 0 6 2.686 6 6s-2.686 6-6 6h-5V12z" fill="white"/>
@@ -32,7 +36,7 @@
   </div>
 </header>
 
-<main class="dash-main">
+<main class="dash-main" id="main-content" tabindex="-1">
   <div class="container">
 
     <!-- ===== NÃO LOGADO ===== -->
@@ -57,12 +61,12 @@
     <section id="dashView" hidden>
       <div class="dash-welcome">
         <h1 id="welcomeTitle">Olá! 👋</h1>
-        <p>Suas Ordens de Serviço atribuídas — atualize o status conforme for atendendo.</p>
+        <p>Suas Ordens de Serviço — registre diagnóstico, observações e avance cada etapa do atendimento.</p>
       </div>
 
       <div class="dash-stats">
-        <div class="dash-stat"><div class="dash-stat__value" id="statAgendadas">0</div><div class="dash-stat__label">Agendadas</div></div>
-        <div class="dash-stat"><div class="dash-stat__value" id="statEmAtendimento">0</div><div class="dash-stat__label">Em atendimento</div></div>
+        <div class="dash-stat"><div class="dash-stat__value" id="statAgendadas">0</div><div class="dash-stat__label">Aguardando avaliação</div></div>
+        <div class="dash-stat"><div class="dash-stat__value" id="statEmAtendimento">0</div><div class="dash-stat__label">Em andamento</div></div>
         <div class="dash-stat"><div class="dash-stat__value" id="statConcluidas">0</div><div class="dash-stat__label">Concluídas</div></div>
       </div>
 
@@ -76,7 +80,9 @@
   </div>
 </main>
 
+<script src="config.js"></script>
 <script src="dashboard-shared.js"></script>
+<script src="os-equipe.js"></script>
 <script src="tecnico.js"></script>
 </body>
 </html>

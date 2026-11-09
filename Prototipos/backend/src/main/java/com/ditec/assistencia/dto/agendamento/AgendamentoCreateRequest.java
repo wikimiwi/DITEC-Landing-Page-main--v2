@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
  */
 public record AgendamentoCreateRequest(
         @NotBlank(message = "Informe o nome.") @Size(max = 150, message = "Nome muito longo.") String nome,
-        @NotBlank(message = "Informe o telefone.") @Size(max = 20, message = "Telefone muito longo.") String telefone,
+        @NotBlank(message = "Informe o telefone.") @Size(max = 20, message = "Telefone muito longo.") @jakarta.validation.constraints.Pattern(regexp = "^(?=(?:\\D*\\d){10,13}\\D*$)[0-9 ()+.-]+$", message = "Informe um telefone com DDD (10 a 13 digitos).") String telefone,
         @NotBlank(message = "Informe o tipo do aparelho.") @Size(max = 100, message = "Descricao do aparelho muito longa.") String tipoAparelho,
         @Size(max = 500, message = "Descricao do problema muito longa.") String descricaoProblema,
         @NotBlank(message = "Informe o endereco.") @Size(max = 255, message = "Endereco muito longo.") String endereco,

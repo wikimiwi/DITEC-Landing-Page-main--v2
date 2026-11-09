@@ -1,6 +1,6 @@
 /* ============================================================
    DITEC Assistência — script.js  v6 (Backend Java real + MySQL)
-   Chatbot com IA via proxy Spring Boot (Hugging Face / Qwen2.5-72B)
+   Chatbot com IA via proxy Spring Boot (Google Gemini API)
    Autenticação, agendamento e rastreamento de OS via API REST —
    ver dashboard-shared.js (window.DitecAPI) e /backend.
    ============================================================ */
@@ -10,8 +10,6 @@
       CONFIGURAÇÃO — edite aqui antes de publicar
       ───────────────────────────────────────────────────────────── */
    const CONFIG = {
-     /* Modelo — compatível com API gratuita HF */
-     HF_MODEL: 'Qwen/Qwen2.5-72B-Instruct',
    
      /* Número do WhatsApp da DITEC (DDI+DDD+número) */
      whatsappNumber: '5511999999999',
@@ -38,36 +36,7 @@
      ],
    };
    
-   /* ─────────────────────────────────────────────────────────────
-      SYSTEM PROMPT — instrução enviada ao Mistral antes de cada
-      conversa. Define quem é o bot, o que pode/não pode responder.
-      ───────────────────────────────────────────────────────────── */
-   const SYSTEM_PROMPT = `Você é o assistente virtual da DITEC Assistência Técnica, uma empresa especializada em conserto de eletrodomésticos em São Paulo e Grande SP.
-   
-   INFORMAÇÕES DA EMPRESA:
-   - Nome: DITEC Assistência Técnica
-   - Telefone: (11) 99999-9999
-   - WhatsApp: (11) 99999-9999
-   - Horário: Segunda a Sábado, das 7h às 20h
-   - Área: São Paulo Capital e Grande SP
-   
-   SERVIÇOS QUE REALIZAMOS:
-   - Geladeiras e freezers
-   - Máquinas de lavar e secadoras
-   - Fogões e fornos
-   - Micro-ondas
-   - Ar condicionado
-   
-   DIFERENCIAIS:
-   - Diagnóstico gratuito
-   - Garantia de 90 dias em peças e mão de obra
-   - Atendimento no mesmo dia (sujeito a disponibilidade)
-   - Formas de pagamento: Pix, cartão débito/crédito, parcelamento em até 12x, boleto, dinheiro (5% de desconto)
-   
-   REGRAS DE COMPORTAMENTO:
-   1. Responda APENAS sobre a DITEC e eletrodomésticos.
-   2. Seja sempre gentil, objetivo e profissional (máximo 3 parágrafos).
-   3. Quando pertinente, sugira entrar em contato pelo WhatsApp (11) 99999-9999 para agendar.`;
+   /* O prompt de sistema do chatbot fica SOMENTE no servidor (ChatService.SYSTEM_PROMPT). */
    
 /* ─────────────────────────────────────────────────────────────
    DADOS DE ORDENS DE SERVIÇO — agora vêm da API real
@@ -153,7 +122,7 @@
    }
    
    /* ─────────────────────────────────────────────────────────────
-      INTEGRAÇÃO COM BACKEND JAVA (Proxy Hugging Face)
+      INTEGRAÇÃO COM BACKEND JAVA (proxy da Google Gemini API)
       ───────────────────────────────────────────────────────────── */
 
    /* sessionId estável durante a aba (não é PII) — usado pelo admin
@@ -167,26 +136,17 @@
      return id;
    }
 
-   async function askMistral(userMessage, history = []) {
+   async function perguntarIA(userMessage, history = []) {
      const recentHistory = history.slice(-4);
 
-     const systemMsg = [
-       'Você é o assistente virtual da DITEC Assistência Técnica em São Paulo.',
-       'Responda SOMENTE sobre: conserto de eletrodomésticos, serviços, preços, garantia e agendamento da DITEC.',
-       'Diagnóstico gratuito. Garantia 90 dias. Seg-Sab 7h-20h. WhatsApp: (11) 99999-9999.',
-       'Pagamento: Pix, cartão, parcelamento 12x, dinheiro (5% desconto).',
-       'Responda em português brasileiro. Seja objetivo. Máximo 2 parágrafos curtos.',
-     ].join(' ');
-
+     /* O prompt de sistema e o modelo ficam SOMENTE no servidor (ChatService):
+        o navegador envia apenas a conversa. */
      const messages = [
-       { role: 'system', content: systemMsg },
        ...recentHistory,
-       { role: 'user',   content: userMessage },
+       { role: 'user', content: userMessage },
      ];
 
-     /* ── Proxy real: Spring Boot esconde a HF_API_KEY e loga a interação ── */
      const data = await DitecAPI.chat({
-       model: CONFIG.HF_MODEL,
        messages,
        max_tokens: 250,
        temperature: 0.6,
@@ -207,15 +167,17 @@
      const banner = $('#cookieBanner');
      if (!banner) return;
      if (localStorage.getItem('ditec_cookies')) { banner.classList.add('hidden'); return; }
-     setTimeout(() => banner.classList.remove('hidden'), 1500);
-     $('#cookieAccept').addEventListener('click', () => {
-       localStorage.setItem('ditec_cookies', 'all');
+     /* enquanto o aviso aparece, os botões flutuantes (chat/WhatsApp) sobem para não ficarem cobertos */
+     const ajustar = visivel => document.documentElement.style.setProperty('--cookie-offset', visivel ? banner.offsetHeight + 'px' : '0px');
+     setTimeout(() => { banner.classList.remove('hidden'); ajustar(true); }, 1500);
+     window.addEventListener('resize', () => { if (!banner.classList.contains('hidden')) ajustar(true); });
+     function fechar(valor) {
+       localStorage.setItem('ditec_cookies', valor);
        banner.classList.add('hidden');
-     });
-     $('#cookieReject').addEventListener('click', () => {
-       localStorage.setItem('ditec_cookies', 'essential');
-       banner.classList.add('hidden');
-     });
+       ajustar(false);
+     }
+     $('#cookieAccept').addEventListener('click', () => fechar('all'));
+     $('#cookieReject').addEventListener('click', () => fechar('essential'));
    })();
    
    (function initHeader() {
@@ -438,7 +400,7 @@
        const senha = $('#cadSenha').value || '';
        const senha2= $('#cadSenha2').value || '';
        if (!nome || !email || !tel || !senha) return showFormError(cadastroForm, 'Preencha todos os campos.');
-       if (senha.length < 6) return showFormError(cadastroForm, 'A senha deve ter ao menos 6 caracteres.');
+       if (senha.length < 8) return showFormError(cadastroForm, 'A senha deve ter ao menos 8 caracteres.');
        if (senha !== senha2) return showFormError(cadastroForm, 'As senhas não coincidem.');
 
        const submitBtn = cadastroForm.querySelector('button[type="submit"]');
@@ -523,7 +485,7 @@
        const senha = $('#cpSenha').value || '';
        const old = form.querySelector('.modal-error'); if (old) old.remove();
        if (!nome || !email || !tel || !senha) return showErr('Preencha todos os campos.');
-       if (senha.length < 6) return showErr('A senha deve ter ao menos 6 caracteres.');
+       if (senha.length < 8) return showErr('A senha deve ter ao menos 8 caracteres.');
 
        const submitBtn = form.querySelector('button[type="submit"]');
        if (submitBtn) submitBtn.disabled = true;
@@ -615,12 +577,16 @@
            + (isToday ? ' cal-day--today' : '')
            + (isSel   ? ' cal-day--selected' : '');
          d.textContent = day;
-         d.setAttribute('role', 'gridcell');
-         d.setAttribute('aria-label', `${day} de ${MESES[viewMonth]}`);
-         if (!isPast && !isSun) {
+         /* cada dia é um botão acessível (teclado: Enter ou Espaço) */
+         d.setAttribute('role', 'button');
+         d.setAttribute('aria-label', `${day} de ${MESES[viewMonth]}` + (isPast || isSun ? ' — indisponível' : ''));
+         if (isSel) d.setAttribute('aria-pressed', 'true');
+         if (isPast || isSun) {
+           d.setAttribute('aria-disabled', 'true');
+         } else {
            d.tabIndex = 0;
            d.addEventListener('click', () => selectDate(date, day));
-           d.addEventListener('keypress', e => { if (e.key === 'Enter') selectDate(date, day); });
+           d.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectDate(date, day); } });
          }
          calDays.appendChild(d);
        }
@@ -681,6 +647,18 @@
          else if (v.length > 2) v = `(${v.slice(0,2)}) ${v.slice(2)}`;
          sTel.value = v;
        });
+       /* "Fazer novo agendamento": antes era um onclick inline, bloqueado pela CSP (o botão não funcionava) */
+       const btnNovo = $('#scheduleAgain');
+       btnNovo && btnNovo.addEventListener('click', () => {
+         schedSuccess.style.display = 'none';
+         schedForm.reset();
+         schedForm.style.display = 'block';
+         selectedDate = null; selectedTime = null; /* força escolher de novo: o horário recém-agendado fica ocupado */
+         schedSel.style.display = 'none';
+         if (tsGrid) tsGrid.innerHTML = '';
+         render();
+         schedForm.querySelector('input,select,textarea')?.focus();
+       });
        schedForm.addEventListener('submit', async e => {
          e.preventDefault();
          const nome    = ($('#sNome').value || '').trim();
@@ -727,79 +705,74 @@
    })();
    
    (function initTracking() {
-     const inp = $('#osInput'), btn = $('#osSearch'), res = $('#trackingResult');
-     if (!btn) return;
-     btn.addEventListener('click', search);
-     inp.addEventListener('keypress', e => e.key === 'Enter' && search());
+     const form = $('#osForm'), inp = $('#osInput'), tel = $('#osTelefone'), res = $('#trackingResult');
+     if (!form) return;
+     maskTelefoneInput(tel);
+     const O = window.DitecOS;
 
-     /* status da OS (backend) -> rótulo/classe visual (mesmo estilo de badge que já existia) */
-     const STATUS_VISUAL = {
-       AGENDADO:       { label: 'Agendado 🗓️',        badge: 'os-badge--aguardando' },
-       EM_ATENDIMENTO: { label: 'Em Atendimento 🔧',   badge: 'os-badge--reparo' },
-       CONCLUIDO:      { label: 'Concluído ✅',        badge: 'os-badge--concluido' },
-       CANCELADO:      { label: 'Cancelado ❌',        badge: 'os-badge--aguardando' },
-     };
+     form.addEventListener('submit', e => { e.preventDefault(); search(); });
+
+     function mensagem(icone, titulo, texto) {
+       res.style.display = 'block';
+       res.innerHTML = `<div class="os-msg"><p class="os-msg__icon" aria-hidden="true">${icone}</p>
+         <p class="os-msg__title">${O.esc(titulo)}</p><p class="os-msg__text">${O.esc(texto)}</p></div>`;
+     }
 
      async function search() {
-       const val = (inp.value || '').trim().toUpperCase();
-       if (!val) { res.style.display = 'none'; return; }
-
+       const protocolo = (inp.value || '').trim().toUpperCase();
+       const telefone = (tel.value || '').trim();
+       if (!/^DITEC-\d{4}-\d{6}$/.test(protocolo)) {
+         mensagem('⚠️', 'Protocolo inválido', 'Use o formato DITEC-AAAA-NNNNNN (ex.: DITEC-2026-000001).');
+         inp.focus(); return;
+       }
+       if (onlyDigits(telefone).length < 10) {
+         mensagem('⚠️', 'Informe o telefone', 'Digite o telefone com DDD usado no agendamento.');
+         tel.focus(); return;
+       }
+       inp.value = protocolo;
+       const btn = $('#osSearch');
+       btn.disabled = true;
        res.style.display = 'block';
-       res.innerHTML = `<div style="text-align:center;padding:20px;color:#6b7280;">Buscando protocolo...</div>`;
+       res.setAttribute('aria-busy', 'true');
+       res.innerHTML = `<div class="os-msg"><span class="os-spinner" aria-hidden="true"></span><p class="os-msg__text">Buscando sua OS...</p></div>`;
 
        let os;
        try {
-         os = await DitecAPI.rastrear(val);
+         os = await DitecAPI.rastrear(protocolo, telefone);
        } catch (err) {
-         const naoEncontrado = err.status === 404;
-         res.innerHTML = `<div style="text-align:center;padding:20px;">
-           <p style="font-size:1.5rem;margin-bottom:12px;">${naoEncontrado ? '🔍' : '⚠️'}</p>
-           <p style="font-weight:700;margin-bottom:8px;">${naoEncontrado ? 'OS não encontrada' : 'Não foi possível buscar agora'}</p>
-           <p style="font-size:.88rem;color:#6b7280;">${escHtml(err.message || 'Verifique o número e tente novamente.')}</p>
-         </div>`;
+         if (err.status === 404) mensagem('🔍', 'OS não encontrada', err.message || 'Confira o protocolo e o telefone.');
+         else if (err.status === 429) mensagem('⏳', 'Muitas consultas', err.message);
+         else mensagem('⚠️', 'Não foi possível consultar agora', err.message || 'Tente novamente em instantes.');
          return;
+       } finally {
+         btn.disabled = false;
+         res.removeAttribute('aria-busy');
        }
 
-       const visual = STATUS_VISUAL[os.status] || STATUS_VISUAL.AGENDADO;
-       const timeline = os.timeline || [];
+       const orcamentoPendente = os.status === 'AGUARDANDO_APROVACAO'
+         ? `<div class="os-alert">💬 O orçamento de <strong>${O.fmtMoeda(os.valorOrcamento)}</strong> aguarda sua aprovação.
+            Entre na <a href="conta.html">Minha Conta</a> para aprovar ou recusar, ou fale conosco pelo WhatsApp.
+            Lembrando: o diagnóstico é gratuito.</div>` : '';
 
-       const stepsHtml = timeline.map((t, i) => {
-         const isUltimo = i === timeline.length - 1;
-         const cls = 'os-step' + (isUltimo && os.status !== 'CONCLUIDO' ? ' os-step--current' : ' os-step--done');
-         const icon = isUltimo && os.status !== 'CONCLUIDO' ? String(i + 1) : '✓';
-         const quando = t.dataHora ? new Date(t.dataHora).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '';
-         return `<div class="${cls}">
-           <div class="os-step__dot">${icon}</div>
-           <div class="os-step__info">
-             <div class="os-step__label">${escHtml(formatarStatusOS(t.statusNovo))}</div>
-             <div class="os-step__detail">${escHtml(t.observacao || '')} ${quando ? '— ' + quando : ''}</div>
-           </div>
-         </div>`;
-       }).join('');
-
-       res.innerHTML = `<div class="os-status">
-         <div class="os-header">
+       res.innerHTML = `<article class="os-status">
+         <header class="os-header">
            <div>
-             <div class="os-number">${escHtml(os.protocolo)}</div>
-             <div style="font-size:.82rem;color:#6b7280;margin-top:2px;">${escHtml(os.clienteNomeAbreviado || '')} · ${escHtml(os.tipoAparelho || '')}</div>
+             <div class="os-number">${O.esc(os.protocolo)}</div>
+             <div class="os-sub">${O.esc(os.clienteNomeAbreviado || '')} · ${O.esc(os.tipoAparelho || '')}</div>
            </div>
-           <span class="os-badge ${visual.badge}">${visual.label}</span>
-         </div>
-         <div class="os-timeline">${stepsHtml || '<p style="color:#6b7280;font-size:.85rem;">Sem histórico ainda.</p>'}</div>
-       </div>`;
-     }
-
-     function formatarStatusOS(status) {
-       const map = {
-         AGENDADO: 'Agendamento recebido', EM_ATENDIMENTO: 'Técnico em atendimento',
-         CONCLUIDO: 'Serviço concluído', CANCELADO: 'Cancelado',
-       };
-       return map[status] || status;
+           ${O.badge(os.status, 'os-badge')}
+         </header>
+         ${O.stepper(os)}
+         ${orcamentoPendente}
+         ${O.infoGrid(os)}
+         <section><h3 class="os-section-title">Histórico de movimentações</h3>${O.timeline(os.timeline)}</section>
+         <p class="os-foot">Consulta feita em ${O.esc(new Date().toLocaleString('pt-BR'))}. Os dados vêm diretamente do sistema da DITEC.</p>
+       </article>`;
      }
    })();
    
    /* ─────────────────────────────────────────────────────────────
-      CHATBOT COM IA — Mistral 7B via Spring Boot
+      CHATBOT COM IA — Google Gemini via Spring Boot
       ───────────────────────────────────────────────────────────── */
    (function initChatbot() {
      const chatbot   = $('#chatbot');
@@ -825,6 +798,7 @@
        win.classList.add('visible');
        badge.classList.add('hidden');
        trigger.setAttribute('aria-expanded', 'true');
+       trigger.setAttribute('aria-label', 'Fechar assistente virtual DITEC');
        if (!greeted) { greeted = true; botGreet(); }
        setTimeout(() => inpEl.focus(), 350);
      }
@@ -833,8 +807,11 @@
        chatbot.classList.remove('open');
        win.classList.remove('visible');
        trigger.setAttribute('aria-expanded', 'false');
+       trigger.setAttribute('aria-label', 'Abrir assistente virtual DITEC');
      }
      trigger.addEventListener('click', () => isOpen ? close() : open());
+     /* Esc fecha o chat e devolve o foco ao botão (navegação por teclado) */
+     document.addEventListener('keydown', e => { if (e.key === 'Escape' && isOpen) { close(); trigger.focus(); } });
      closeBtn.addEventListener('click', close);
    
      function botGreet() {
@@ -849,13 +826,13 @@
        inpEl.value = '';
        quickEl.innerHTML = '';
        addUserMsg(m);
-       callMistral(m);
+       chamarIA(m);
      }
    
      sendBtn.addEventListener('click', () => send());
      inpEl.addEventListener('keypress', e => e.key === 'Enter' && !e.shiftKey && send());
    
-     async function callMistral(userMessage) {
+     async function chamarIA(userMessage) {
        isLoading = true;
        inpEl.disabled = true;
        sendBtn.disabled = true;
@@ -863,7 +840,7 @@
        showTyping(true);
    
        try {
-         const resposta = await askMistral(userMessage, history);
+         const resposta = await perguntarIA(userMessage, history);
          removeTyping();
    
          history.push({ role: 'user',      content: userMessage });
@@ -884,11 +861,11 @@
    
        } catch (err) {
          removeTyping();
-         console.error('[DITEC Chatbot] Erro na API (verifique se o Spring Boot está rodando):', err.message);
+         console.warn('[DITEC Chatbot] Falha ao obter resposta:', err && err.status, err && err.message);
 
-         const msgErro = (err && err.message)
-           ? `😕 ${err.message}`
-           : '😕 Não consegui me conectar à IA agora. Verifique se o servidor Java está rodando na porta 8080!';
+         const msgErro = err && err.status === 429
+           ? '😕 Recebi muitas mensagens em pouco tempo. Aguarde alguns minutos e tente de novo — ou fale conosco pelo WhatsApp.'
+           : '😕 Não consegui responder agora. Tente novamente em instantes ou fale com a equipe pelo WhatsApp (11) 99999-9999.';
 
          addBotMsg(msgErro);
          showQR(['Tentar novamente', 'Chamar no WhatsApp']);
@@ -932,7 +909,7 @@
        el.className = 'chat-msg chat-msg--bot';
        el.id = 'chatTyping';
        const aviso = comAviso
-         ? `<div style="font-size:.72rem;color:#9ca3af;margin-top:6px;">⏳ Processando via Java...</div>`
+         ? `<div style="font-size:.72rem;color:#6b7280;margin-top:6px;">⏳ Pensando na resposta...</div>`
          : '';
        el.innerHTML = `
          <div class="chat-msg__avatar" aria-hidden="true">DT</div>
@@ -1002,7 +979,7 @@
    
    document.addEventListener('DOMContentLoaded', () => {
      console.log('%c DITEC v5 — Chatbot com IA + Backend Java ', 'background:#0047AB;color:white;padding:4px 8px;border-radius:4px;font-weight:bold;');
-     console.log(`%c Conexão: ✅ Configurado para rodar via localhost:8080`, `color:#16a34a`);
+     console.log(`%c API: ${DitecAPI.BASE_URL}`, `color:#16a34a`);
    });
 /* ============================================================
    DITEC — animations.js  (movimento premium)

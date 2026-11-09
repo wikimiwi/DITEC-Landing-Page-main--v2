@@ -73,20 +73,45 @@ ditec:
     # no perfil "test" (application-test.yml), pra nao interferir nos
     # testes automatizados.
     enabled: ${DITEC_RATELIMIT_ENABLED:true}
+    # true SOMENTE se a API estiver atras de um proxy reverso confiavel (ex.: Render).
+    trust-forwarded-for: ${DITEC_TRUST_PROXY:false}
   jwt:
     secret: ${JWT_SECRET:}
     expiration-minutes: ${JWT_EXPIRATION_MINUTES:120}
   cors:
-    allowed-origins: ${DITEC_ALLOWED_ORIGINS:http://localhost:5500,http://127.0.0.1:5500,http://localhost:5501,http://127.0.0.1:5501}
-  huggingface:
-    api-key: ${HF_API_KEY:}
-    base-url: ${HF_BASE_URL:https://router.huggingface.co/v1/chat/completions}
-    default-model: ${HF_MODEL:Qwen/Qwen2.5-72B-Instruct}
+    allowed-origins: ${DITEC_ALLOWED_ORIGINS:${FRONTEND_URL:http://localhost:5500,http://127.0.0.1:5500,http://localhost:5501,http://127.0.0.1:5501}}
+  # Chatbot: Google Gemini API (chave so' no backend; vazia = respostas automaticas)
+  gemini:
+    api-key: ${GEMINI_API_KEY:}
+    api-url: ${GEMINI_API_URL:https://generativelanguage.googleapis.com/v1beta}
+    # gemini-2.5-flash (pedido inicial) foi testado em 09/11/2026: "no longer available to new users" (404).
+    # Escolha documentada: gemini-3.5-flash-lite (estavel, medido com media de 1,1 s). Troque por GEMINI_MODEL.
+    model: ${GEMINI_MODEL:gemini-3.5-flash-lite}
+    # usado se o modelo principal nao existir/nao estiver liberado para a conta
+    fallback-model: ${GEMINI_FALLBACK_MODEL:gemini-2.5-flash-lite}
+    max-output-tokens: ${GEMINI_MAX_OUTPUT_TOKENS:400}
+    temperature: ${GEMINI_TEMPERATURE:0.6}
+    thinking-level: ${GEMINI_THINKING_LEVEL:LOW}
+    max-retries: ${GEMINI_MAX_RETRIES:2}
+    retry-backoff-ms: ${GEMINI_RETRY_BACKOFF_MS:500}
+    connect-timeout-ms: ${GEMINI_CONNECT_TIMEOUT_MS:5000}
+    read-timeout-ms: ${GEMINI_READ_TIMEOUT_MS:15000}
   regras:
     horario-inicio: 07:00
     horario-fim: 20:00
     garantia-dias: 90
     desconto-pagamento-vista: 0.05
+
+# Health check para a hospedagem (GET /actuator/health -> {"status":"UP"}).
+# So' o "health" e' exposto, sem detalhes internos.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
 
 logging:
   level:

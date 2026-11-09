@@ -3,15 +3,18 @@ package com.ditec.assistencia.dto.chat;
 import java.util.List;
 
 /**
- * Mesmo formato usado (a) para desserializar a resposta da Hugging Face e
+ * Formato da resposta ao frontend (padrao "OpenAI-compatible" que o script.js ja le). Antes tambem
  * (b) para responder ao frontend — ambos seguem o schema OpenAI-compatible
- * (data.choices[0].message.content), entao reaproveitamos o mesmo DTO.
+ * (data.choices[0].message.content).
+ *
+ * "fonte" (so' na resposta ao frontend): "ia" quando o texto veio do modelo,
+ * "automatica" quando a IA estava indisponivel e foi usado o FAQ oficial.
  */
-public record ChatCompletionResponse(List<ChatChoiceDto> choices) {
+public record ChatCompletionResponse(List<ChatChoiceDto> choices, String fonte) {
 
-    public static ChatCompletionResponse deTexto(String texto) {
+    public static ChatCompletionResponse deTexto(String texto, String fonte) {
         return new ChatCompletionResponse(
-                List.of(new ChatChoiceDto(0, new ChatMessageDto("assistant", texto), "stop")));
+                List.of(new ChatChoiceDto(0, new ChatMessageDto("assistant", texto), "stop")), fonte);
     }
 
     public String primeiroTexto() {

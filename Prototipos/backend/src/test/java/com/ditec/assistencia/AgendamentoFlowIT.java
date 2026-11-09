@@ -60,11 +60,18 @@ class AgendamentoFlowIT {
 
         String protocoloExtraido = objectMapper.readTree(protocolo).get("protocolo").asText();
 
-        mockMvc.perform(get("/api/ordens-servico/protocolo/{protocolo}", protocoloExtraido))
+        mockMvc.perform(rastreio(protocoloExtraido, "(11) 90000-1111"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("AGENDADO"))
                 .andExpect(jsonPath("$.timeline").isArray())
-                .andExpect(jsonPath("$.timeline[0].statusNovo").value("AGENDADO"));
+                .andExpect(jsonPath("$.timeline[0].statusNovo").value("AGENDADO"))
+                .andExpect(jsonPath("$.timeline[0].tipo").value("ABERTURA"))
+                .andExpect(jsonPath("$.statusDescricao").value("Aguardando avaliação"))
+                .andExpect(jsonPath("$.dataAbertura").isNotEmpty());
+
+        // telefone diferente do agendamento: mesma resposta de "nao encontrada" (404)
+        mockMvc.perform(rastreio(protocoloExtraido, "(11) 98888-7777"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -102,8 +109,29 @@ class AgendamentoFlowIT {
 
     @Test
     void protocoloInexistenteRetorna404() throws Exception {
-        mockMvc.perform(get("/api/ordens-servico/protocolo/{protocolo}", "DITEC-2000-999999"))
+        mockMvc.perform(rastreio("DITEC-2000-999999", "(11) 90000-1111"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void telefoneInvalidoNoAgendamentoRetorna422() throws Exception {
+        AgendamentoCreateRequest req = new AgendamentoCreateRequest(
+                "Sem Telefone", "abc", "Fogao", "Nao acende", "Rua X, 1", "Moema", proximoHorarioValido().plusDays(4), null);
+        mockMvc.perform(post("/api/agendamentos").contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void rastreioComProtocoloMalformadoRetorna422() throws Exception {
+        mockMvc.perform(rastreio("abc", "(11) 90000-1111"))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void endpointAntigoDeRastreioSoComProtocoloFoiRemovido() throws Exception {
+        mockMvc.perform(get("/api/ordens-servico/protocolo/{protocolo}", "DITEC-2026-000001"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -123,7 +151,7 @@ class AgendamentoFlowIT {
                 .andReturn().getResponse().getContentAsString();
         String protocolo = objectMapper.readTree(corpo).get("protocolo").asText();
 
-        mockMvc.perform(get("/api/ordens-servico/protocolo/{protocolo}", protocolo))
+        mockMvc.perform(rastreio(protocolo, "11900005555"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.clienteNomeAbreviado").value("Fulano de Souza A."))
                 .andExpect(jsonPath("$.id").doesNotExist())
@@ -134,6 +162,13 @@ class AgendamentoFlowIT {
                 .andExpect(jsonPath("$.desconto").doesNotExist())
                 .andExpect(jsonPath("$.pecasUtilizadas").doesNotExist())
                 .andExpect(jsonPath("$.descricaoFinal").doesNotExist())
-                .andExpect(jsonPath("$.notaFiscalNumero").doesNotExist());
+                .andExpect(jsonPath("$.notaFiscalNumero").doesNotExist())
+                .andExpect(jsonPath("$.clienteTelefone").doesNotExist());
+    }
+
+    private org.springframework.test.web.servlet.RequestBuilder rastreio(String protocolo, String telefone) throws Exception {
+        return post("/api/ordens-servico/rastreio")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(java.util.Map.of("protocolo", protocolo, "telefone", telefone)));
     }
 }

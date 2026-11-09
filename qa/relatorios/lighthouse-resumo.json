@@ -1,0 +1,144 @@
+[
+  {
+    "formFactor": "mobile",
+    "nome": "Página inicial (Sobre, Serviços, Agendamento, Rastreio, Contato)",
+    "caminho": "/index.html",
+    "performance": 100,
+    "acessibilidade": 100,
+    "boasPraticas": 100,
+    "seo": 100,
+    "falhas": [
+      "mainthread-work-breakdown",
+      "render-blocking-resources",
+      "unminified-javascript",
+      "dom-size",
+      "network-dependency-tree-insight",
+      "render-blocking-insight"
+    ]
+  },
+  {
+    "formFactor": "mobile",
+    "nome": "Área do cliente / login",
+    "caminho": "/conta.html",
+    "performance": 98,
+    "acessibilidade": 100,
+    "boasPraticas": 100,
+    "seo": 60,
+    "falhas": [
+      "render-blocking-resources",
+      "is-crawlable",
+      "network-dependency-tree-insight",
+      "render-blocking-insight"
+    ]
+  },
+  {
+    "formFactor": "mobile",
+    "nome": "Área do técnico / login",
+    "caminho": "/tecnico.html",
+    "performance": 98,
+    "acessibilidade": 100,
+    "boasPraticas": 100,
+    "seo": 60,
+    "falhas": [
+      "render-blocking-resources",
+      "is-crawlable",
+      "network-dependency-tree-insight",
+      "render-blocking-insight"
+    ]
+  },
+  {
+    "formFactor": "mobile",
+    "nome": "Painel administrativo / login",
+    "caminho": "/admin.html",
+    "performance": 99,
+    "acessibilidade": 100,
+    "boasPraticas": 100,
+    "seo": 60,
+    "falhas": [
+      "render-blocking-resources",
+      "is-crawlable",
+      "network-dependency-tree-insight",
+      "render-blocking-insight"
+    ]
+  },
+  {
+    "formFactor": "desktop",
+    "nome": "Página inicial (Sobre, Serviços, Agendamento, Rastreio, Contato)",
+    "caminho": "/index.html",
+    "performance": 89,
+    "acessibilidade": 100,
+    "boasPraticas": 100,
+    "seo": 100,
+    "falhas": [
+      "first-contentful-paint",
+      "largest-contentful-paint",
+      "speed-index",
+      "mainthread-work-breakdown",
+      "largest-contentful-paint-element",
+      "render-blocking-resources",
+      "unminified-javascript",
+      "modern-image-formats",
+      "uses-responsive-images",
+      "dom-size",
+      "image-delivery-insight",
+      "network-dependency-tree-insight",
+      "render-blocking-insight"
+    ]
+  },
+  {
+    "formFactor": "desktop",
+    "nome": "Área do cliente / login",
+    "caminho": "/conta.html",
+    "performance": 82,
+    "acessibilidade": 100,
+    "boasPraticas": 100,
+    "seo": 60,
+    "falhas": [
+      "first-contentful-paint",
+      "largest-contentful-paint",
+      "speed-index",
+      "largest-contentful-paint-element",
+      "render-blocking-resources",
+      "is-crawlable",
+      "network-dependency-tree-insight",
+      "render-blocking-insight"
+    ]
+  },
+  {
+    "formFactor": "desktop",
+    "nome": "Área do técnico / login",
+    "caminho": "/tecnico.html",
+    "performance": 82,
+    "acessibilidade": 100,
+    "boasPraticas": 100,
+    "seo": 60,
+    "falhas": [
+      "first-contentful-paint",
+      "largest-contentful-paint",
+      "speed-index",
+      "largest-contentful-paint-element",
+      "render-blocking-resources",
+      "is-crawlable",
+      "network-dependency-tree-insight",
+      "render-blocking-insight"
+    ]
+  },
+  {
+    "formFactor": "desktop",
+    "nome": "Painel administrativo / login",
+    "caminho": "/admin.html",
+    "performance": 86,
+    "acessibilidade": 100,
+    "boasPraticas": 100,
+    "seo": 60,
+    "falhas": [
+      "first-contentful-paint",
+      "largest-contentful-paint",
+      "largest-contentful-paint-element",
+      "render-blocking-resources",
+      "is-crawlable",
+      "network-dependency-tree-insight",
+      "render-blocking-insight"
+    ]
+  }
+]

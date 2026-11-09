@@ -14,7 +14,7 @@ public record FinalizarOSRequest(
         @DecimalMax(value = "999999.99", message = "Valor invalido.") BigDecimal valor,
         @NotBlank(message = "Informe a forma de pagamento.") @Size(max = 30, message = "Forma de pagamento invalida.") String formaPagamento,
         @Size(max = 2000, message = "Descricao das pecas muito longa.") String pecasUtilizadas,
-        @Size(max = 2000, message = "Descricao final muito longa.") String descricaoFinal,
-        @Size(max = 50, message = "Numero da nota fiscal muito longo.") String notaFiscalNumero
+        @NotBlank(message = "Descreva o servico realizado.") @Size(max = 2000, message = "Descricao final muito longa.") String descricaoFinal,
+        @Size(max = 50, message = "Numero do comprovante muito longo.") String notaFiscalNumero
 ) {
 }
