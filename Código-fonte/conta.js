@@ -65,6 +65,7 @@
     $('#dCep').value = perfil.cep || '';
 
     renderAgendamentos();
+    renderMinhasOS();
   }
 
   const STATUS_BADGE = {
@@ -306,7 +307,7 @@
     const senha = $('#gCadSenha').value;
     const senha2 = $('#gCadSenha2').value;
     if (!nome || !email || !tel || !senha) return formError(e.target, 'Preencha todos os campos.');
-    if (senha.length < 6) return formError(e.target, 'A senha deve ter ao menos 6 caracteres.');
+    if (senha.length < 8) return formError(e.target, 'A senha deve ter ao menos 8 caracteres.');
     if (senha !== senha2) return formError(e.target, 'As senhas não coincidem.');
 
     const btn = e.target.querySelector('button[type="submit"]');
@@ -352,18 +353,56 @@
     }
   });
 
-  /* ---- Rastreamento de OS ---- */
-  $('#osInputConta').addEventListener('keypress', e => { if (e.key === 'Enter') $('#osSearchConta').click(); });
-  $('#osSearchConta').addEventListener('click', async () => {
-    const val = ($('#osInputConta').value || '').trim().toUpperCase();
-    const res = $('#osResultConta');
-    if (!val) return;
-    res.innerHTML = `<p style="font-size:.85rem;color:var(--text-light);padding:10px 0;">Buscando...</p>`;
+  /* ---- Minhas Ordens de Serviço: etapas, histórico real e resposta ao orçamento ---- */
+  const O = window.DitecOS;
+  async function renderMinhasOS() {
+    const el = $('#osListConta');
+    el.innerHTML = '<div class="dash-empty">Carregando...</div>';
+    let lista;
     try {
-      const os = await DitecAPI.rastrear(val);
-      res.innerHTML = `<div class="dash-row"><div><div class="dash-row__main">${escHtml(os.protocolo)}</div><div class="dash-row__sub">${escHtml(os.tipoAparelho || '')}</div></div><span class="dash-badge ${STATUS_BADGE[os.status] || 'dash-badge--pendente'}">${STATUS_LABEL[os.status] || os.status}</span></div>`;
+      lista = await DitecAPI.minhasOS();
     } catch (err) {
-      res.innerHTML = `<p style="font-size:.85rem;color:var(--text-light);padding:10px 0;">${escHtml(err.message || 'OS não encontrada.')}</p>`;
+      el.innerHTML = `<div class="dash-empty">${O.esc(err.message || 'Não foi possível carregar suas OS.')}</div>`;
+      return;
+    }
+    $('#osCount').textContent = lista.length;
+    if (!lista.length) {
+      el.innerHTML = '<div class="dash-empty">Nenhuma Ordem de Serviço vinculada à sua conta ainda.</div>';
+      return;
+    }
+    el.innerHTML = lista.map(os => `
+      <details class="os-panel" style="margin-bottom:10px;" ${os.status === 'AGUARDANDO_APROVACAO' ? 'open' : ''}>
+        <summary style="cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;">
+          <span><strong>${O.esc(os.protocolo)}</strong> — ${O.esc(os.tipoAparelho || '')}</span>${O.badge(os.status)}
+        </summary>
+        ${O.stepper(os)}
+        ${os.status === 'AGUARDANDO_APROVACAO' ? `
+          <div class="os-alert" data-orcamento="${os.id}">
+            💬 Orçamento: <strong>${O.fmtMoeda(os.valorOrcamento)}</strong>. Diagnóstico: ${O.esc(os.diagnostico || '—')}
+            <div class="os-actions" style="margin-top:10px;">
+              <button class="btn btn--primary btn--sm" type="button" data-resp="sim">Aprovar orçamento</button>
+              <button class="btn btn--outline btn--sm" type="button" data-resp="nao">Recusar (sem custo)</button>
+            </div>
+          </div>` : ''}
+        ${O.infoGrid(os)}
+        <section><h4 class="os-section-title">Histórico</h4>${O.timeline(os.timeline)}</section>
+      </details>`).join('');
+  }
+
+  $('#osListConta').addEventListener('click', async e => {
+    const btn = e.target.closest('[data-resp]');
+    if (!btn) return;
+    const box = btn.closest('[data-orcamento]');
+    const aprovado = btn.dataset.resp === 'sim';
+    if (!aprovado && !confirm('Recusar o orçamento? A OS será cancelada sem custo (o diagnóstico é gratuito).')) return;
+    box.querySelectorAll('button').forEach(b => { b.disabled = true; });
+    try {
+      await DitecAPI.responderOrcamento(Number(box.dataset.orcamento), aprovado);
+      renderMinhasOS();
+      renderAgendamentos();
+    } catch (err) {
+      alert(err.message || 'Não foi possível registrar sua resposta.');
+      box.querySelectorAll('button').forEach(b => { b.disabled = false; });
     }
   });
 

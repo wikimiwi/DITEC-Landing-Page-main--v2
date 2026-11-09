@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
 public record RegisterRequest(
         @NotBlank(message = "Informe o nome completo.") @Size(max = 150, message = "Nome muito longo.") String nome,
         @NotBlank(message = "Informe o e-mail.") @Email(message = "E-mail invalido.") @Size(max = 150, message = "E-mail muito longo.") String email,
-        @NotBlank(message = "Informe o telefone.") @Size(max = 20, message = "Telefone muito longo.") String telefone,
+        @NotBlank(message = "Informe o telefone.") @Size(max = 20, message = "Telefone muito longo.") @jakarta.validation.constraints.Pattern(regexp = "^(?=(?:\\D*\\d){10,13}\\D*$)[0-9 ()+.-]+$", message = "Informe um telefone com DDD (10 a 13 digitos).") String telefone,
         @NotBlank(message = "Informe uma senha.") @Size(min = 8, max = 100, message = "A senha deve ter entre 8 e 100 caracteres.") String senha
 ) {
 }

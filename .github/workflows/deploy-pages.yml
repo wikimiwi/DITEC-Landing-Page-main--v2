@@ -33,7 +33,8 @@ jobs:
         run: |
           mkdir -p _site
           cp -R "Código-fonte/." "_site/"
-          cp -R "assetslogos" "_site/assetslogos"
+          # nao publica arquivos de backup nem documentacao interna
+          rm -f _site/*.bak _site/README.md _site/SECURITY.md
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4

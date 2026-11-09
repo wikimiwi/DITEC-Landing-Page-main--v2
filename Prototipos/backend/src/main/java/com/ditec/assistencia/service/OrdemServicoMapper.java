@@ -5,7 +5,10 @@ import com.ditec.assistencia.dto.os.OrdemServicoResponse;
 import com.ditec.assistencia.dto.os.TimelineItemResponse;
 import com.ditec.assistencia.entity.OrdemServico;
 import com.ditec.assistencia.entity.TimelineOS;
+import com.ditec.assistencia.enums.StatusOS;
+import com.ditec.assistencia.enums.TipoUsuario;
 
+import java.time.LocalDate;
 import java.util.List;
 
 final class OrdemServicoMapper {
@@ -13,56 +16,121 @@ final class OrdemServicoMapper {
     private OrdemServicoMapper() {
     }
 
-    static OrdemServicoResponse toResponse(OrdemServico os, List<TimelineOS> timeline) {
-        List<TimelineItemResponse> timelineDto = mapTimeline(timeline);
-
+    /**
+     * Visao completa (dono/tecnico/admin). timeline == null => listagem resumida
+     * (o historico e' carregado no detalhe, evitando N+1 nas listas).
+     * incluirInternos=false (cliente) remove anotacoes internas do historico.
+     */
+    static OrdemServicoResponse toResponse(OrdemServico os, List<TimelineOS> timeline, boolean incluirInternos,
+                                           boolean incluirTransicoes) {
+        var ag = os.getAgendamento();
+        List<String> transicoes = incluirTransicoes
+                ? os.getStatus().proximos().stream().map(StatusOS::name).toList()
+                : List.of();
         return new OrdemServicoResponse(
                 os.getId(),
                 os.getProtocolo(),
+                ag.getId(),
+                ag.getStatus().name(),
                 nomeCliente(os),
+                ag.getTelefoneExibicao(),
+                os.getTecnico() != null ? os.getTecnico().getId() : null,
                 os.getTecnico() != null ? os.getTecnico().getNome() : null,
-                os.getAgendamento().getTipoAparelho(),
-                os.getAgendamento().getBairro(),
-                os.getAgendamento().getEndereco(),
+                ag.getTipoAparelho(),
+                ag.getBairro(),
+                ag.getEndereco(),
+                ag.isPrioridadeGas(),
+                ag.getDataHora(),
                 os.getDescricaoProblema(),
+                os.getDiagnostico(),
+                os.getValorOrcamento(),
+                os.getOrcamentoAprovado(),
+                os.getPrevisaoConclusao(),
                 os.getStatus().name(),
+                os.getStatus().getDescricao(),
+                os.getStatus().getEtapa(),
+                transicoes,
                 os.getValor(),
                 os.getFormaPagamento(),
                 os.getDesconto(),
                 os.getPecasUtilizadas(),
                 os.getDescricaoFinal(),
+                os.getCriadoEm(),
+                os.getAtualizadoEm(),
                 os.getDataInicio(),
                 os.getDataConclusao(),
+                os.getDataEntrega(),
                 os.getGarantiaDias(),
+                garantiaAte(os),
                 os.getNotaFiscalNumero(),
-                timelineDto
+                timeline == null ? null : mapTimeline(timeline, incluirInternos, false)
         );
     }
 
-    /**
-     * Versao PUBLICA (sem login) do rastreamento por protocolo — ver
-     * OrdemServicoRastreioResponse para a justificativa de seguranca. Nunca
-     * inclui endereco completo, valor, forma de pagamento, desconto, pecas
-     * utilizadas ou nota fiscal, e o nome do cliente vem abreviado.
-     */
+    /** Versao PUBLICA (protocolo + telefone) — ver OrdemServicoRastreioResponse. */
     static OrdemServicoRastreioResponse toRastreioResponse(OrdemServico os, List<TimelineOS> timeline) {
+        var ag = os.getAgendamento();
         return new OrdemServicoRastreioResponse(
                 os.getProtocolo(),
                 abreviarNome(nomeCliente(os)),
-                os.getTecnico() != null ? os.getTecnico().getNome() : null,
-                os.getAgendamento().getTipoAparelho(),
-                os.getAgendamento().getBairro(),
+                ag.getTipoAparelho(),
+                os.getDescricaoProblema(),
                 os.getStatus().name(),
+                os.getStatus().getDescricao(),
+                os.getStatus().getEtapa(),
+                os.getCriadoEm(),
+                os.getAtualizadoEm(),
+                ag.getDataHora(),
+                os.getDiagnostico(),
+                os.getValorOrcamento(),
+                os.getOrcamentoAprovado(),
+                os.getTecnico() != null ? os.getTecnico().getNome() : null,
+                os.getPrevisaoConclusao(),
+                os.getDataConclusao(),
+                os.getDataEntrega(),
                 os.getGarantiaDias(),
-                mapTimeline(timeline)
+                garantiaAte(os),
+                mapTimeline(timeline, false, true)
         );
     }
 
-    private static List<TimelineItemResponse> mapTimeline(List<TimelineOS> timeline) {
+    /** Garantia de 90 dias contada a partir da conclusao do servico. */
+    static LocalDate garantiaAte(OrdemServico os) {
+        if (os.getDataConclusao() == null || os.getGarantiaDias() == null) return null;
+        return os.getDataConclusao().toLocalDate().plusDays(os.getGarantiaDias());
+    }
+
+    private static List<TimelineItemResponse> mapTimeline(List<TimelineOS> timeline, boolean incluirInternos,
+                                                          boolean publico) {
         return timeline.stream()
-                .map(t -> new TimelineItemResponse(t.getStatusAnterior(), t.getStatusNovo(),
-                        t.getObservacao(), t.getAlteradoPor(), t.getDataHora()))
+                .filter(t -> incluirInternos || t.isVisivelCliente())
+                .map(t -> new TimelineItemResponse(
+                        t.getTipo().name(),
+                        t.getStatusAnterior(),
+                        t.getStatusNovo(),
+                        descricaoStatus(t.getStatusNovo()),
+                        t.getObservacao(),
+                        publico ? responsavelPublico(t) : t.getAlteradoPor(),
+                        t.isVisivelCliente(),
+                        t.getDataHora()))
                 .toList();
+    }
+
+    /** No rastreamento publico, o nome de um cliente nunca aparece por extenso. */
+    private static String responsavelPublico(TimelineOS t) {
+        if (t.getUsuario() == null) return "Sistema DITEC";
+        if (t.getUsuario().getTipo() == TipoUsuario.CLIENTE) return "Cliente";
+        if (t.getUsuario().getTipo() == TipoUsuario.ADMINISTRADOR) return "Equipe DITEC";
+        return t.getAlteradoPor();
+    }
+
+    private static String descricaoStatus(String status) {
+        if (status == null) return null;
+        try {
+            return StatusOS.valueOf(status).getDescricao();
+        } catch (IllegalArgumentException ex) {
+            return status;
+        }
     }
 
     private static String nomeCliente(OrdemServico os) {

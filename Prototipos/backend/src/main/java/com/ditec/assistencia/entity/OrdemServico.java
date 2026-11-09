@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -47,8 +48,23 @@ public class OrdemServico {
     @Column(name = "descricao_problema", length = 500)
     private String descricaoProblema;
 
+    /** Diagnostico tecnico (preenchido a partir da etapa EM_DIAGNOSTICO). */
+    @Column(columnDefinition = "TEXT")
+    private String diagnostico;
+
+    /** Valor do orcamento apresentado ao cliente (antes da execucao). */
+    @Column(name = "valor_orcamento", precision = 10, scale = 2)
+    private BigDecimal valorOrcamento;
+
+    /** null = ainda sem resposta; true/false = resposta do cliente ao orcamento. */
+    @Column(name = "orcamento_aprovado")
+    private Boolean orcamentoAprovado;
+
+    @Column(name = "previsao_conclusao")
+    private LocalDate previsaoConclusao;
+
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(nullable = false, length = 30)
     @Builder.Default
     private StatusOS status = StatusOS.AGENDADO;
 
@@ -74,10 +90,17 @@ public class OrdemServico {
     @Column(name = "data_conclusao")
     private LocalDateTime dataConclusao;
 
+    @Column(name = "data_entrega")
+    private LocalDateTime dataEntrega;
+
     @Column(name = "garantia_dias")
     @Builder.Default
     private Integer garantiaDias = 90;
 
+    /**
+     * Numero de comprovante/nota informado manualmente (opcional). A EMISSAO de
+     * NF-e esta fora do escopo do projeto: o sistema apenas registra o numero.
+     */
     @Column(name = "nota_fiscal_numero", length = 50)
     private String notaFiscalNumero;
 
@@ -90,7 +113,7 @@ public class OrdemServico {
     @PrePersist
     void prePersist() {
         LocalDateTime agora = LocalDateTime.now();
-        criadoEm = agora;
+        if (criadoEm == null) criadoEm = agora;
         atualizadoEm = agora;
         if (status == null) status = StatusOS.AGENDADO;
     }

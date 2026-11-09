@@ -1,5 +1,6 @@
 package com.ditec.assistencia.entity;
 
+import com.ditec.assistencia.enums.TipoEventoOS;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,6 +32,11 @@ public class TimelineOS {
     @JoinColumn(name = "ordem_servico_id", nullable = false)
     private OrdemServico ordemServico;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private TipoEventoOS tipo = TipoEventoOS.STATUS;
+
     @Column(name = "status_anterior", length = 30)
     private String statusAnterior;
 
@@ -40,8 +46,19 @@ public class TimelineOS {
     @Column(length = 500)
     private String observacao;
 
+    /** Nome de quem fez a alteracao (mantido mesmo se o usuario for removido). */
     @Column(name = "alterado_por", nullable = false, length = 150)
     private String alteradoPor;
+
+    /** Usuario responsavel (null = sistema). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id")
+    private Usuario usuario;
+
+    /** false = anotacao interna, nao aparece no rastreamento do cliente. */
+    @Column(name = "visivel_cliente", nullable = false)
+    @Builder.Default
+    private boolean visivelCliente = true;
 
     @Column(name = "data_hora", nullable = false)
     private LocalDateTime dataHora;
@@ -49,5 +66,6 @@ public class TimelineOS {
     @PrePersist
     void prePersist() {
         if (dataHora == null) dataHora = LocalDateTime.now();
+        if (tipo == null) tipo = TipoEventoOS.STATUS;
     }
 }

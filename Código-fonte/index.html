@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:8080 https://ditec-api.onrender.com; frame-src https://www.google.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' http://localhost:8080 https://ditec-api.onrender.com; frame-src https://www.google.com; base-uri 'self'; form-action 'self'; object-src 'none'" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <title>DITEC Assistência Técnica | Conserto de Eletrodomésticos em São Paulo</title>
@@ -50,12 +50,15 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" />
+  <script src="carregar-fontes.js" async></script>
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
   <link rel="stylesheet" href="styles.css" />
   <!-- Favicon SVG inline fallback -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'><rect width='36' height='36' rx='9' fill='%230047AB'/><text x='18' y='25' text-anchor='middle' font-family='sans-serif' font-weight='900' font-size='16' fill='white'>DT</text></svg>" />
 </head>
 <body>
+<a class="skip-link" href="#main-content">Pular para o conteúdo</a>
 
 <!-- ===== COOKIE BANNER (LGPD) ===== -->
 <div id="scrollProgress"></div>
@@ -97,7 +100,7 @@
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         <span id="authBtnText">Entrar</span>
       </button>
-      <a href="tel:+5511999999999" class="btn btn--primary btn--sm" aria-label="Ligar para DITEC">
+      <a href="tel:+5511999999999" class="btn btn--primary btn--sm" aria-label="Ligar Agora para a DITEC">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.67A2 2 0 012 .92h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 15.92v1z"/></svg>
         Ligar Agora
       </a>
@@ -108,7 +111,7 @@
   </div>
 </header>
 
-<main id="main-content">
+<main id="main-content" tabindex="-1">
 
 <!-- ===== HERO ===== -->
 <section class="hero" id="home" aria-label="Apresentação">
@@ -122,7 +125,7 @@
       <h1 class="hero__title">Conserto de Eletrodomésticos<br><span class="highlight">Rápido em São Paulo</span></h1>
       <p class="hero__subtitle">Técnicos certificados. Peças originais.<br><strong>Garantia de 90 dias</strong> em peças e mão de obra.</p>
       <div class="hero__actions">
-        <a href="https://wa.me/5511999999999?text=Olá!%20Preciso%20de%20assistência%20técnica%20DITEC." target="_blank" rel="noopener noreferrer" class="btn btn--whatsapp btn--lg" aria-label="Chamar DITEC no WhatsApp">
+        <a href="https://wa.me/5511999999999?text=Olá!%20Preciso%20de%20assistência%20técnica%20DITEC." target="_blank" rel="noopener noreferrer" class="btn btn--whatsapp btn--lg" aria-label="Chamar no WhatsApp da DITEC (abre em nova aba)">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
           Chamar no WhatsApp
         </a>
@@ -199,12 +202,12 @@
       <h2 class="section-title">Serviços Especializados</h2>
       <p class="section-subtitle">Cobrimos todos os principais eletrodomésticos com técnicos certificados e equipamentos modernos.</p>
     </div>
-    <div class="services__grid" role="list">
-      <article class="service-card" role="listitem" data-reveal data-delay="1"><div class="service-card__icon" aria-hidden="true"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="5" y1="10" x2="19" y2="10"/><circle cx="12" cy="6" r="1" fill="currentColor" stroke="none"/><rect x="7" y="13" width="4" height="3" rx="0.5"/></svg></div><h3 class="service-card__title">Geladeiras</h3><p class="service-card__desc">Compressor, gás, borrachas, termostato e muito mais.</p><span class="service-card__tag">Conserto no dia</span></article>
-      <article class="service-card" role="listitem" data-reveal data-delay="2"><div class="service-card__icon" aria-hidden="true"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg></div><h3 class="service-card__title">Máquinas de Lavar</h3><p class="service-card__desc">Bomba, rolamentos, motor, painel e componentes elétricos.</p><span class="service-card__tag">Peças originais</span></article>
-      <article class="service-card" role="listitem" data-reveal data-delay="3"><div class="service-card__icon" aria-hidden="true"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="8" width="20" height="13" rx="2"/><path d="M7 8V6a2 2 0 014 0v2M13 8V6a2 2 0 014 0v2"/><circle cx="7" cy="14.5" r="2"/><circle cx="12" cy="14.5" r="2"/><circle cx="17" cy="14.5" r="2"/></svg></div><h3 class="service-card__title">Fogões</h3><p class="service-card__desc">Acendimento, válvulas, forno, queimadores e iluminação.</p><span class="service-card__tag">Garantia 90 dias</span></article>
-      <article class="service-card" role="listitem" data-reveal data-delay="4"><div class="service-card__icon" aria-hidden="true"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M8 5v14M15 9h2M15 12h2M15 15h2"/><circle cx="11.5" cy="12" r="2.5"/></svg></div><h3 class="service-card__title">Micro-ondas</h3><p class="service-card__desc">Magnetron, prato, teclado, fusíveis e porta trancada.</p><span class="service-card__tag">Diagnóstico grátis</span></article>
-      <article class="service-card" role="listitem" data-reveal data-delay="5"><div class="service-card__icon" aria-hidden="true"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="11" rx="2"/><path d="M7 17v2M17 17v2"/><path d="M6 10h12M6 13h5"/><circle cx="17" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg></div><h3 class="service-card__title">Ar Condicionado</h3><p class="service-card__desc">Higienização, recarga de gás, placa eletrônica e dreno.</p><span class="service-card__tag">Técnico certificado</span></article>
+    <div class="services__grid">
+      <article class="service-card" data-reveal data-delay="1"><div class="service-card__icon" aria-hidden="true"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="5" y1="10" x2="19" y2="10"/><circle cx="12" cy="6" r="1" fill="currentColor" stroke="none"/><rect x="7" y="13" width="4" height="3" rx="0.5"/></svg></div><h3 class="service-card__title">Geladeiras</h3><p class="service-card__desc">Compressor, gás, borrachas, termostato e muito mais.</p><span class="service-card__tag">Conserto no dia</span></article>
+      <article class="service-card" data-reveal data-delay="2"><div class="service-card__icon" aria-hidden="true"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg></div><h3 class="service-card__title">Máquinas de Lavar</h3><p class="service-card__desc">Bomba, rolamentos, motor, painel e componentes elétricos.</p><span class="service-card__tag">Peças originais</span></article>
+      <article class="service-card" data-reveal data-delay="3"><div class="service-card__icon" aria-hidden="true"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="8" width="20" height="13" rx="2"/><path d="M7 8V6a2 2 0 014 0v2M13 8V6a2 2 0 014 0v2"/><circle cx="7" cy="14.5" r="2"/><circle cx="12" cy="14.5" r="2"/><circle cx="17" cy="14.5" r="2"/></svg></div><h3 class="service-card__title">Fogões</h3><p class="service-card__desc">Acendimento, válvulas, forno, queimadores e iluminação.</p><span class="service-card__tag">Garantia 90 dias</span></article>
+      <article class="service-card" data-reveal data-delay="4"><div class="service-card__icon" aria-hidden="true"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M8 5v14M15 9h2M15 12h2M15 15h2"/><circle cx="11.5" cy="12" r="2.5"/></svg></div><h3 class="service-card__title">Micro-ondas</h3><p class="service-card__desc">Magnetron, prato, teclado, fusíveis e porta trancada.</p><span class="service-card__tag">Diagnóstico grátis</span></article>
+      <article class="service-card" data-reveal data-delay="5"><div class="service-card__icon" aria-hidden="true"><svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="11" rx="2"/><path d="M7 17v2M17 17v2"/><path d="M6 10h12M6 13h5"/><circle cx="17" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg></div><h3 class="service-card__title">Ar Condicionado</h3><p class="service-card__desc">Higienização, recarga de gás, placa eletrônica e dreno.</p><span class="service-card__tag">Técnico certificado</span></article>
     </div>
   </div>
 </section>
@@ -218,14 +221,14 @@
       <p class="section-subtitle">Trabalhamos com as principais marcas com peças originais e técnicos treinados.</p>
     </div>
     <div class="brands__grid" role="list">
-      <div class="brand-card" role="listitem" title="Brastemp" data-reveal data-delay="1"><img src="../assetslogos/brastemp.png" alt="Brastemp" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
-      <div class="brand-card" role="listitem" title="Electrolux" data-reveal data-delay="2"><img src="../assetslogos/electrolux.png" alt="Electrolux" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
-      <div class="brand-card" role="listitem" title="Consul" data-reveal data-delay="3"><img src="../assetslogos/consul.png" alt="Consul" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
-      <div class="brand-card" role="listitem" title="Samsung" data-reveal data-delay="4"><img src="../assetslogos/samsung.png" alt="Samsung" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
-      <div class="brand-card" role="listitem" title="LG" data-reveal data-delay="5"><img src="../assetslogos/lg.png" alt="LG" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
-      <div class="brand-card" role="listitem" title="Whirlpool" data-reveal data-delay="6"><img src="../assetslogos/whirlpool.png" alt="Whirlpool" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
-      <div class="brand-card" role="listitem" title="Panasonic" data-reveal data-delay="6"><img src="../assetslogos/panasonic.png" alt="Panasonic" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
-      <div class="brand-card" role="listitem" title="Philips" data-reveal data-delay="6"><img src="../assetslogos/philips.png" alt="Philips" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
+      <div class="brand-card" role="listitem" title="Brastemp" data-reveal data-delay="1"><img src="assetslogos/brastemp.png" alt="Brastemp" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
+      <div class="brand-card" role="listitem" title="Electrolux" data-reveal data-delay="2"><img src="assetslogos/electrolux.png" alt="Electrolux" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
+      <div class="brand-card" role="listitem" title="Consul" data-reveal data-delay="3"><img src="assetslogos/consul.png" alt="Consul" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
+      <div class="brand-card" role="listitem" title="Samsung" data-reveal data-delay="4"><img src="assetslogos/samsung.png" alt="Samsung" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
+      <div class="brand-card" role="listitem" title="LG" data-reveal data-delay="5"><img src="assetslogos/lg.png" alt="LG" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
+      <div class="brand-card" role="listitem" title="Whirlpool" data-reveal data-delay="6"><img src="assetslogos/whirlpool.png" alt="Whirlpool" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
+      <div class="brand-card" role="listitem" title="Panasonic" data-reveal data-delay="6"><img src="assetslogos/panasonic.png" alt="Panasonic" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
+      <div class="brand-card" role="listitem" title="Philips" data-reveal data-delay="6"><img src="assetslogos/philips.png" alt="Philips" class="brand-logo-img" loading="lazy" width="140" height="60" /></div>
     </div>
   </div>
 </section>
@@ -320,7 +323,7 @@
       <article class="testimonial-card" data-reveal data-delay="3">
         <div class="testimonial-card__header"><div class="testimonial-card__stars" aria-label="5 estrelas">★★★★★</div><div class="testimonial-card__source"><svg width="16" height="16" viewBox="0 0 24 24" fill="#4285F4" aria-hidden="true"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg><span>Google</span></div></div>
         <p class="testimonial-card__text">"Ar condicionado com mau cheiro e sem gelar. Higienização completa e recarga de gás. Ficou como novo! Garantia de 90 dias. Já indiquei para toda a família."</p>
-        <div class="testimonial-card__author"><div class="testimonial-card__avatar" style="background:#fef3c7;color:#d97706;">AP</div><div><div class="testimonial-card__name">Ana Paula T.</div><div class="testimonial-card__role">Vila Mariana, SP · Ar Cond.</div></div></div>
+        <div class="testimonial-card__author"><div class="testimonial-card__avatar" style="background:#fef3c7;color:#92400e;">AP</div><div><div class="testimonial-card__name">Ana Paula T.</div><div class="testimonial-card__role">Vila Mariana, SP · Ar Cond.</div></div></div>
       </article>
     </div>
   </div>
@@ -341,7 +344,7 @@
       <div class="payment-card payment-card--boleto" data-reveal data-delay="4"><div class="payment-card__icon">📄</div><div class="payment-card__name">Boleto</div><div class="payment-card__desc">Empresas e<br>pessoa jurídica</div></div>
       <div class="payment-card payment-card--cash" data-reveal data-delay="5"><div class="payment-card__icon">💵</div><div class="payment-card__name">Dinheiro</div><div class="payment-card__desc">5% desconto<br>no pagamento</div></div>
     </div>
-    <p class="payment__note">* Parcelamento sem juros sujeito a análise. Nota fiscal emitida em todos os serviços.</p>
+    <p class="payment__note">* Parcelamento sem juros sujeito a análise.</p>
   </div>
 </section>
 
@@ -362,10 +365,10 @@
             <button class="calendar__nav" id="calNext" aria-label="Próximo mês">›</button>
           </div>
           <div class="calendar__weekdays" aria-hidden="true"><span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span></div>
-          <div class="calendar__days" id="calDays" role="grid" aria-label="Selecione uma data"></div>
+          <div class="calendar__days" id="calDays" role="group" aria-label="Selecione uma data"></div>
         </div>
         <div class="timeslots" id="timeslots" style="display:none;">
-          <h4 class="timeslots__title" id="timeslotsTitle">Horários disponíveis</h4>
+          <h3 class="timeslots__title" id="timeslotsTitle">Horários disponíveis</h3>
           <div class="timeslots__grid" id="timeslotsGrid" role="group" aria-label="Horários disponíveis"></div>
         </div>
       </div>
@@ -396,7 +399,7 @@
           <h3>Agendamento Confirmado!</h3>
           <p id="scheduleSuccessText"></p>
           <p>Você receberá uma confirmação no WhatsApp em instantes.</p>
-          <button class="btn btn--outline btn--sm" onclick="document.getElementById('scheduleSuccess').style.display='none';document.getElementById('scheduleForm').style.display='block'">Fazer novo agendamento</button>
+          <button id="scheduleAgain" type="button" class="btn btn--outline btn--sm">Fazer novo agendamento</button>
         </div>
       </div>
     </div>
@@ -409,19 +412,26 @@
     <div class="section-header" data-reveal>
       <p class="section-tag">Transparência total</p>
       <h2 class="section-title">Rastreie sua Ordem de Serviço</h2>
-      <p class="section-subtitle">Digite o número da OS recebida por WhatsApp e acompanhe o status em tempo real.</p>
+      <p class="section-subtitle">Informe o número da OS e o telefone usado no agendamento para acompanhar cada etapa do atendimento.</p>
     </div>
     <div class="tracking__wrapper">
-      <div class="tracking__search">
-        <input type="text" id="osInput" class="input tracking__input" placeholder="Ex: DITEC-2026-000001" maxlength="20" aria-label="Número da ordem de serviço" />
-        <button class="btn btn--primary" id="osSearch">
+      <form class="tracking__search" id="osForm" novalidate>
+        <div class="tracking__field">
+          <label class="form-label" for="osInput">Número da OS (protocolo)</label>
+          <input type="text" id="osInput" class="input tracking__input" placeholder="Ex: DITEC-2026-000001" maxlength="20" autocomplete="off" autocapitalize="characters" required />
+        </div>
+        <div class="tracking__field">
+          <label class="form-label" for="osTelefone">Telefone usado no agendamento</label>
+          <input type="tel" id="osTelefone" class="input tracking__input" placeholder="(11) 99999-9999" maxlength="16" autocomplete="tel" inputmode="tel" required />
+        </div>
+        <button class="btn btn--primary tracking__btn" id="osSearch" type="submit">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           Rastrear
         </button>
-      </div>
+      </form>
       <div class="tracking__result" id="trackingResult" style="display:none;" aria-live="polite"></div>
       <div class="tracking__demo">
-        <p class="tracking__demo-hint">💡 O protocolo é gerado no formato <strong>DITEC-AAAA-NNNNNN</strong> e aparece na tela de confirmação do seu agendamento.</p>
+        <p class="tracking__demo-hint">💡 O protocolo tem o formato <strong>DITEC-AAAA-NNNNNN</strong> e aparece na confirmação do seu agendamento. Pedimos o telefone para que ninguém consulte a sua OS sem autorização.</p>
       </div>
     </div>
   </div>
@@ -435,14 +445,13 @@
       <h2 class="section-title">Perguntas Frequentes</h2>
       <p class="section-subtitle">Tudo que você precisa saber antes de chamar um técnico.</p>
     </div>
-    <div class="faq__list" role="list">
-      <details class="faq-item" role="listitem"><summary class="faq-item__question">A visita técnica tem algum custo?<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="faq-item__icon" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></summary><div class="faq-item__answer"><p>O diagnóstico inicial é <strong>completamente gratuito</strong>. O técnico vai até você, avalia o aparelho e apresenta um orçamento detalhado. Você só paga se aprovar o serviço — sem pegadinhas.</p></div></details>
-      <details class="faq-item" role="listitem"><summary class="faq-item__question">Qual é o prazo da garantia?<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="faq-item__icon" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></summary><div class="faq-item__answer"><p>Oferecemos <strong>90 dias de garantia</strong> em peças e mão de obra em todos os serviços. Se o problema retornar dentro desse prazo, o técnico volta sem custo adicional. A garantia é formalizada em nota fiscal.</p></div></details>
-      <details class="faq-item" role="listitem"><summary class="faq-item__question">Atendem no mesmo dia?<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="faq-item__icon" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></summary><div class="faq-item__answer"><p>Sim! Na maioria dos casos atendemos <strong>no mesmo dia</strong>, mediante disponibilidade de técnicos na sua região. Horário de atendimento: <strong>segunda a sábado, das 7h às 20h</strong>. Urgências relacionadas a gás têm prioridade máxima.</p></div></details>
-      <details class="faq-item" role="listitem"><summary class="faq-item__question">Usam peças originais ou genéricas?<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="faq-item__icon" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></summary><div class="faq-item__answer"><p>Utilizamos <strong>peças originais ou equivalentes certificadas</strong> pelas fabricantes. Jamais usamos peças sem procedência. O tipo de peça utilizada é sempre informado previamente no orçamento, com a diferença de custo e garantia explicada.</p></div></details>
-      <details class="faq-item" role="listitem"><summary class="faq-item__question">Quais bairros e cidades são atendidos?<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="faq-item__icon" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></summary><div class="faq-item__answer"><p>Atendemos toda a <strong>cidade de São Paulo</strong> e parte da <strong>Grande SP</strong> (Osasco, Barueri, Santo André, São Bernardo, Diadema, Carapicuíba, Cotia e Taboão da Serra). Use o verificador de área na seção de contato para confirmar sua região.</p></div></details>
-      <details class="faq-item" role="listitem"><summary class="faq-item__question">Emitem nota fiscal?<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="faq-item__icon" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></summary><div class="faq-item__answer"><p>Sim, <strong>nota fiscal em 100% dos serviços</strong>. Somos uma empresa regularmente registrada no CNPJ 00.000.000/0001-00. A nota é necessária para acionar a garantia e é enviada por e-mail logo após o pagamento.</p></div></details>
-      <details class="faq-item" role="listitem"><summary class="faq-item__question">Como funciona o pagamento?<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="faq-item__icon" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></summary><div class="faq-item__answer"><p>Aceitamos <strong>Pix, cartão de débito e crédito</strong> (todas as bandeiras), boleto bancário e dinheiro. Parcelamos em até 12x no cartão de crédito sem juros. Clientes que pagam à vista em dinheiro têm <strong>5% de desconto</strong>.</p></div></details>
+    <div class="faq__list">
+      <details class="faq-item"><summary class="faq-item__question">A visita técnica tem algum custo?<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="faq-item__icon" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></summary><div class="faq-item__answer"><p>O diagnóstico inicial é <strong>completamente gratuito</strong>. O técnico vai até você, avalia o aparelho e apresenta um orçamento detalhado. Você só paga se aprovar o serviço — sem pegadinhas.</p></div></details>
+      <details class="faq-item"><summary class="faq-item__question">Qual é o prazo da garantia?<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="faq-item__icon" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></summary><div class="faq-item__answer"><p>Oferecemos <strong>90 dias de garantia</strong> em peças e mão de obra em todos os serviços. Se o problema retornar dentro desse prazo, o técnico volta sem custo adicional. A garantia fica registrada na sua Ordem de Serviço (consulte em "Rastrear OS").</p></div></details>
+      <details class="faq-item"><summary class="faq-item__question">Atendem no mesmo dia?<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="faq-item__icon" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></summary><div class="faq-item__answer"><p>Sim! Na maioria dos casos atendemos <strong>no mesmo dia</strong>, mediante disponibilidade de técnicos na sua região. Horário de atendimento: <strong>segunda a sábado, das 7h às 20h</strong>. Urgências relacionadas a gás têm prioridade máxima.</p></div></details>
+      <details class="faq-item"><summary class="faq-item__question">Usam peças originais ou genéricas?<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="faq-item__icon" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></summary><div class="faq-item__answer"><p>Utilizamos <strong>peças originais ou equivalentes certificadas</strong> pelas fabricantes. Jamais usamos peças sem procedência. O tipo de peça utilizada é sempre informado previamente no orçamento, com a diferença de custo e garantia explicada.</p></div></details>
+      <details class="faq-item"><summary class="faq-item__question">Quais bairros e cidades são atendidos?<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="faq-item__icon" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></summary><div class="faq-item__answer"><p>Atendemos toda a <strong>cidade de São Paulo</strong> e parte da <strong>Grande SP</strong> (Osasco, Barueri, Santo André, São Bernardo, Diadema, Carapicuíba, Cotia e Taboão da Serra). Use o verificador de área na seção de contato para confirmar sua região.</p></div></details>
+      <details class="faq-item"><summary class="faq-item__question">Como funciona o pagamento?<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="faq-item__icon" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></summary><div class="faq-item__answer"><p>Aceitamos <strong>Pix, cartão de débito e crédito</strong> (todas as bandeiras), boleto bancário e dinheiro. Parcelamos em até 12x no cartão de crédito sem juros. Clientes que pagam à vista em dinheiro têm <strong>5% de desconto</strong>.</p></div></details>
     </div>
   </div>
 </section>
@@ -462,7 +471,7 @@
         </div>
         <!-- Redes Sociais -->
         <div class="social-links">
-          <h4 class="social-links__title">Siga a DITEC nas Redes</h4>
+          <h3 class="social-links__title">Siga a DITEC nas Redes</h3>
           <div class="social-links__row">
             <a href="https://instagram.com/ditec_assistencia" target="_blank" rel="noopener noreferrer" class="social-btn social-btn--instagram" aria-label="Instagram DITEC"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>Instagram</a>
             <a href="https://facebook.com/ditec_assistencia" target="_blank" rel="noopener noreferrer" class="social-btn social-btn--facebook" aria-label="Facebook DITEC"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>Facebook</a>
@@ -471,7 +480,7 @@
         </div>
         <!-- Verificador de Área -->
         <div class="area-checker">
-          <h4 class="area-checker__title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0047AB" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Verificar Área de Atendimento</h4>
+          <h3 class="area-checker__title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0047AB" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Verificar Área de Atendimento</h3>
           <div class="area-checker__input-group"><input type="text" id="areaInput" placeholder="Digite seu bairro ou CEP..." class="input" maxlength="60" aria-label="Bairro ou CEP para verificação" /><button type="button" id="checkAreaBtn" class="btn btn--primary btn--sm">Verificar</button></div>
           <div id="areaResult" class="area-checker__result" style="display:none;" aria-live="polite"></div>
         </div>
@@ -589,11 +598,11 @@
       </div>
     </div>
     <div class="footer__links">
-      <h4>Navegação</h4>
+      <h3>Navegação</h3>
       <a href="#home">Home</a><a href="#sobre">Sobre Nós</a><a href="#servicos">Serviços</a><a href="#marcas">Marcas</a><a href="#depoimentos">Avaliações</a><a href="#agendamento">Agendar</a><a href="#rastreamento">Rastrear OS</a><a href="#faq">FAQ</a><a href="#contato">Contato</a>
     </div>
     <div class="footer__contact">
-      <h4>Contato</h4>
+      <h3>Contato</h3>
       <p>(11) 99999-9999</p><p>contato@ditec.com.br</p><p>Seg–Sab: 7h às 20h</p><p>São Paulo e Grande SP</p>
       <div class="footer__legal-links">
         <a href="#privacidade">Política de Privacidade</a>
@@ -609,7 +618,7 @@
 </footer>
 
 <!-- ===== WA FLOAT ===== -->
-<a href="https://wa.me/5511999999999?text=Olá!%20Preciso%20de%20assistência%20técnica%20DITEC." target="_blank" rel="noopener noreferrer" class="whatsapp-float" id="whatsappFloat" aria-label="Chamar DITEC no WhatsApp">
+<a href="https://wa.me/5511999999999?text=Olá!%20Preciso%20de%20assistência%20técnica%20DITEC." target="_blank" rel="noopener noreferrer" class="whatsapp-float" id="whatsappFloat" aria-label="Fale conosco no WhatsApp (abre em nova aba)">
   <svg width="28" height="28" viewBox="0 0 24 24" fill="white" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
   <span class="whatsapp-float__tooltip">Fale conosco!</span>
 </a>
@@ -627,14 +636,14 @@
     <div class="chatbot__messages" id="chatbotMessages" role="log" aria-label="Histórico de mensagens"></div>
     <div class="chatbot__quick-replies" id="chatbotQuickReplies" role="group" aria-label="Respostas rápidas"></div>
     <div class="chatbot__input-row">
-      <input type="text" id="chatbotInput" class="chatbot__input" placeholder="Digite sua dúvida..." maxlength="200" autocomplete="off" aria-label="Digite sua mensagem" />
+      <input type="text" id="chatbotInput" class="chatbot__input" placeholder="Digite sua dúvida..." maxlength="500" autocomplete="off" aria-label="Digite sua mensagem" />
       <button id="chatbotSend" class="chatbot__send" aria-label="Enviar mensagem"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
     </div>
   </div>
-  <button class="chatbot__trigger" id="chatbotTrigger" aria-label="Abrir assistente virtual DITEC" aria-expanded="false">
+  <button class="chatbot__trigger" id="chatbotTrigger" aria-label="Abrir assistente virtual DITEC (1 nova mensagem)" aria-expanded="false">
     <svg class="chatbot__trigger-icon chatbot__trigger-icon--chat" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
     <svg class="chatbot__trigger-icon chatbot__trigger-icon--close" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    <span class="chatbot__trigger-badge" id="chatbotBadge" aria-label="1 nova mensagem">1</span>
+    <span class="chatbot__trigger-badge" id="chatbotBadge" aria-hidden="true" data-count="1"></span>
   </button>
 </div>
 
@@ -663,7 +672,7 @@
       <div class="form-group"><label class="form-label" for="cadNome">Nome completo</label><input type="text" id="cadNome" class="input" placeholder="João Silva" required autocomplete="name" /></div>
       <div class="form-group"><label class="form-label" for="cadEmail">E-mail</label><input type="email" id="cadEmail" class="input" placeholder="voce@email.com" required autocomplete="username" /></div>
       <div class="form-group"><label class="form-label" for="cadTel">Telefone / WhatsApp</label><input type="tel" id="cadTel" class="input" placeholder="(11) 99999-9999" required autocomplete="tel" /></div>
-      <div class="form-group"><label class="form-label" for="cadSenha">Senha</label><input type="password" id="cadSenha" class="input" placeholder="Mínimo 6 caracteres" required autocomplete="new-password" /></div>
+      <div class="form-group"><label class="form-label" for="cadSenha">Senha</label><input type="password" id="cadSenha" class="input" placeholder="Mínimo 8 caracteres" minlength="8" required autocomplete="new-password" /></div>
       <div class="form-group"><label class="form-label" for="cadSenha2">Confirmar senha</label><input type="password" id="cadSenha2" class="input" placeholder="Repita a senha" required autocomplete="new-password" /></div>
       <button type="submit" class="btn btn--primary btn--full">Criar Conta</button>
       <p class="modal-switch">Já tem conta? <button type="button" class="modal-link" id="goToLogin">Entrar</button></p>
@@ -685,13 +694,14 @@
       <div class="form-group"><label class="form-label" for="cpNome">Nome completo</label><input type="text" id="cpNome" class="input" required autocomplete="name" /></div>
       <div class="form-group"><label class="form-label" for="cpEmail">E-mail</label><input type="email" id="cpEmail" class="input" placeholder="voce@email.com" required autocomplete="username" /></div>
       <div class="form-group"><label class="form-label" for="cpTel">Telefone / WhatsApp</label><input type="tel" id="cpTel" class="input" required autocomplete="tel" /></div>
-      <div class="form-group"><label class="form-label" for="cpSenha">Crie uma senha</label><input type="password" id="cpSenha" class="input" placeholder="Mínimo 6 caracteres" required autocomplete="new-password" /></div>
+      <div class="form-group"><label class="form-label" for="cpSenha">Crie uma senha</label><input type="password" id="cpSenha" class="input" placeholder="Mínimo 8 caracteres" minlength="8" required autocomplete="new-password" /></div>
       <button type="submit" class="btn btn--primary btn--full">Completar Cadastro</button>
       <button type="button" class="modal-skip" id="completeProfileSkip">Agora não, obrigado</button>
     </form>
   </div>
 </div>
 
+<script src="config.js"></script>
 <script src="dashboard-shared.js"></script>
 <script src="script.js"></script>
 </body>

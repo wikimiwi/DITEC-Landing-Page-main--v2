@@ -13,6 +13,7 @@ import com.ditec.assistencia.exception.ConflitoException;
 import com.ditec.assistencia.exception.CredenciaisInvalidasException;
 import com.ditec.assistencia.repository.AgendamentoRepository;
 import com.ditec.assistencia.repository.ClienteRepository;
+import com.ditec.assistencia.repository.OrdemServicoRepository;
 import com.ditec.assistencia.repository.UsuarioRepository;
 import com.ditec.assistencia.security.JwtProperties;
 import com.ditec.assistencia.security.JwtUtil;
@@ -32,6 +33,7 @@ public class AuthService {
     private final UsuarioRepository usuarioRepository;
     private final ClienteRepository clienteRepository;
     private final AgendamentoRepository agendamentoRepository;
+    private final OrdemServicoRepository ordemServicoRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final JwtProperties jwtProperties;
@@ -55,20 +57,30 @@ public class AuthService {
                 .build();
         usuario = usuarioRepository.save(usuario);
 
-Cliente cliente = Cliente.builder().usuario(usuario).build();
-final Cliente clienteSalvo = clienteRepository.save(cliente);
+        Cliente cliente = Cliente.builder().usuario(usuario).build();
+        final Cliente clienteSalvo = clienteRepository.save(cliente);
 
-// Mesma logica que existia em localStorage: vincula o agendamento mais
-// recente feito como visitante (mesmo telefone) a conta recem-criada.
-agendamentoRepository.findFirstByClienteIsNullAndTelefoneContatoOrderByCriadoEmDesc(usuario.getTelefone())
-        .ifPresent(ag -> {
-            ag.setCliente(clienteSalvo);
-            agendamentoRepository.save(ag);
-        });
+        // Vincula o agendamento mais recente feito como visitante (mesmo telefone)
+        // a conta recem-criada — fluxo "agendou e depois criou a conta".
+        // Correcoes: (1) a OS tambem e' vinculada (antes so' o agendamento, e o
+        // cliente nao via a propria OS); (2) so' vale para agendamentos das
+        // ultimas 24h, para que alguem nao "herde" atendimentos antigos de
+        // terceiros apenas informando o telefone deles.
+        agendamentoRepository.findFirstByClienteIsNullAndTelefoneContatoOrderByCriadoEmDesc(usuario.getTelefone())
+                .filter(ag -> ag.getCriadoEm() != null && ag.getCriadoEm().isAfter(LocalDateTime.now().minusHours(24)))
+                .ifPresent(ag -> {
+                    ag.setCliente(clienteSalvo);
+                    agendamentoRepository.save(ag);
+                    ordemServicoRepository.findByAgendamento_Id(ag.getId()).ifPresent(os -> {
+                        os.setCliente(clienteSalvo);
+                        ordemServicoRepository.save(os);
+                    });
+                });
 
         return gerarResposta(usuario);
     }
 
+    @Transactional
     public AuthResponse login(LoginRequest req) {
         Usuario usuario = usuarioRepository.findByEmailIgnoreCase(req.email().trim())
                 .orElseThrow(() -> new CredenciaisInvalidasException("E-mail ou senha incorretos."));

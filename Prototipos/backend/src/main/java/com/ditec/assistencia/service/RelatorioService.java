@@ -10,6 +10,7 @@ import com.ditec.assistencia.repository.ChatLogRepository;
 import com.ditec.assistencia.repository.OrdemServicoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
@@ -24,6 +25,7 @@ import java.util.Locale;
  */
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class RelatorioService {
 
     private final AgendamentoRepository agendamentoRepository;
@@ -50,15 +52,19 @@ public class RelatorioService {
 
     public byte[] ordensServicoCsv() {
         StringBuilder sb = new StringBuilder();
-        sb.append(CsvUtils.linha("Protocolo", "Cliente", "Tecnico", "Status", "Valor", "Forma Pagamento",
-                "Desconto", "Data Conclusao", "Garantia (dias)"));
+        sb.append(CsvUtils.linha("Protocolo", "Cliente", "Tecnico", "Status", "Abertura", "Previsao",
+                "Orcamento", "Valor", "Forma Pagamento", "Desconto", "Data Conclusao", "Data Entrega", "Garantia (dias)"));
         for (OrdemServico os : ordemServicoRepository.findAll()) {
             String cliente = os.getCliente() != null && os.getCliente().getUsuario() != null
                     ? os.getCliente().getUsuario().getNome() : os.getAgendamento().getNomeExibicao();
             sb.append(CsvUtils.linha(
                     os.getProtocolo(), cliente, os.getTecnico() != null ? os.getTecnico().getNome() : "",
-                    os.getStatus(), os.getValor(), os.getFormaPagamento(), os.getDesconto(),
+                    os.getStatus().getDescricao(),
+                    os.getCriadoEm() != null ? DT_FMT.format(os.getCriadoEm()) : "",
+                    os.getPrevisaoConclusao() != null ? os.getPrevisaoConclusao().toString() : "",
+                    os.getValorOrcamento(), os.getValor(), os.getFormaPagamento(), os.getDesconto(),
                     os.getDataConclusao() != null ? DT_FMT.format(os.getDataConclusao()) : "",
+                    os.getDataEntrega() != null ? DT_FMT.format(os.getDataEntrega()) : "",
                     os.getGarantiaDias()
             ));
         }

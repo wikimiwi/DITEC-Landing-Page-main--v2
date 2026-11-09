@@ -18,11 +18,14 @@ public class OrdemServicoController {
 
     private final OrdemServicoService ordemServicoService;
 
-    /** Rastreamento publico — igual ao comportamento original da landing page, porém
-     *  com resposta minimizada (ver OrdemServicoRastreioResponse). */
-    @GetMapping("/protocolo/{protocolo}")
-    public OrdemServicoRastreioResponse buscarPorProtocolo(@PathVariable String protocolo) {
-        return ordemServicoService.buscarPorProtocolo(protocolo);
+    /**
+     * Rastreamento publico: protocolo + telefone do agendamento.
+     * POST (e nao GET) para que o telefone nao fique em URL, logs de acesso ou historico do navegador.
+     * O antigo GET /protocolo/{protocolo} (so' com o protocolo, enumeravel) foi removido.
+     */
+    @PostMapping("/rastreio")
+    public OrdemServicoRastreioResponse rastrear(@Valid @RequestBody RastreioRequest request) {
+        return ordemServicoService.rastrear(request);
     }
 
     @GetMapping("/{id}")
@@ -30,7 +33,7 @@ public class OrdemServicoController {
         return ordemServicoService.buscarPorId(id, auth);
     }
 
-    /** Minhas OS — cliente ve as proprias, tecnico ve as que estao com ele. */
+    /** Minhas OS — cliente ve as proprias, tecnico ve as atribuidas a ele. */
     @GetMapping
     @PreAuthorize("hasAnyRole('CLIENTE','TECNICO')")
     public List<OrdemServicoResponse> minhas(Authentication auth) {
@@ -40,15 +43,46 @@ public class OrdemServicoController {
     @PutMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('TECNICO','ADMINISTRADOR')")
     public OrdemServicoResponse atualizarStatus(@PathVariable Long id, @Valid @RequestBody StatusUpdateRequest request,
-                                                 Authentication auth) {
+                                                Authentication auth) {
         return ordemServicoService.atualizarStatus(id, request, auth);
+    }
+
+    @PutMapping("/{id}/diagnostico")
+    @PreAuthorize("hasAnyRole('TECNICO','ADMINISTRADOR')")
+    public OrdemServicoResponse diagnostico(@PathVariable Long id, @Valid @RequestBody DiagnosticoRequest request,
+                                            Authentication auth) {
+        return ordemServicoService.registrarDiagnostico(id, request, auth);
+    }
+
+    @PutMapping("/{id}/previsao")
+    @PreAuthorize("hasAnyRole('TECNICO','ADMINISTRADOR')")
+    public OrdemServicoResponse previsao(@PathVariable Long id, @Valid @RequestBody PrevisaoRequest request,
+                                         Authentication auth) {
+        return ordemServicoService.atualizarPrevisao(id, request, auth);
+    }
+
+    @PostMapping("/{id}/observacoes")
+    @PreAuthorize("hasAnyRole('TECNICO','ADMINISTRADOR')")
+    @ResponseStatus(HttpStatus.CREATED)
+    public OrdemServicoResponse observacao(@PathVariable Long id, @Valid @RequestBody ObservacaoRequest request,
+                                           Authentication auth) {
+        return ordemServicoService.adicionarObservacao(id, request, auth);
     }
 
     @PostMapping("/{id}/finalizar")
     @PreAuthorize("hasAnyRole('TECNICO','ADMINISTRADOR')")
     public OrdemServicoResponse finalizar(@PathVariable Long id, @Valid @RequestBody FinalizarOSRequest request,
-                                           Authentication auth) {
+                                          Authentication auth) {
         return ordemServicoService.finalizar(id, request, auth);
+    }
+
+    /** Cliente dono aprova ou recusa o orcamento. */
+    @PostMapping("/{id}/orcamento/resposta")
+    @PreAuthorize("hasRole('CLIENTE')")
+    public OrdemServicoResponse responderOrcamento(@PathVariable Long id,
+                                                   @Valid @RequestBody OrcamentoRespostaRequest request,
+                                                   Authentication auth) {
+        return ordemServicoService.responderOrcamento(id, request, auth);
     }
 
     @PostMapping("/{id}/avaliacao")

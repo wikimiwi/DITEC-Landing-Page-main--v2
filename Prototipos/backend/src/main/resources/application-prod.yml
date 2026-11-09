@@ -1,0 +1,29 @@
+# ============================================================
+# Perfil de PRODUCAO — ative com DITEC_PROFILE=prod.
+# Todos os valores sensiveis vem de variaveis de ambiente do
+# servico de hospedagem (ver docs/RELATORIO_FINAL_CORRECOES_DITEC.md).
+# ============================================================
+server:
+  # Atras do proxy HTTPS da hospedagem (Render, Railway, Nginx...): respeita
+  # X-Forwarded-Proto/Host para gerar URLs e cookies corretos.
+  forward-headers-strategy: framework
+
+spring:
+  jpa:
+    show-sql: false
+
+ditec:
+  seed:
+    enabled: false            # nunca cria contas de demonstracao em producao
+  ratelimit:
+    enabled: true
+    trust-forwarded-for: ${DITEC_TRUST_PROXY:true}   # a hospedagem fica na frente da API
+  cors:
+    # Obrigatorio: URL publica do front-end (ex.: https://usuario.github.io).
+    # Varias origens separadas por virgula em DITEC_ALLOWED_ORIGINS.
+    allowed-origins: ${DITEC_ALLOWED_ORIGINS:${FRONTEND_URL}}
+
+logging:
+  level:
+    root: WARN
+    com.ditec.assistencia: ${DITEC_LOG_LEVEL:INFO}

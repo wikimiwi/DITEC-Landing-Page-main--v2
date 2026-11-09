@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -40,6 +41,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final RateLimitFilter rateLimitFilter;
     private final CorsProperties corsProperties;
+    private final org.springframework.core.env.Environment environment;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -65,6 +67,15 @@ public class SecurityConfig {
             // a autenticacao migrar para cookies (ex: por causa de XSS/localStorage),
             // esta configuracao PRECISA ser revisada e a protecao CSRF reativada.
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // Sem token (ou token invalido/expirado) => 401, e nao 403. O front-end usa o
+            // 401 para encerrar a sessao local expirada e pedir login novamente.
+            .exceptionHandling(ex -> ex.authenticationEntryPoint((request, response, authException) -> {
+                response.setStatus(401);
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"status\":401,\"error\":\"Unauthorized\","
+                        + "\"message\":\"Sessao expirada ou login necessario.\",\"path\":\""
+                        + request.getRequestURI().replace("\"", "") + "\"}");
+            }))
             .headers(headers -> headers
                 // API pura (JSON) — nao ha' motivo legitimo pra carregar qualquer
                 // subrecurso a partir das respostas do backend.
@@ -72,14 +83,16 @@ public class SecurityConfig {
                         "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"))
                 .frameOptions(frame -> frame.deny())
                 .referrerPolicy(referrer -> referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
-.permissionsPolicy(permissions -> permissions.policy(
-        "geolocation=(), microphone=(), camera=(), payment=(), usb=()"))
-.and()
-// So' tem efeito quando servido via HTTPS de verdade (o navegador
-// ignora esse header em HTTP puro) — necessario configurar em producao.
-.httpStrictTransportSecurity(hsts -> hsts
-        .includeSubDomains(true)
-        .maxAgeInSeconds(31536000))
+                // Permissions-Policy via header estatico: no Spring Security 6.3,
+                // .permissionsPolicy(...) devolve PermissionsPolicyConfig e quebra o
+                // encadeamento (era o motivo de o projeto nao compilar).
+                .addHeaderWriter(new StaticHeadersWriter("Permissions-Policy",
+                        "geolocation=(), microphone=(), camera=(), payment=(), usb=()"))
+                // So' tem efeito quando servido via HTTPS de verdade (o navegador
+                // ignora esse header em HTTP puro) — necessario configurar em producao.
+                .httpStrictTransportSecurity(hsts -> hsts
+                        .includeSubDomains(true)
+                        .maxAgeInSeconds(31536000))
                 // Cache-Control: no-store ja' vem por padrao do Spring Security em
                 // todas as respostas (nao precisa configurar explicitamente).
             )
@@ -88,7 +101,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/agendamentos/disponibilidade").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/agendamentos").permitAll() // suporta agendamento sem login
-                .requestMatchers(HttpMethod.GET, "/api/ordens-servico/protocolo/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/ordens-servico/rastreio").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/chat").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/servicos").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
@@ -103,13 +116,20 @@ public class SecurityConfig {
 
     private CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(
-                corsProperties.allowedOrigins() != null && !corsProperties.allowedOrigins().isEmpty()
-                        ? corsProperties.allowedOrigins()
-                        : List.of("http://localhost:5500"));
+        // Somente as origens configuradas (DITEC_ALLOWED_ORIGINS / FRONTEND_URL). Sem
+        // configuracao, nenhuma origem externa e' liberada (antes caia em localhost).
+        List<String> origens = corsProperties.allowedOrigins() == null ? List.of()
+                : corsProperties.allowedOrigins().stream().map(String::trim).filter(o -> !o.isEmpty() && !"*".equals(o) && !o.startsWith("${")).toList();
+        boolean producao = java.util.Arrays.stream(environment.getActiveProfiles()).anyMatch(p -> p.toLowerCase().contains("prod"));
+        if (producao && origens.isEmpty()) {
+            // falha rapida: em producao o front-end precisa estar explicitamente autorizado
+            throw new IllegalStateException("Perfil prod sem origem de CORS: defina FRONTEND_URL (ou DITEC_ALLOWED_ORIGINS).");
+        }
+        configuration.setAllowedOrigins(origens);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-        configuration.setAllowCredentials(true);
+        // A API nao usa cookies (JWT no header Authorization) — credenciais CORS desnecessarias.
+        configuration.setAllowCredentials(false);
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
