@@ -1,0 +1,112 @@
+classDiagram
+  direction LR
+  class Usuario {
+    +Long id
+    +String nome
+    +String email
+    -String senhaHash
+    +String telefone
+    +TipoUsuario tipo
+    +StatusConta status
+    +LocalDateTime ultimoAcesso
+  }
+  class Cliente {
+    +String endereco
+    +String bairro
+    +String cidade
+    +String uf
+    +String cep
+    +String complemento
+  }
+  class Tecnico {
+    +String nome
+    +String especialidade
+    +String certificacao
+    +String telefone
+    +String email
+    +StatusConta status
+  }
+  class Servico {
+    +String nome
+    +String descricao
+    +BigDecimal valorBase
+    +StatusConta status
+  }
+  class Agendamento {
+    +String protocolo
+    +String nomeContato
+    +String telefoneContato
+    +LocalDateTime dataHora
+    +String tipoAparelho
+    +String bairro
+    +String endereco
+    +boolean prioridadeGas
+    +StatusAgendamento status
+  }
+  class OrdemServico {
+    +String protocolo
+    +StatusOS status
+    +String diagnostico
+    +BigDecimal valorOrcamento
+    +Boolean orcamentoAprovado
+    +LocalDate previsaoConclusao
+    +BigDecimal valor
+    +String formaPagamento
+    +BigDecimal desconto
+    +int garantiaDias
+    +LocalDateTime dataConclusao
+    +LocalDateTime dataEntrega
+  }
+  class TimelineOS {
+    +TipoEventoOS tipo
+    +String statusAnterior
+    +String statusNovo
+    +String observacao
+    +boolean visivelCliente
+    +LocalDateTime dataHora
+  }
+  class Avaliacao {
+    +int nota
+    +String comentario
+  }
+  class ChatLog {
+    +String sessaoId
+    +String pergunta
+    +String resposta
+  }
+  class StatusOS {
+    <<enumeration>>
+    AGENDADO
+    EM_DIAGNOSTICO
+    AGUARDANDO_APROVACAO
+    AGUARDANDO_PECAS
+    EM_MANUTENCAO
+    EM_TESTES
+    CONCLUIDO
+    AGUARDANDO_RETIRADA
+    ENTREGUE
+    CANCELADO
+    +podeTransicionarPara(novo) boolean
+    +isTerminal() boolean
+  }
+  class TipoUsuario {
+    <<enumeration>>
+    CLIENTE
+    TECNICO
+    ADMINISTRADOR
+  }
+  Usuario "1" <-- "0..1" Cliente : perfil de
+  Usuario "1" <-- "0..1" Tecnico : perfil de
+  Usuario ..> TipoUsuario
+  Cliente "0..1" --> "0..*" Agendamento : solicita
+  Tecnico "0..1" --> "0..*" Agendamento : atende
+  Servico "0..1" --> "0..*" Agendamento : classifica
+  Agendamento "1" --> "0..1" OrdemServico : gera
+  Tecnico "0..1" --> "0..*" OrdemServico : executa
+  Cliente "0..1" --> "0..*" OrdemServico : acompanha
+  OrdemServico "1" *-- "0..*" TimelineOS : histórico
+  Usuario "0..1" --> "0..*" TimelineOS : autor
+  OrdemServico "1" --> "0..1" Avaliacao : recebe
+  Cliente "0..1" --> "0..*" Avaliacao : emite
+  Cliente "0..1" --> "0..*" ChatLog : origina
+  OrdemServico ..> StatusOS

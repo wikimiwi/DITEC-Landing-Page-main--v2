@@ -1,0 +1,20 @@
+digraph G {
+  rankdir=TB; nodesep=0.4; ranksep=0.4; fontname="Liberation Sans";
+  node [shape=box, style="rounded,filled", fontname="Liberation Sans", fontsize=14, margin="0.2,0.1", color="#333333"];
+  edge [fontname="Liberation Sans", fontsize=13, color="#333333"];
+  ini [shape=circle,label="",width=0.25,style=filled,fillcolor="#222222"];
+  fim [shape=doublecircle,label="",width=0.22,style=filled,fillcolor="#222222"];
+  d2 [shape=diamond, style=filled, fillcolor="#fff6d6", label="Precisa\nde peças?"];
+  t4 [label="AGUARDANDO_PECAS", fillcolor="#e8f6e8"];
+  t5 [label="EM_MANUTENCAO", fillcolor="#e8f6e8"];
+  t6 [label="EM_TESTES\n(pode voltar a EM_MANUTENCAO)", fillcolor="#e8f6e8"];
+  t7 [label="Técnico finaliza a OS: valor, pagamento,\npeças e descrição do serviço\nGarantia de 90 dias · 5% de desconto em Pix ou dinheiro\n(CONCLUIDO)", fillcolor="#e8f6e8"];
+  d3 [shape=diamond, style=filled, fillcolor="#fff6d6", label="Retirada\nimediata?"];
+  t8 [label="AGUARDANDO_RETIRADA", fillcolor="#e8f6e8"];
+  t9 [label="ENTREGUE", fillcolor="#e8f6e8"];
+  c2 [label="Cliente avalia o atendimento\n(nota de 1 a 5)", fillcolor="#e8f0fa"];
+  ini -> d2; d2 -> t4 [label=" sim"]; t4 -> t5; d2 -> t5 [label=" não"];
+  t5 -> t6 -> t7 -> d3; d3 -> t9 [label=" sim"]; d3 -> t8 [label=" não"]; t8 -> t9; t9 -> c2 -> fim;
+  leg [shape=plaintext, style="", fontsize=12, label=<<table border="0" cellborder="1" cellspacing="0" cellpadding="4"><tr><td bgcolor="#e8f6e8">Técnico</td><td bgcolor="#e8f0fa">Cliente</td><td bgcolor="#fff6d6">Decisão</td></tr></table>>];
+  fim -> leg [style=invis];
+}

@@ -1,0 +1,22 @@
+sequenceDiagram
+  actor T as Técnico
+  actor C as Cliente
+  participant API as API (controller)
+  participant OS as OrdemServico<br/>Service
+  participant BD as Banco de dados
+  T->>API: PUT .../diagnostico
+  API->>OS: registrarDiagnostico
+  OS->>BD: Grava diagnóstico e orçamento · eventos
+  T->>API: PUT .../status =<br/>AGUARDANDO_APROVACAO
+  API->>OS: atualizarStatus
+  OS->>OS: Exige diagnóstico e valor do orçamento
+  OS->>BD: Status AGUARDANDO_APROVACAO
+  C->>API: POST .../orcamento/<br/>resposta
+  API->>OS: responderOrcamento
+  OS->>OS: Exige OS do cliente aguardando aprovação
+  alt Orçamento aprovado
+    OS->>BD: orcamento_aprovado = verdadeiro · EM_MANUTENCAO
+  else Orçamento recusado
+    OS->>BD: orcamento_aprovado = falso · CANCELADO sem custo
+  end
+  OS-->>C: OS atualizada

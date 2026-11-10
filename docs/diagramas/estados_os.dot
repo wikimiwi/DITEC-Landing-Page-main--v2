@@ -1,0 +1,40 @@
+digraph G {
+rankdir=TB; nodesep=0.5; ranksep=0.55; fontname="Liberation Sans";
+node [shape=box, style="rounded,filled", fillcolor="#eef3f8", color="#355c7d", fontname="Liberation Sans", fontsize=14, margin="0.18,0.10"];
+edge [fontname="Liberation Sans", fontsize=12, color="#333333"];
+ini [shape=circle, label="", width=0.25, style=filled, fillcolor="#222222", color="#222222"];
+fim [shape=doublecircle, label="", width=0.22, style=filled, fillcolor="#222222", color="#222222"];
+AGENDADO [label="AGENDADO\nAguardando avaliação"];
+EM_DIAGNOSTICO [label="EM_DIAGNOSTICO\nEm diagnóstico"];
+AGUARDANDO_APROVACAO [label="AGUARDANDO_APROVACAO\nAguardando aprovação\ndo orçamento"];
+AGUARDANDO_PECAS [label="AGUARDANDO_PECAS\nAguardando peças"];
+EM_MANUTENCAO [label="EM_MANUTENCAO\nEm manutenção"];
+EM_TESTES [label="EM_TESTES\nEm testes"];
+CONCLUIDO [label="CONCLUIDO\nServiço concluído"];
+AGUARDANDO_RETIRADA [label="AGUARDANDO_RETIRADA\nAguardando retirada\nou entrega"];
+ENTREGUE [label="ENTREGUE\nEntregue ao cliente", fillcolor="#e6f3e6", color="#2e7d32"];
+CANCELADO [label="CANCELADO\nCancelada", fillcolor="#fde8e8", color="#aa3333"];
+ini -> AGENDADO;
+AGENDADO -> EM_DIAGNOSTICO;
+AGENDADO -> CANCELADO [style=dashed, color="#aa3333"];
+EM_DIAGNOSTICO -> AGUARDANDO_APROVACAO;
+EM_DIAGNOSTICO -> AGUARDANDO_PECAS;
+EM_DIAGNOSTICO -> EM_MANUTENCAO;
+EM_DIAGNOSTICO -> CANCELADO [style=dashed, color="#aa3333"];
+AGUARDANDO_APROVACAO -> AGUARDANDO_PECAS;
+AGUARDANDO_APROVACAO -> EM_MANUTENCAO;
+AGUARDANDO_APROVACAO -> CANCELADO [style=dashed, color="#aa3333"];
+AGUARDANDO_PECAS -> EM_MANUTENCAO;
+AGUARDANDO_PECAS -> CANCELADO [style=dashed, color="#aa3333"];
+EM_MANUTENCAO -> AGUARDANDO_PECAS;
+EM_MANUTENCAO -> EM_TESTES;
+EM_MANUTENCAO -> CANCELADO [style=dashed, color="#aa3333"];
+EM_TESTES -> EM_MANUTENCAO;
+EM_TESTES -> CONCLUIDO [label=" via /finalizar", style=bold];
+CONCLUIDO -> AGUARDANDO_RETIRADA;
+CONCLUIDO -> ENTREGUE;
+AGUARDANDO_RETIRADA -> ENTREGUE;
+ENTREGUE -> fim;
+CANCELADO -> fim;
+{rank=same; EM_MANUTENCAO; AGUARDANDO_PECAS;}
+}

@@ -1,0 +1,120 @@
+diff --git a/Banco de Dados/database/README.md b/Banco de Dados/database/README.md
+index 53b3288..6675233 100644
+--- a/Banco de Dados/database/README.md	
++++ b/Banco de Dados/database/README.md	
+@@ -46,5 +46,22 @@ UPDATE ordem_servico SET status='CONCLUIDO' WHERE status IN ('AGUARDANDO_RETIRAD
+ ALTER TABLE ordem_servico ADD CONSTRAINT ck_os_status CHECK (status IN ('AGENDADO','EM_ATENDIMENTO','CONCLUIDO','CANCELADO')),
+   DROP COLUMN diagnostico, DROP COLUMN valor_orcamento, DROP COLUMN orcamento_aprovado,
+   DROP COLUMN previsao_conclusao, DROP COLUMN data_entrega;
++DROP INDEX idx_os_criado_em ON ordem_servico;
++DROP INDEX idx_timeline_os_data ON timeline_os;
+ DELETE FROM flyway_schema_history WHERE version = '2';
+ ```
++
++### Antes de aplicar a V2 em um banco que já contém dados
++
++1. **Servidor:** MySQL 8.0.16 ou superior. A V2 usa `ALTER TABLE ... DROP CHECK`, sintaxe exclusiva do MySQL
++   (em MariaDB a migração falha com erro de sintaxe).
++2. **Backup:** gere um dump completo antes (`mysqldump --single-transaction ditec_assistencia > backup.sql`).
++   O DDL do MySQL não é transacional: se a V2 falhar no meio, as alterações já executadas permanecem
++   (inclusive a remoção de `ck_os_status`) e o Flyway registra a migração como falha. A recuperação segura é
++   restaurar o backup, corrigir os dados e aplicar a V2 novamente.
++3. **Pré-checagem de dados:** a V1 não impedia valores negativos em `ordem_servico.valor`, e a V2 cria
++   `ck_os_valor` (`valor >= 0`). O resultado abaixo deve ser `0`; caso contrário, corrija os registros antes:
++
++```sql
++SELECT COUNT(*) FROM ordem_servico WHERE valor < 0;
++```
+diff --git "a/C\303\263digo-fonte/README.md" "b/C\303\263digo-fonte/README.md"
+index 6e93b25..5813e94 100644
+--- "a/C\303\263digo-fonte/README.md"
++++ "b/C\303\263digo-fonte/README.md"
+@@ -8,7 +8,7 @@ landing page (v5, 100% front-end com dados simulados) para um sistema **real e i
+ 
+ ```
+ Frontend (HTML/CSS/JS)  →  API REST (Spring Boot)  →  MySQL
+-Frontend (chatbot)      →  Spring Boot (proxy)      →  Hugging Face (Qwen2.5-72B)
++Frontend (chatbot)      →  Spring Boot (proxy)      →  Google Gemini API
+ ```
+ 
+ > Este projeto foi finalizado a partir do *Prompt Mestre de Finalização* do semestre 2026.3
+@@ -65,7 +65,7 @@ DITEC-Landing-Page-main--v2/
+ | **MySQL** | 8.x | Banco de dados |
+ | **Navegador moderno** | — | Frontend (Chrome, Edge, Firefox) |
+ | **Extensão Live Server** (VS Code) ou similar | — | Servir o frontend sem problemas de CORS |
+-| **Conta na Hugging Face** | — | Chave de API para o chatbot (`HF_API_KEY`) |
++| **Chave da Google Gemini API** (opcional) | — | Habilita a IA do chatbot (`GEMINI_API_KEY`, criada no Google AI Studio); sem ela o chatbot responde no modo automático |
+ 
+ O frontend **não precisa de Node/npm** — é HTML/CSS/JS puro.
+ 
+@@ -118,8 +118,8 @@ acontecem:
+ | `DB_PASSWORD` | **sim, sem valor padrão** | Senha do banco — app recusa subir sem isso |
+ | `JWT_SECRET` | **sim, sem valor padrão** | Segredo HS256, **mínimo 32 caracteres** (`openssl rand -base64 48`) — app recusa subir sem isso |
+ | `JWT_EXPIRATION_MINUTES` | não (padrão 120) | Validade do token |
+-| `HF_API_KEY` | sim, para o chatbot funcionar | Token da Hugging Face (escopo *Inference Providers*) |
+-| `HF_MODEL` | não (padrão `Qwen/Qwen2.5-72B-Instruct`) | Modelo usado no chatbot |
++| `GEMINI_API_KEY` | não (sem ela o chatbot responde no modo automático) | Chave da Google Gemini API (Google AI Studio) |
++| `GEMINI_MODEL` | não (padrão `gemini-3.5-flash-lite`) | Modelo usado no chatbot (alternativo automático: `GEMINI_FALLBACK_MODEL`) |
+ | `DITEC_ALLOWED_ORIGINS` | não (padrão `localhost:5500`) | Origens liberadas no CORS |
+ | `DITEC_SEED_ENABLED` | não (padrão `true`) | Liga/desliga o `DataSeeder` (nunca roda se o profile ativo contiver "prod") |
+ | `DITEC_RATELIMIT_ENABLED` | não (padrão `true`) | Liga/desliga a proteção contra força bruta/spam |
+@@ -182,7 +182,7 @@ registrando diagnóstico, orçamento, previsão e observações → finaliza inf
+ pagamento/descrição → garantia de 90 dias é ativada → `ENTREGUE` (v7 — ver README da raiz).
+ 
+ **Chatbot:** o widget já existente continua funcionando exatamente igual — só que agora fala
+-com o Spring Boot de verdade, que esconde a `HF_API_KEY`, repassa para a Hugging Face e grava
++com o Spring Boot de verdade, que esconde a `GEMINI_API_KEY`, repassa para a Google Gemini API e grava
+ cada pergunta/resposta em `chat_log`.
+ 
+ ---
+@@ -229,7 +229,7 @@ Prefixo: `http://localhost:8080/api`
+ | POST | `/ordens-servico/{id}/finalizar` | técnico ou admin | Concluir, valor, garantia 90d |
+ | POST | `/ordens-servico/{id}/avaliacao` | cliente | Avaliar atendimento concluído |
+ | GET | `/servicos` | público | Catálogo de serviços ativos |
+-| POST | `/chat` | público | Proxy do chatbot (Hugging Face) |
++| POST | `/chat` | público | Proxy do chatbot (Google Gemini) |
+ | GET | `/admin/dashboard` | admin | Números gerais |
+ | GET | `/admin/clientes` | admin | Lista de clientes |
+ | GET | `/admin/agendamentos` | admin | Lista paginada |
+@@ -296,7 +296,7 @@ Detalhes completos em `backend/src/main/resources/db/migration/V1__schema.sql`.
+ - Pagamento à vista (Pix ou dinheiro) aplica **5% de desconto** automaticamente na finalização.
+ - Garantia de **90 dias** ativada na finalização da OS.
+ - Protocolo único (`DITEC-AAAA-NNNNNN`), gerado no backend, nunca no frontend.
+-- Senhas sempre com **BCrypt**; `HF_API_KEY` nunca é exposta ao navegador; autorização por perfil sempre checada no backend (nunca confia em role enviada pelo cliente).
++- Senhas sempre com **BCrypt**; `GEMINI_API_KEY` nunca é exposta ao navegador; autorização por perfil sempre checada no backend (nunca confia em role enviada pelo cliente).
+ 
+ ---
+ 
+diff --git "a/C\303\263digo-fonte/SECURITY.md" "b/C\303\263digo-fonte/SECURITY.md"
+index e48f7ff..d2d56ca 100644
+--- "a/C\303\263digo-fonte/SECURITY.md"
++++ "b/C\303\263digo-fonte/SECURITY.md"
+@@ -201,7 +201,7 @@ Relatório da auditoria de segurança realizada sobre o sistema DITEC Assistênc
+ - **Autorização:** por perfil (`CLIENTE`/`ADMINISTRADOR`/`TECNICO`) via `@PreAuthorize`,
+   combinada com verificação de propriedade do recurso no service layer.
+ - **CORS:** restrito às origens em `DITEC_ALLOWED_ORIGINS` (nunca `*`).
+-- **Segredos:** todos via variável de ambiente (`JWT_SECRET`, `DB_PASSWORD`, `HF_API_KEY`)
++- **Segredos:** todos via variável de ambiente (`JWT_SECRET`, `DB_PASSWORD`, `GEMINI_API_KEY`)
+   — nenhum tem valor padrão inseguro; a aplicação falha ao iniciar se algum obrigatório
+   estiver ausente.
+ - **Rate limiting:** ver seção 1 — em memória, por IP, configurável via
+@@ -209,8 +209,8 @@ Relatório da auditoria de segurança realizada sobre o sistema DITEC Assistênc
+ - **Logs:** nunca registram senha, hash, token ou chave de API. O `DataSeeder` imprime as
+   credenciais de teste no console **apenas** em ambientes não-produtivos — ver trava
+   descrita na seção 1.
+-- **Chatbot / Hugging Face:** a chave (`HF_API_KEY`) nunca sai do backend; o fluxo é
+-  sempre `Frontend → Backend DITEC → Hugging Face`. Limites de tokens/tamanho de
++- **Chatbot / Google Gemini:** a chave (`GEMINI_API_KEY`) nunca sai do backend (é enviada no
++  header `x-goog-api-key`, nunca na URL); o fluxo é sempre `Frontend → Backend DITEC → Google Gemini API`. Limites de tokens/tamanho de
+   mensagem aplicados no servidor (ver seção 1).
+ 
+ ---
+@@ -240,7 +240,7 @@ que precisam ser feitos **no momento do deploy real**:
+    e `Content-Security-Policy` (com `frame-ancestors`) via header HTTP real, não só a
+    meta tag que está no HTML hoje.
+ 3. **Rotacionar todos os segredos** antes de ir para produção — `JWT_SECRET`,
+-   `DB_PASSWORD`, `HF_API_KEY` usados em desenvolvimento **nunca** devem ser os mesmos
++   `DB_PASSWORD`, `GEMINI_API_KEY` usados em desenvolvimento **nunca** devem ser os mesmos
+    de produção.
+ 4. **`DITEC_SEED_ENABLED=false`** e profile ativo contendo "prod" (dupla trava, ver seção 1).
+ 5. **`DITEC_ALLOWED_ORIGINS`** apontando exclusivamente para o domínio real do frontend

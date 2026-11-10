@@ -1,0 +1,8 @@
+digraph G {
+  rankdir=LR; nodesep=0.3; ranksep=0.35; fontname="Liberation Sans";
+  node [shape=box, style="rounded,filled", fillcolor="#eef3f8", color="#355c7d", fontname="Liberation Sans", fontsize=14, margin="0.15,0.1"];
+  edge [fontname="Liberation Sans", fontsize=12, color="#333333"];
+  R [label="Requisito\nRF · RNF · RN"]; H [label="História\nHU + critérios"]; M [label="Modelo\nCU · UML · E/R"];
+  C [label="Código\nendpoint · tela · tabela"]; T [label="Teste\nautomatizado, isolado\nou manual"];
+  R -> H -> M -> C -> T; T -> R [style=dashed, label="evidência", constraint=false];
+}

@@ -1,0 +1,18 @@
+sequenceDiagram
+  actor V as Visitante
+  participant FE as Front-end
+  participant API as API (filtro e controller)
+  participant OS as OrdemServico<br/>Service
+  participant BD as Banco de dados
+  V->>FE: Informa protocolo e telefone
+  FE->>API: POST /api/ordens-servico/<br/>rastreio
+  API->>API: Limite de 20 por 5 min · valida DITEC-AAAA-NNNNNN
+  API->>OS: rastrear(protocolo, telefone)
+  OS->>BD: Busca a OS pelo protocolo
+  alt Protocolo inexistente ou telefone diferente
+    OS-->>FE: 404 com a mesma mensagem nos dois casos
+  else Dados conferem (8 últimos dígitos)
+    OS->>BD: Lê os eventos da linha do tempo
+    OS-->>FE: Status, etapa e eventos visíveis ao cliente
+  end
+  Note over OS,FE: A resposta pública omite valores, técnico, observações internas e dados pessoais

@@ -1,0 +1,21 @@
+graph G {
+  rankdir=TB; nodesep=0.45; ranksep=0.85; fontname="Liberation Sans"; splines=true;
+  node [shape=box, style="filled", fillcolor="#eef3f8", color="#355c7d", penwidth=1.5, fontname="Liberation Sans", fontsize=15, margin="0.2,0.12"];
+  edge [fontname="Liberation Sans", fontsize=12, color="#444444", labelfloat=false];
+  Usuario [label="USUÁRIO"]; Cliente [label="CLIENTE"]; Tecnico [label="TÉCNICO"]; Servico [label="SERVIÇO"];
+  Agendamento [label="AGENDAMENTO"]; OS [label="ORDEM DE SERVIÇO"]; Evento [label="EVENTO DA\nLINHA DO TEMPO"];
+  Avaliacao [label="AVALIAÇÃO"]; Chat [label="INTERAÇÃO\nDO CHAT"];
+  Usuario -- Cliente [label=" é  (1,1)–(0,1)"];
+  Usuario -- Tecnico [label=" é  (1,1)–(0,1)"];
+  Cliente -- Agendamento [label=" solicita  (0,1)–(0,N)"];
+  Tecnico -- Agendamento [label=" atende  (0,1)–(0,N)"];
+  Servico -- Agendamento [label=" classifica  (0,1)–(0,N)"];
+  Agendamento -- OS [label=" gera  (1,1)–(0,1)"];
+  Cliente -- OS [label=" acompanha  (0,1)–(0,N)"];
+  Tecnico -- OS [label=" executa  (0,1)–(0,N)"];
+  OS -- Evento [label=" registra  (1,1)–(0,N)"];
+  Usuario -- Evento [label=" autoria  (0,1)–(0,N)"];
+  OS -- Avaliacao [label=" recebe  (1,1)–(0,1)"];
+  Cliente -- Avaliacao [label=" emite  (0,1)–(0,N)"];
+  Cliente -- Chat [label=" origina  (0,1)–(0,N)"];
+}

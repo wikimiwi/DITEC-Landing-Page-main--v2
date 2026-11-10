@@ -1,0 +1,6 @@
+Varredura de segredos no histórico completo (20 commits) e na árvore atual — padrões: chaves Google (AIza…, AQ.…), Hugging Face (hf_…), sk-…, ghp_…, chaves privadas PEM.
+ocorrências: 3; valores distintos: 1
+  prefixo=hf_ tamanho=37 placeholder(só x após o prefixo)=True
+Arquivos sensíveis versionados (.env, .pem, .key): 0
+.env ignorado pelo .gitignore: 2 regra(s)
+Relatórios de QA que mencionam chave de API: 0

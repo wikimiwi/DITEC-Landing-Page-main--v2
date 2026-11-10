@@ -1,0 +1,11 @@
+OK  Agendamento.java   tabela=agendamento     campos=16 colunas=16 só-entidade=- só-tabela=-
+OK  Avaliacao.java     tabela=avaliacao       campos= 6 colunas= 6 só-entidade=- só-tabela=-
+OK  ChatLog.java       tabela=chat_log        campos= 6 colunas= 6 só-entidade=- só-tabela=-
+OK  Cliente.java       tabela=cliente         campos= 8 colunas= 8 só-entidade=- só-tabela=-
+OK  OrdemServico.java  tabela=ordem_servico   campos=23 colunas=23 só-entidade=- só-tabela=-
+OK  Servico.java       tabela=servico         campos= 5 colunas= 5 só-entidade=- só-tabela=-
+OK  Tecnico.java       tabela=tecnico         campos= 8 colunas= 8 só-entidade=- só-tabela=-
+OK  TimelineOS.java    tabela=timeline_os     campos=10 colunas=10 só-entidade=- só-tabela=-
+OK  Usuario.java       tabela=usuario         campos= 9 colunas= 9 só-entidade=- só-tabela=-
+
+Resumo: 9/9 entidades coincidem com as tabelas (V1+V2); 91 campos conferidos

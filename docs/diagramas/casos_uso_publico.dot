@@ -1,0 +1,25 @@
+digraph G {
+  rankdir=LR; fontname="Liberation Sans"; nodesep=0.35; ranksep=1.1; splines=true;
+  node [fontname="Liberation Sans", fontsize=12];
+  edge [arrowhead=none, color="#444444"];
+  subgraph cluster_sis { label="Sistema DITEC Assistência Técnica"; style=rounded; color="#555555"; fontsize=14;
+    node [shape=ellipse, style=filled, fillcolor="#eef3f8", color="#355c7d"];
+    CU01 [label="CU01 Consultar site,\nserviços e área de atendimento"];
+    CU02 [label="CU02 Agendar visita técnica"];
+    CU03 [label="CU03 Rastrear ordem de serviço"];
+    CU04 [label="CU04 Conversar com o\nassistente virtual"];
+    CU05 [label="CU05 Criar conta"];
+    CU06 [label="CU06 Autenticar-se"];
+    CU07 [label="CU07 Gerir perfil e endereço"];
+    CU08 [label="CU08 Gerir agendamentos"];
+    CU09 [label="CU09 Consultar ordens de serviço\ne histórico"];
+    CU10 [label="CU10 Responder ao orçamento"];
+    CU11 [label="CU11 Avaliar atendimento"];
+  }
+  node [shape=box, style="rounded,filled", fillcolor="#f4f4f4", color="#222222", fontsize=13];
+  Visitante; Cliente; IA [label="Google Gemini API\n(sistema externo)", style="filled", fillcolor="#fff3d6"];
+  Visitante -> {CU01 CU02 CU03 CU04 CU05 CU06};
+  Cliente -> {CU02 CU03 CU04 CU06 CU07 CU08 CU09 CU10 CU11};
+  CU04 -> IA [style=dashed];
+  {rank=same; Visitante; Cliente;}
+}

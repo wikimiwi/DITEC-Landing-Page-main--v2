@@ -1,0 +1,66 @@
+erDiagram
+  usuario ||--o| cliente : "é"
+  usuario ||--o| tecnico : "é"
+  cliente |o--o{ agendamento : "solicita"
+  tecnico |o--o{ agendamento : "atende"
+  servico |o--o{ agendamento : "classifica"
+  agendamento ||--o| ordem_servico : "gera"
+  cliente |o--o{ ordem_servico : "acompanha"
+  tecnico |o--o{ ordem_servico : "executa"
+  ordem_servico ||--o{ timeline_os : "registra"
+  usuario |o--o{ timeline_os : "autoria"
+  ordem_servico ||--o| avaliacao : "recebe"
+  cliente |o--o{ avaliacao : "emite"
+  cliente |o--o{ chat_log : "origina"
+  agendamento {
+    bigint_20 id PK
+    varchar_20 protocolo UK
+    bigint_20 cliente_id FK
+    bigint_20 tecnico_id FK
+    bigint_20 servico_id FK
+    varchar_20 status
+  }
+  avaliacao {
+    bigint_20 id PK
+    bigint_20 ordem_servico_id FK
+    bigint_20 cliente_id FK
+  }
+  chat_log {
+    bigint_20 id PK
+    bigint_20 cliente_id FK
+  }
+  cliente {
+    bigint_20 id PK
+    bigint_20 usuario_id FK
+  }
+  ordem_servico {
+    bigint_20 id PK
+    bigint_20 agendamento_id FK
+    bigint_20 cliente_id FK
+    bigint_20 tecnico_id FK
+    varchar_20 protocolo UK
+    varchar_30 status
+  }
+  servico {
+    bigint_20 id PK
+    varchar_150 nome
+    varchar_20 status
+  }
+  tecnico {
+    bigint_20 id PK
+    bigint_20 usuario_id FK
+    varchar_150 nome
+    varchar_150 email UK
+    varchar_20 status
+  }
+  timeline_os {
+    bigint_20 id PK
+    bigint_20 ordem_servico_id FK
+    bigint_20 usuario_id FK
+  }
+  usuario {
+    bigint_20 id PK
+    varchar_150 nome
+    varchar_150 email UK
+    varchar_20 status
+  }

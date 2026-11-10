@@ -1,0 +1,37 @@
+APROVADO  BD-01  inserir usuário CLIENTE válido
+APROVADO  BD-02  inserir usuário TECNICO válido
+APROVADO  BD-03  e-mail duplicado em usuario (UNIQUE) [rejeitado: ERROR 1062 (23000): Duplicate entry 'cli@teste.com' for key 'uq_usuario_email']
+APROVADO  BD-04  tipo de usuário inválido (CHECK) [rejeitado: ERROR 4025 (23000): CONSTRAINT `ck_usuario_tipo` failed for `ditec_teste`.`usuario`]
+APROVADO  BD-05  inserir cliente vinculado ao usuário
+APROVADO  BD-06  cliente com usuario_id inexistente (FK) [rejeitado: ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`ditec_teste`.`cliente`,]
+APROVADO  BD-07  segundo cliente para o mesmo usuário (UNIQUE) [rejeitado: ERROR 1062 (23000): Duplicate entry '1' for key 'uq_cliente_usuario']
+APROVADO  BD-08  inserir técnico vinculado ao usuário
+APROVADO  BD-09  agendamento de visitante (cliente_id nulo)
+APROVADO  BD-10  protocolo de agendamento duplicado (UNIQUE) [rejeitado: ERROR 1062 (23000): Duplicate entry 'DITEC-2026-000001' for key 'uq_agendamento_protocolo']
+APROVADO  BD-11  status de agendamento inválido (CHECK) [rejeitado: ERROR 4025 (23000): CONSTRAINT `ck_agendamento_status` failed for `ditec_teste`.`agendamento`]
+APROVADO  BD-12  agendamento sem bairro (NOT NULL) [rejeitado: ERROR 1364 (HY000): Field 'bairro' doesn't have a default value]
+APROVADO  BD-13  OS para agendamento inexistente (FK) [rejeitado: ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`ditec_teste`.`ordem_ser]
+APROVADO  BD-14  OS vinculada ao agendamento 1
+APROVADO  BD-15  segunda OS para o mesmo agendamento (UNIQUE 1:1) [rejeitado: ERROR 1062 (23000): Duplicate entry '1' for key 'uq_os_agendamento']
+APROVADO  BD-16  status de OS inválido (CHECK) [rejeitado: ERROR 4025 (23000): CONSTRAINT `ck_os_status` failed for `ditec_teste`.`ordem_servico`]
+APROVADO  BD-17  garantia_dias negativa (CHECK) [rejeitado: ERROR 4025 (23000): CONSTRAINT `ck_os_garantia` failed for `ditec_teste`.`ordem_servico`]
+APROVADO  BD-18  garantia padrão = 90 dias [obtido: 90]
+APROVADO  BD-19  status padrão da OS = AGENDADO [obtido: AGENDADO]
+APROVADO  BD-20  avaliação nota 5
+APROVADO  BD-21  segunda avaliação para a mesma OS (UNIQUE) [rejeitado: ERROR 1062 (23000): Duplicate entry '2' for key 'uq_avaliacao_os']
+APROVADO  BD-22  criar OS 2 para testar notas inválidas
+APROVADO  BD-23  nota 6 (acima do limite, CHECK) [rejeitado: ERROR 4025 (23000): CONSTRAINT `ck_avaliacao_nota` failed for `ditec_teste`.`avaliacao`]
+APROVADO  BD-24  nota 0 (abaixo do limite, CHECK) [rejeitado: ERROR 4025 (23000): CONSTRAINT `ck_avaliacao_nota` failed for `ditec_teste`.`avaliacao`]
+APROVADO  BD-25  registro de timeline da OS
+APROVADO  BD-26  timeline para OS inexistente (FK) [rejeitado: ERROR 1452 (23000): Cannot add or update a child row: a foreign key constraint fails (`ditec_teste`.`timeline_]
+APROVADO  BD-27  registro de chat_log
+APROVADO  BD-28  excluir técnico (ON DELETE SET NULL)
+APROVADO  BD-29  OS permanece com tecnico_id nulo após excluir técnico [obtido: NULO]
+APROVADO  BD-30  excluir OS 1 (CASCADE em timeline e avaliação)
+APROVADO  BD-31  timeline removida em cascata [obtido: 0]
+APROVADO  BD-32  avaliação da OS 1 removida em cascata [obtido: 0]
+APROVADO  BD-33  excluir usuário cliente (CASCADE no cliente)
+APROVADO  BD-34  cliente removido em cascata [obtido: 0]
+APROVADO  BD-35  chat_log mantido com cliente_id nulo (SET NULL) [obtido: NULO]
+
+Total: 35 testes | aprovados: 35 | reprovados: 0

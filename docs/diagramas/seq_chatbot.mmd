@@ -1,0 +1,18 @@
+sequenceDiagram
+  actor U as Visitante ou cliente
+  participant FE as Front-end
+  participant CS as API (ChatService)
+  participant G as Gemini API
+  participant FB as ChatFallbackService
+  U->>FE: Escreve a pergunta
+  FE->>CS: POST /api/chat (mensagens, sessionId)
+  CS->>CS: Descarta mensagens de sistema e limita o histórico a 10
+  alt IA disponível
+    CS->>G: HTTPS · chave no cabeçalho x-goog-api-key
+    G-->>CS: Resposta gerada
+  else IA indisponível, limite atingido ou pausa temporária
+    CS->>FB: responder(pergunta)
+    FB-->>CS: Resposta de FAQ com aviso
+  end
+  CS->>CS: Registra a interação em chat_log
+  CS-->>FE: Resposta no formato esperado pelo front-end

@@ -1,0 +1,58 @@
+Servidor: 10.11.14-MariaDB-0ubuntu0.24.04.1
+Diferença entre a V2 original e a cópia usada:
+< ALTER TABLE ordem_servico DROP CHECK ck_os_status;
+> ALTER TABLE ordem_servico DROP CONSTRAINT ck_os_status;
+
+=== MV-A  V2 original no servidor de teste (esperado: falha por sintaxe exclusiva do MySQL) ===
+APROVADO   MV-A  V2 original não é portável para MariaDB (DROP CHECK) [ERROR 1064 (42000) at line 25: You have an error in your SQL…]
+
+=== MV-B  V2 (cópia adaptada) sobre dados da V1 ===
+APROVADO   MV-B1 dados da V1 semeados [OS: 4, histórico: 8]
+APROVADO   MV-B2 V2 aplicada sem erro
+APROVADO   MV-B3 nenhum EM_ATENDIMENTO restante em ordem_servico [obtido: 0]
+APROVADO   MV-B4 OS EM_ATENDIMENTO convertida para EM_MANUTENCAO [obtido: 1]
+APROVADO   MV-B5 nenhum EM_ATENDIMENTO restante no histórico [obtido: 0]
+APROVADO   MV-B6 histórico convertido para EM_MANUTENCAO (3 linhas) [obtido: 3]
+APROVADO   MV-B7 nenhuma linha de histórico perdida [obtido: 8]
+APROVADO   MV-B8 linhas sem status anterior viram tipo ABERTURA [obtido: 4]
+APROVADO   MV-B9 demais linhas recebem tipo STATUS [obtido: 4]
+APROVADO   MV-B10 histórico existente fica visível ao cliente [obtido: 8]
+APROVADO   MV-B11 valor da OS concluída preservado (190,00) [obtido: 1]
+
+=== MV-C  Restrições introduzidas pela V2 ===
+APROVADO   MV-C status 'EM_DIAGNOSTICO' aceito
+APROVADO   MV-C status 'AGUARDANDO_APROVACAO' aceito
+APROVADO   MV-C status 'AGUARDANDO_PECAS' aceito
+APROVADO   MV-C status 'EM_MANUTENCAO' aceito
+APROVADO   MV-C status 'EM_TESTES' aceito
+APROVADO   MV-C status 'AGUARDANDO_RETIRADA' aceito
+APROVADO   MV-C status 'ENTREGUE' aceito
+APROVADO   MV-C status antigo 'EM_ATENDIMENTO' rejeitado [ERROR 4025 (23000) at line 1: CONSTRAINT `ck_os_status` failed for `mv_b`.`ordem_servico`]
+APROVADO   MV-C status inexistente rejeitado [ERROR 4025 (23000) at line 1: CONSTRAINT `ck_os_status` failed for `mv_b`.`ordem_servico`]
+APROVADO   MV-C valor_orcamento negativo rejeitado [ERROR 4025 (23000) at line 1: CONSTRAINT `ck_os_valor_orcamento` failed for `mv_b`.`ordem_servico`]
+APROVADO   MV-C valor negativo rejeitado [ERROR 4025 (23000) at line 1: CONSTRAINT `ck_os_valor` failed for `mv_b`.`ordem_servico`]
+APROVADO   MV-C valor_orcamento = 0 aceito
+APROVADO   MV-C tipo de evento inválido rejeitado [ERROR 4025 (23000) at line 1: CONSTRAINT `ck_timeline_tipo` failed for `mv_b`.`timeline_os`]
+APROVADO   MV-C tipo de evento 'DIAGNOSTICO' aceito
+APROVADO   MV-C tipo de evento 'ORCAMENTO' aceito
+APROVADO   MV-C tipo de evento 'OBSERVACAO' aceito
+APROVADO   MV-C tipo de evento 'ATRIBUICAO' aceito
+APROVADO   MV-C tipo de evento 'PREVISAO' aceito
+APROVADO   MV-C usuario_id inexistente na timeline (FK) rejeitado [ERROR 1452 (23000) at line 1: Cannot add or update a child row: a foreign key constraint fails (`mv_b`.`timeli]
+APROVADO   MV-C excluir o responsável: evento permanece e usuario_id vira NULL (ON DELETE SET NULL)
+
+=== MV-D  Caso-limite: OS com valor negativo já existente (a V1 não tinha CHECK em valor) ===
+APROVADO   MV-D1 a V2 aborta ao encontrar OS com valor < 0 [ERROR 4025 (23000) at line 29: CONSTRAINT `ck_os_valor` failed for `mv_d`.`ordem_servico`]
+APROVADO   MV-D2 estado parcial após a falha (DDL não transacional) [coluna 'diagnostico' criada: 1; ck_os_status presente: 0]
+APROVADO   MV-D3 consulta de pré-checagem identifica o problema antes da migração [OS com valor < 0: 1]
+
+=== MV-E  Roteiro de reversão do README (aplicado a partir do próprio README) ===
+APROVADO   MV-E1 reversão do README executa sem erro
+APROVADO   MV-E2 status voltam ao domínio da V1 (nenhum EM_MANUTENCAO) [obtido: 0]
+APROVADO   MV-E3 índices criados pela V2 permanecem após a reversão (2) [obtido: 2]
+APROVADO   MV-E4 DEFEITO CONFIRMADO: reaplicar a V2 após a reversão do README falha [ERROR 1061 (42000) at line 38: Duplicate key name 'idx_os_criado_em']
+APROVADO   MV-E5 reversão corrigida (com DROP INDEX) executa sem erro
+APROVADO   MV-E6 V2 reaplicada com sucesso após a reversão corrigida
+APROVADO   MV-E7 estado final consistente (nenhum EM_ATENDIMENTO)
+
+Total: 42 verificações | aprovadas: 42 | reprovadas: 0

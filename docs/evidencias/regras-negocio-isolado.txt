@@ -1,0 +1,17 @@
+PASSOU bairro atendido: Moema
+PASSOU bairro atendido com acento: Saúde
+PASSOU bairro fora da área: Campinas
+PASSOU bairro vazio
+PASSOU CEP 01310-100 (faixa atendida)
+PASSOU CEP 30140-071 (fora da faixa)
+PASSOU CEP com menos de 8 dígitos
+PASSOU domingo bloqueado (2026-11-08)
+PASSOU segunda atendida (2026-11-09)
+PASSOU sábado atendido (2026-11-14)
+PASSOU horário 07:00 permitido
+PASSOU horário 19:00 permitido
+PASSOU horário 08:00 não está na grade
+PASSOU aparelho a gás: 'Fogão a gás'
+PASSOU aparelho comum: 'Geladeira'
+
+Total: 15 passaram, 0 falharam

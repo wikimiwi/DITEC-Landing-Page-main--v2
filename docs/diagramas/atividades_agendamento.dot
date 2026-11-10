@@ -1,0 +1,20 @@
+digraph G {
+  rankdir=TB; nodesep=0.4; ranksep=0.42; fontname="Liberation Sans";
+  node [shape=box, style="rounded,filled", fontname="Liberation Sans", fontsize=14, margin="0.2,0.1", color="#333333"];
+  edge [fontname="Liberation Sans", fontsize=13, color="#333333"];
+  ini [shape=circle,label="",width=0.25,style=filled,fillcolor="#222222"];
+  fim [shape=doublecircle,label="",width=0.22,style=filled,fillcolor="#222222"];
+  c1 [label="Escolhe a data e um horário\nlivre da grade", fillcolor="#e8f0fa"];
+  c2 [label="Informa aparelho, endereço,\nbairro e telefone de contato", fillcolor="#e8f0fa"];
+  s1 [shape=diamond, style=filled, fillcolor="#fff6d6", label="Bairro atendido,\nnão é domingo, horário\nda grade e livre?"];
+  c3 [label="Corrige os dados\nou escolhe outro horário", fillcolor="#e8f0fa"];
+  s2 [label="Cria o agendamento PENDENTE,\na OS AGENDADO e o protocolo\nDITEC-AAAA-NNNNNN", fillcolor="#fff6d6"];
+  s3 [label="Registra o evento de abertura\nna linha do tempo", fillcolor="#fff6d6"];
+  a1 [label="Administrador confirma o agendamento\n(PENDENTE → AGENDADO)", fillcolor="#e8f6e8"];
+  a2 [label="Administrador atribui um\ntécnico ativo à OS", fillcolor="#e8f6e8"];
+  ini -> c1 -> c2 -> s1;
+  s1 -> c3 [label=" não"]; c3 -> c2;
+  s1 -> s2 [label=" sim"]; s2 -> s3 -> a1 -> a2 -> fim;
+  leg [shape=plaintext, style="", fontsize=12, label=<<table border="0" cellborder="1" cellspacing="0" cellpadding="4"><tr><td bgcolor="#e8f0fa">Cliente ou visitante</td><td bgcolor="#fff6d6">Sistema</td><td bgcolor="#e8f6e8">Administrador</td></tr></table>>];
+  a2 -> leg [style=invis];
+}

@@ -1,0 +1,19 @@
+digraph G {
+  rankdir=TB; nodesep=0.4; ranksep=0.42; fontname="Liberation Sans";
+  node [shape=box, style="rounded,filled", fontname="Liberation Sans", fontsize=14, margin="0.2,0.1", color="#333333"];
+  edge [fontname="Liberation Sans", fontsize=13, color="#333333"];
+  ini [shape=circle,label="",width=0.25,style=filled,fillcolor="#222222"];
+  fim [shape=doublecircle,label="",width=0.22,style=filled,fillcolor="#222222"];
+  t1 [label="Técnico inicia o diagnóstico\n(EM_DIAGNOSTICO)", fillcolor="#e8f6e8"];
+  t2 [label="Registra o diagnóstico e, se houver,\no valor do orçamento", fillcolor="#e8f6e8"];
+  d1 [shape=diamond, style=filled, fillcolor="#fff6d6", label="Enviar orçamento\nao cliente?"];
+  t3 [label="Técnico move a OS para\nAGUARDANDO_APROVACAO\n(exige diagnóstico e valor)", fillcolor="#e8f6e8"];
+  c1 [shape=diamond, style=filled, fillcolor="#fff6d6", label="Cliente\naprova?"];
+  x1 [label="OS CANCELADO sem custo\n(diagnóstico gratuito)", fillcolor="#fde8e8"];
+  nx [label="Segue para a execução\n(Figura seguinte)", fillcolor="#f4f4f4"];
+  ini -> t1 -> t2 -> d1;
+  d1 -> t3 [label=" sim"]; d1 -> nx [label=" não"];
+  t3 -> c1; c1 -> nx [label=" sim: EM_MANUTENCAO"]; c1 -> x1 [label=" não"]; x1 -> fim;
+  leg [shape=plaintext, style="", fontsize=12, label=<<table border="0" cellborder="1" cellspacing="0" cellpadding="4"><tr><td bgcolor="#e8f6e8">Técnico</td><td bgcolor="#fff6d6">Decisão</td><td bgcolor="#fde8e8">Cancelamento</td></tr></table>>];
+  nx -> leg [style=invis]; fim -> leg [style=invis];
+}

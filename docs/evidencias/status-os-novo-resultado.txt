@@ -1,0 +1,10 @@
+Origem: StatusOS.java e StatusAgendamento.java de e58a3d2 compilados isoladamente (sem Spring).
+Harness: StatusOSHarness.java (réplica dos 4 testes de StatusOSTest + análise do grafo de transições)
+
+Replica dos 4 testes do grupo: 42 verificações OK, 0 falhas
+Alcançáveis a partir de AGENDADO: 10/10; inalcançáveis: []
+Estados não-terminais sem saída (becos): []
+Total de transições permitidas: 19
+Quem pode ir para CONCLUIDO: [EM_TESTES]
+Onde CANCELADO é permitido: [AGENDADO, EM_DIAGNOSTICO, AGUARDANDO_APROVACAO, AGUARDANDO_PECAS, EM_MANUTENCAO]
+código de saída: 0

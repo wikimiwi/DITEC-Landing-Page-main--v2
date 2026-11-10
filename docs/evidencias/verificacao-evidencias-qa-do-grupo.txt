@@ -1,0 +1,22 @@
+Conferência dos arquivos de evidência versionados em qa/relatorios/ contra os valores citados em docs/RELATORIO_FINAL_CORRECOES_DITEC.md
+(verifica coerência interna dos dados; não comprova a autenticidade da execução original)
+
+benchmark-chat-2026-11-09T17-56-48-526Z.json: n=12 fontes=['ia']
+  1ª=1969 ms | demais: média=1066 mín=869 máx=1457 p95=1457 | geral: média=1141 p95=1969 ms | todas < 2000 ms: True
+benchmark-chat-2026-11-09T18-01-30-640Z.json: n=12 fontes=['ia']
+  1ª=1428 ms | demais: média=1003 mín=842 máx=1175 p95=1175 | geral: média=1038 p95=1428 ms | todas < 2000 ms: True
+
+Valores do relatório (execução 18:01): 1ª 1.428; demais média 1.003, mín 842, máx 1.175, p95 1.175; geral média 1.038, p95 1.428
+Observação: a execução anterior (17:56) teve 1ª resposta de 1.969 ms (próxima do limite de 2.000 ms); o relatório cita a execução mais recente.
+
+axe-resultado.json: 22 cenários; violações somadas: 0
+
+lighthouse-resumo.json:
+  mobile   /index.html    desempenho=100 acessibilidade=100 boas práticas=100 seo=100
+  mobile   /conta.html    desempenho= 98 acessibilidade=100 boas práticas=100 seo= 60
+  mobile   /tecnico.html  desempenho= 98 acessibilidade=100 boas práticas=100 seo= 60
+  mobile   /admin.html    desempenho= 99 acessibilidade=100 boas práticas=100 seo= 60
+  desktop  /index.html    desempenho= 89 acessibilidade=100 boas práticas=100 seo=100
+  desktop  /conta.html    desempenho= 82 acessibilidade=100 boas práticas=100 seo= 60
+  desktop  /tecnico.html  desempenho= 82 acessibilidade=100 boas práticas=100 seo= 60
+  desktop  /admin.html    desempenho= 86 acessibilidade=100 boas práticas=100 seo= 60

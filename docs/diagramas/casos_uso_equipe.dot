@@ -1,0 +1,26 @@
+digraph G {
+  rankdir=LR; fontname="Liberation Sans"; nodesep=0.3; ranksep=1.1; splines=true;
+  node [fontname="Liberation Sans", fontsize=12];
+  edge [arrowhead=none, color="#444444"];
+  subgraph cluster_sis { label="Sistema DITEC Assistência Técnica"; style=rounded; color="#555555"; fontsize=14;
+    node [shape=ellipse, style=filled, fillcolor="#eef3f8", color="#355c7d"];
+    CU06 [label="CU06 Autenticar-se"];
+    CU09 [label="CU09 Consultar ordens de serviço"];
+    CU12 [label="CU12 Atualizar status da OS"];
+    CU13 [label="CU13 Registrar diagnóstico\ne orçamento"];
+    CU14 [label="CU14 Registrar observações\ne previsão"];
+    CU15 [label="CU15 Finalizar OS"];
+    CU16 [label="CU16 Acompanhar o painel"];
+    CU17 [label="CU17 Gerir agendamentos"];
+    CU18 [label="CU18 Gerir OS: filtrar, atribuir\ntécnico e cancelar"];
+    CU19 [label="CU19 Gerir técnicos"];
+    CU20 [label="CU20 Gerir serviços"];
+    CU21 [label="CU21 Consultar clientes"];
+    CU22 [label="CU22 Exportar relatórios CSV"];
+  }
+  node [shape=box, style="rounded,filled", fillcolor="#f4f4f4", color="#222222", fontsize=13];
+  Tecnico [label="Técnico"]; Administrador;
+  Tecnico -> {CU06 CU09 CU12 CU13 CU14 CU15};
+  Administrador -> {CU06 CU09 CU12 CU13 CU14 CU15 CU16 CU17 CU18 CU19 CU20 CU21 CU22};
+  {rank=same; Tecnico; Administrador;}
+}

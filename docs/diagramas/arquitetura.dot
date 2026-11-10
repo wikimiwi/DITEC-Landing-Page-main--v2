@@ -1,0 +1,29 @@
+digraph G {
+  rankdir=TB; fontname="Liberation Sans"; nodesep=0.45; ranksep=0.55; splines=true; compound=true;
+  node [fontname="Liberation Sans", fontsize=15, shape=box, style="rounded,filled", fillcolor="#eef3f8", color="#355c7d", margin="0.18,0.10"];
+  edge [fontname="Liberation Sans", fontsize=13, color="#444444"];
+
+  PG [label="GitHub Pages\npublicação do front-end\n(deploy-pages.yml)", fillcolor="#f4f4f4", color="#777777"];
+
+  subgraph cluster_nav { label="Navegador do usuário"; labeljust=l; fontsize=15; style="rounded"; color="#555555"; margin=14;
+    FE [label="Front-end estático\nindex · conta · tecnico · admin\nHTML, CSS e JavaScript"];
+  }
+
+  subgraph cluster_srv { label="Render · contêiner Docker · Java 21 · Spring Boot 3.5"; labeljust=l; fontsize=15; style="rounded"; color="#555555"; margin=14;
+    F1 [label="Filtros\nRateLimitFilter · JwtAuthenticationFilter"];
+    C  [label="Controllers REST (/api/...)"];
+    S  [label="Services\nregras de negócio e transações"];
+    R  [label="Repositories\nSpring Data JPA"];
+    FB [label="ChatFallbackService\nrespostas de FAQ"];
+    F1 -> C -> S -> R;
+  }
+
+  DB [label="MySQL\nesquema versionado pelo Flyway (V1 e V2)", shape=cylinder, style="filled", fillcolor="#f1ebdd", color="#8a6d3b"];
+  IA [label="Google Gemini API\n(serviço externo)", fillcolor="#f6e9e9", color="#a33a3a"];
+
+  PG -> FE [style=dashed, label=" serve "];
+  FE -> F1 [label=" HTTPS · JSON · Bearer JWT ", lhead=cluster_srv, ltail=cluster_nav];
+  R -> DB [label=" JDBC "];
+  S -> IA [label=" HTTPS · chave só no servidor "];
+  S -> FB [style=dashed, label=" IA indisponível "];
+}

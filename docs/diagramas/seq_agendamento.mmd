@@ -1,0 +1,25 @@
+sequenceDiagram
+  actor U as Visitante ou cliente
+  participant FE as Front-end
+  participant API as API (filtro e controller)
+  participant AS as Agendamento<br/>Service
+  participant BD as Banco de dados
+  U->>FE: Escolhe a data
+  FE->>API: GET /api/agendamentos/<br/>disponibilidade
+  API->>AS: disponibilidade(data)
+  AS->>BD: Consulta horários ocupados
+  AS-->>FE: Horários livres da grade
+  U->>FE: Confirma os dados
+  FE->>API: POST /api/agendamentos
+  API->>API: Limite de 10 por hora por origem
+  API->>AS: criar(dados)
+  AS->>AS: Bairro atendido, não é domingo, horário da grade
+  AS->>BD: Há agendamento ativo no horário?
+  alt Regra violada
+    AS-->>FE: 422 com a mensagem da regra
+  else Horário ocupado
+    AS-->>FE: 409 Horário indisponível
+  else Dados válidos
+    AS->>BD: Grava agendamento PENDENTE, OS AGENDADO e evento de abertura
+    AS-->>FE: Agendamento com o protocolo
+  end
